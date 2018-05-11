@@ -19,8 +19,11 @@ greenLower = (29, 86, 6)
 greenUpper = (64, 255, 255)
 pts = deque(maxlen=args["buffer"])
 
+pts.appendleft((0,0))
+pts.appendleft((0,0))
 
-cap = cv.VideoCapture(1)
+
+cap = cv.VideoCapture(0)
 
 while(True):
     # Capture frame-by-frame
@@ -68,9 +71,26 @@ while(True):
 
     # update the points queue
     pts.appendleft(center)
+    
+    treshold = 20;
+    
+    if pts[0] is None or pts[1] is None or (pts[0][0]-pts[1][0] < 7 and pts[0][0]-pts[1][0] > -7 and pts[0][1]-pts[1][1] < 7 and pts[0][1]-pts[1][1] > -7):
+    	print("No movement")
+    else:
+    	if pts[1][0] < pts[0][0]:
+    		if pts[1][1] < pts[0][1]:
+    			print("North")
+    		else:
+    			print("South")
+    	else:
+    		if pts[1][1] < pts[0][1]:
+    			print("West")
+    		else:
+    			print("East")
 
 	# loop over the set of tracked points
     for i in range(1, len(pts)):
+
 		# if either of the tracked points are None, ignore
 		# them
         if pts[i - 1] is None or pts[i] is None:
@@ -80,7 +100,7 @@ while(True):
 		# draw the connecting lines
         thickness = int(np.sqrt(args["buffer"] / float(i + 1)) * 2.5)
         cv.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
-
+        
     #res = cv.bitwise_and(frame,frame, mask= mask)
     # Display the resulting frame
     cv.imshow('frame',frame)
