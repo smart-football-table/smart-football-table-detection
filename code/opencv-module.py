@@ -72,21 +72,25 @@ while(True):
     # update the points queue
     pts.appendleft(center)
     
-    treshold = 20;
+    treshold = 7;
     
-    if pts[0] is None or pts[1] is None or (pts[0][0]-pts[1][0] < 7 and pts[0][0]-pts[1][0] > -7 and pts[0][1]-pts[1][1] < 7 and pts[0][1]-pts[1][1] > -7):
+    if pts[0] is None or pts[1] is None or (pts[0][0]-pts[1][0] < +treshold and pts[0][0]-pts[1][0] > 0-treshold and pts[0][1]-pts[1][1] < 0+treshold and pts[0][1]-pts[1][1] > 0-treshold):
     	print("No movement")
     else:
     	if pts[1][0] < pts[0][0]:
     		if pts[1][1] < pts[0][1]:
-    			print("North")
+    			print("North-West")
+    		elif pts[1][1] > pts[0][1]:
+    			print("North-East")
     		else:
-    			print("South")
+    			print("North")
     	else:
     		if pts[1][1] < pts[0][1]:
-    			print("West")
+    			print("South-West")
+    		elif pts[1][1] > pts[0][1]:
+    			print("South-East")
     		else:
-    			print("East")
+    			print("South")
 
 	# loop over the set of tracked points
     for i in range(1, len(pts)):
