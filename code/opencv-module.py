@@ -76,36 +76,41 @@ while(True):
 
     # update the points queue
     pts.appendleft(center)
-    
+
     treshold = 7;
-    
+
+	actualPointX = pts[0][0]
+	actualPointY = pts[0][1]
+	previousPointX = pts[1][0]
+	previousPointY = pts[1][1]
+
     #detect direction (with treshold)
-    if pts[0] is None or pts[1] is None or (pts[0][0]-pts[1][0] < +treshold and pts[0][0]-pts[1][0] > 0-treshold and pts[0][1]-pts[1][1] < 0+treshold and pts[0][1]-pts[1][1] > 0-treshold):
+    if pts[0] is None or pts[1] is None or (actualPointX-previousPointX < +treshold and actualPointX-previousPointX > 0-treshold and pts[0][1]-pts[1][1] < 0+treshold and pts[0][1]-pts[1][1] > 0-treshold):
     	print("No movement")
     else:
-    	if pts[1][0] < pts[0][0]:
-    		if pts[1][1] < pts[0][1]:
+    	if previousPointX < actualPointX:
+    		if previousPointY < actualPointY:
     			print("North-West")
-    		elif pts[1][1] > pts[0][1]:
+    		elif previousPointY > actualPointY:
     			print("North-East")
     		else:
     			print("North")
     	else:
-    		if pts[1][1] < pts[0][1]:
+    		if previousPointY < actualPointY:
     			print("South-West")
-    		elif pts[1][1] > pts[0][1]:
+    		elif previousPointY > actualPointY:
     			print("South-East")
     		else:
     			print("South")
-    			
+
     #count presence on side
     if not pts[0] is None:
     	if pts[0][0] < 300:
     		halfsideleft += 1
     	else:
     		halfsideright += 1
-    	
-	
+
+
 	# loop over the set of tracked points
     for i in range(1, len(pts)):
 
@@ -118,19 +123,19 @@ while(True):
 		# draw the connecting lines
         thickness = int(np.sqrt(args["buffer"] / float(i + 1)) * 2.5)
         cv.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
-        
+
     #res = cv.bitwise_and(frame,frame, mask= mask)
     # Display the resulting frame
     cv.imshow('frame',frame)
 
     if cv.waitKey(1) & 0xFF == ord('q'):
-    	
+
     	#calculate percentage per side
     	if halfsideleft == 0:
     		print("0 Prozent auf linker Seite")
     	else:
     		print((halfsideleft/(halfsideleft+halfsideright))*100," Prozent auf linker Seite")
-    		
+
     	if halfsideright == 0:
     		print("0 Prozent auf rechter Seite")
     	else:
