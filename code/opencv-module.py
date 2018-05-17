@@ -27,7 +27,7 @@ pts.appendleft((0,0))
 pts.appendleft((0,0))
 
 
-#createHeatmap 20x20xValue
+#createHeatmap 30x30 (20px*20px)
 for i in range(0, 900):
     heatmap.appendleft(0)
 
@@ -94,22 +94,31 @@ while(True):
 
     #detect direction (with treshold)
     if pts[0] is None or pts[1] is None or (0-treshold < actualPointX-previousPointX < 0+treshold and 0-treshold < actualPointY-previousPointY < 0+treshold):
+    	direction = "No movement"
     	print("No movement")
     else:
     	if previousPointX < actualPointX:
     		if previousPointY < actualPointY:
+    			direction = "North-West"
     			print("North-West")
     		elif previousPointY > actualPointY:
+    			direction = "North-East"
     			print("North-East")
     		else:
+    			direction = "North"
     			print("North")
     	else:
     		if previousPointY < actualPointY:
+    			direction = "South-West"
     			print("South-West")
     		elif previousPointY > actualPointY:
+    			direction = "South-East"
     			print("South-East")
     		else:
+    			direction = "South"
     			print("South")
+
+    cv.putText(frame, direction, (40,40), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
 
     #count presence on side
     if not pts[0] is None:
@@ -121,7 +130,10 @@ while(True):
     print(int(actualPointX/20)*int(actualPointY/20))
 
     if heatmap is not None:
-    	heatmap[int(actualPointX/20)*int(actualPointY/20)] += 1
+    	heatmap[(int(actualPointX/20)*30)+int(actualPointY/20)] += 1
+    	for i in range(0, 30):
+    		for j in range(0, 30):
+    			cv.putText(frame, str(heatmap[(i*30)+j]), (i*20,j*20), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 255), 1)
 
 	# loop over the set of tracked points
     for i in range(1, len(pts)):
