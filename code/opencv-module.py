@@ -14,6 +14,9 @@ ap.add_argument("-b", "--buffer", type=int, default=64,
 	help="max buffer size")
 args = vars(ap.parse_args())
 
+heatmapSize = 50
+frameSize = 800
+heatmapRectangeSize = int(frameSize/heatmapSize)
 
 # define the lower and upper boundaries of the "green"
 # ball in the HSV color space, then initialize the
@@ -21,14 +24,14 @@ args = vars(ap.parse_args())
 greenLower = (29, 86, 6)
 greenUpper = (64, 255, 255)
 pts = deque(maxlen=5)
-heatmap = deque(maxlen=900)
+heatmap = deque(maxlen=heatmapSize*heatmapSize)
 
 pts.appendleft((0,0))
 pts.appendleft((0,0))
 
 
 #createHeatmap 30x30 (20px*20px)
-for i in range(0, 900):
+for i in range(0, heatmapSize*heatmapSize):
     heatmap.appendleft(0)
 
 
@@ -43,7 +46,7 @@ while(True):
 
 	# resize the frame and convert it to the HSV
 	# color space
-    frame = imutils.resize(frame, width=600)
+    frame = imutils.resize(frame, width=frameSize)
 
     # Our operations on the frame come here
     hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
@@ -122,22 +125,22 @@ while(True):
 
     #count presence on side
     if not pts[0] is None:
-    	if pts[0][0] < 300:
+    	if pts[0][0] < (frameSize/2):
     		halfsideleft += 1
     	else:
     		halfsideright += 1
 
-    print(int(actualPointX/20)*int(actualPointY/20))
+    print(int(actualPointX/heatmapRectangeSize)*int(actualPointY/heatmapRectangeSize))
 
     if heatmap is not None:
-    	heatmap[(int(actualPointX/20)*30)+int(actualPointY/20)] += 1
-    	for i in range(0, 30):
-    		for j in range(0, 30):
+    	heatmap[(int(actualPointX/heatmapRectangeSize)*heatmapSize)+int(actualPointY/heatmapRectangeSize)] += 1
+    	for i in range(0, heatmapSize):
+    		for j in range(0, heatmapSize):
 
-    			color = (255-(heatmap[(i*30)+j]*12),255-(heatmap[(i*30)+j]*12),255-(heatmap[(i*30)+j]*12))
+    			color = (255-(heatmap[(i*heatmapSize)+j]*12),255-(heatmap[(i*heatmapSize)+j]*12),255-(heatmap[(i*heatmapSize)+j]*12))
 
-    			cv.putText(frame, str(heatmap[(i*30)+j]), (i*20,j*20+20), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 255), 1)
-    			cv.rectangle(frame, (i*20,j*20), (i*20+20,j*20+20),color, 1)
+    			cv.putText(frame, str(heatmap[(i*heatmapSize)+j]), (i*heatmapRectangeSize,j*heatmapRectangeSize+heatmapRectangeSize), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 255), 1)
+    			cv.rectangle(frame, (i*heatmapRectangeSize,j*heatmapRectangeSize), (i*heatmapRectangeSize+heatmapRectangeSize,j*heatmapRectangeSize+heatmapRectangeSize),color, -1)
 
 	# loop over the set of tracked points
     for i in range(1, len(pts)):
