@@ -133,7 +133,11 @@ while(True):
     	heatmap[(int(actualPointX/20)*30)+int(actualPointY/20)] += 1
     	for i in range(0, 30):
     		for j in range(0, 30):
-    			cv.putText(frame, str(heatmap[(i*30)+j]), (i*20,j*20), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 255), 1)
+
+    			color = (255-(heatmap[(i*30)+j]*12),255-(heatmap[(i*30)+j]*12),255-(heatmap[(i*30)+j]*12))
+
+    			cv.putText(frame, str(heatmap[(i*30)+j]), (i*20,j*20+20), cv.FONT_HERSHEY_SIMPLEX, 0.3, (0, 0, 255), 1)
+    			cv.rectangle(frame, (i*20,j*20), (i*20+20,j*20+20),color, 1)
 
 	# loop over the set of tracked points
     for i in range(1, len(pts)):
