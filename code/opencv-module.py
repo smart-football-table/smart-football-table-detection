@@ -21,6 +21,7 @@ args = vars(ap.parse_args())
 greenLower = (29, 86, 6)
 greenUpper = (64, 255, 255)
 pts = deque(maxlen=args["buffer"])
+heatmap = deque(maxlen=args["buffer"])
 
 pts.appendleft((0,0))
 pts.appendleft((0,0))
@@ -77,15 +78,15 @@ while(True):
     # update the points queue
     pts.appendleft(center)
 
-    treshold = 7;
-
-	actualPointX = pts[0][0]
-	actualPointY = pts[0][1]
-	previousPointX = pts[1][0]
-	previousPointY = pts[1][1]
+    treshold = 7
+    if not pts[0] is None or not pts[1] is None:
+    	actualPointX = pts[0][0]
+    	actualPointY = pts[0][1]
+    	previousPointX = pts[1][0]
+    	previousPointY = pts[1][1]
 
     #detect direction (with treshold)
-    if pts[0] is None or pts[1] is None or (actualPointX-previousPointX < +treshold and actualPointX-previousPointX > 0-treshold and pts[0][1]-pts[1][1] < 0+treshold and pts[0][1]-pts[1][1] > 0-treshold):
+    if pts[0] is None or pts[1] is None or (0-treshold < actualPointX-previousPointX < 0+treshold and 0-treshold < actualPointY-previousPointY < 0+treshold):
     	print("No movement")
     else:
     	if previousPointX < actualPointX:
@@ -110,6 +111,10 @@ while(True):
     	else:
     		halfsideright += 1
 
+    #createHeatmap 20x20xValue
+    for i in range(1, 30):
+    	for j in range(1, 30):
+    		heatmap.appendleft((20*i,20*j,0))
 
 	# loop over the set of tracked points
     for i in range(1, len(pts)):
@@ -123,6 +128,10 @@ while(True):
 		# draw the connecting lines
         thickness = int(np.sqrt(args["buffer"] / float(i + 1)) * 2.5)
         cv.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
+
+        index = round(pts[i][0]/20)/round[pts[i][1]/20]
+
+        heatmap[int(pts[i][0]/20)][int(pts[i][1]/20)][2] += 1
 
     #res = cv.bitwise_and(frame,frame, mask= mask)
     # Display the resulting frame
@@ -141,6 +150,7 @@ while(True):
     	else:
     		print((halfsideright/(halfsideleft+halfsideright))*100 ," Prozent auf rechter Seite")
 
+    	print(heatmap)
     	break
 # When everything done, release the capture
 cap.release()
