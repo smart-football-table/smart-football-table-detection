@@ -1,7 +1,5 @@
 # Smart football table
 
-![logo](https://github.com/KingMus/smart-football-table/blob/master/SFT_Logo.png)
-
 
 ### Calculations for Camera (Logitech Webcam)
 
