@@ -1,4 +1,4 @@
-package ui;
+package ballPosition_module;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -10,8 +10,12 @@ public class FieldPanel extends JPanel {
 	private int x = -10;
 	private int y = -10;
 	
-	public FieldPanel() {
+	MainPanel mainPanel;
+	
+	public FieldPanel(MainPanel panelHolder) {
+		this.mainPanel = panelHolder;
 		init();
+		
 	}
 
 	private void init() {
@@ -22,10 +26,12 @@ public class FieldPanel extends JPanel {
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 
-		g.setColor(Color.WHITE);
-		g.fillRect(0, 0, 2000, 2000);
+		
+		g.setColor(Color.BLACK);
+		g.drawRect(100, 100, 800, 600);
+		
 		g.setColor(Color.BLUE);
-		g.fillOval(x, y, 15, 15);
+		g.fillOval(x+100, y+100, 15, 15);
 
 	}
 
