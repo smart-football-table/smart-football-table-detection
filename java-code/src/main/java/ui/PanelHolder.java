@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.swing.JTabbedPane;
 
+import ballPosition_module.BallPositionController;
 import ballPosition_module.BallPositionMainPanel;
 import possession_module.PossessionController;
 import possession_module.PossessionMainPanel;
@@ -12,7 +13,6 @@ import possession_module.PossessionMainPanel;
 public class PanelHolder extends JTabbedPane {
 
 	BallPositionMainPanel ballPositionMainPanel;
-	PossessionMainPanel possessionMainPanel;
 
 	public PanelHolder() throws IOException {
 		init();
@@ -23,8 +23,8 @@ public class PanelHolder extends JTabbedPane {
 		FileRead fileRead = new FileRead();
 		List<LocationAtTimepoint> locationsOfBall = fileRead.readFile();
 		
-		ballPositionMainPanel = new BallPositionMainPanel();
-		this.addTab("Ballposition", ballPositionMainPanel);
+		BallPositionController ballPositionController = new BallPositionController(locationsOfBall);
+		this.addTab("Ballposition", ballPositionController.getBallPositionMainPanel());
 		
 		PossessionController possessionController = new PossessionController(locationsOfBall);
 		this.addTab("Ballbesitz", possessionController.getPossessionMainPanel());

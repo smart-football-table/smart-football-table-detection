@@ -14,26 +14,19 @@ public class SliderChangeListener implements ChangeListener {
 
 	FieldPanel fieldPanel;
 	JSlider jslider;
-	FileRead fileRead = new FileRead();
-	List<LocationAtTimepoint> locationsOfBall;
 
 	public SliderChangeListener(FieldPanel fieldPanel, JSlider jslider) throws IOException {
 		this.fieldPanel = fieldPanel;
 		this.jslider = jslider;
-
-		locationsOfBall = fileRead.readFile();
-
 	}
 
 	public void stateChanged(ChangeEvent e) {
-		// TODO Auto-generated method stub
 
+		// TODO ist der aufwaendige Weg zurück zum Controller sinnvoll, nur weil so die
+		// Einheitlichkeit bewahrt wird?
 		int index = jslider.getValue();
-		
-		System.out.println(locationsOfBall.get(index).getxCoordinate());
-		
-		fieldPanel.setCoordinates(locationsOfBall.get(index).getxCoordinate(),
-				locationsOfBall.get(index).getyCoordinate());
+
+		fieldPanel.getBallPositionMainPanel().getBallPositionController().drawBallWithTimepoint(index);
 
 	}
 

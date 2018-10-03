@@ -9,8 +9,11 @@ public class BallPositionMainPanel extends JPanel {
 
 	FieldPanel fieldPanel;
 	SliderPanel sliderPanel;
+	
+	BallPositionController ballPositionController;
 
-	public BallPositionMainPanel() throws IOException {
+	public BallPositionMainPanel(BallPositionController ballPositionController) throws IOException {
+		this.ballPositionController = ballPositionController;
 		init();
 	}
 
@@ -40,6 +43,14 @@ public class BallPositionMainPanel extends JPanel {
 
 	public void setSliderPanel(SliderPanel sliderPanel) {
 		this.sliderPanel = sliderPanel;
+	}
+
+	public BallPositionController getBallPositionController() {
+		return ballPositionController;
+	}
+
+	public void setBallPositionController(BallPositionController ballPositionController) {
+		this.ballPositionController = ballPositionController;
 	}
 
 }

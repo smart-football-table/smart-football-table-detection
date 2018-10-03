@@ -10,10 +10,10 @@ public class FieldPanel extends JPanel {
 	private int x = -10;
 	private int y = -10;
 	
-	BallPositionMainPanel mainPanel;
+	BallPositionMainPanel ballPositionMainPanel;
 	
 	public FieldPanel(BallPositionMainPanel panelHolder) {
-		this.mainPanel = panelHolder;
+		this.ballPositionMainPanel = panelHolder;
 		init();
 		
 	}
@@ -41,8 +41,10 @@ public class FieldPanel extends JPanel {
 		
 		repaint();
 	}
-	
-	
+
+	public BallPositionMainPanel getBallPositionMainPanel() {
+		return ballPositionMainPanel;
+	}
 	
 
 }
