@@ -3,6 +3,7 @@ import cv2 as cv
 import argparse
 import imutils
 import time
+import os
 
 #well, comments instead of clean code. blame me (TODO)
 
@@ -87,7 +88,7 @@ while(True):
 
     #key for quit
     if cv.waitKey(1) & 0xFF == ord('q'):
-        file = open("ballMovementInCoordinates.txt","w")
+        file = open("../java-code/ballMovementInCoordinates.txt","w")
 
         pts.reverse()
 

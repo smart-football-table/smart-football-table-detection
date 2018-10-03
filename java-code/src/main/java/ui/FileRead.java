@@ -10,7 +10,7 @@ public class FileRead {
 
 	public List<LocationAtTimepoint> readFile() throws IOException {
 
-		FileReader fr = new FileReader("test.txt");
+		FileReader fr = new FileReader("ballMovementInCoordinates.txt");
 		BufferedReader br = new BufferedReader(fr);
 
 		String line = "";

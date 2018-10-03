@@ -25,7 +25,7 @@ public class FieldPanel extends JPanel {
 		g.setColor(Color.WHITE);
 		g.fillRect(0, 0, 2000, 2000);
 		g.setColor(Color.BLUE);
-		g.fillRect(x, y, 50, 50);
+		g.fillOval(x, y, 15, 15);
 
 	}
 
