@@ -5,12 +5,12 @@ import java.io.IOException;
 
 import javax.swing.JPanel;
 
-public class MainPanel extends JPanel {
+public class BallPositionMainPanel extends JPanel {
 
 	FieldPanel fieldPanel;
 	SliderPanel sliderPanel;
 
-	public MainPanel() throws IOException {
+	public BallPositionMainPanel() throws IOException {
 		init();
 	}
 

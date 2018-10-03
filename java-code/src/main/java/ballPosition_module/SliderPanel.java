@@ -14,9 +14,9 @@ public class SliderPanel extends JPanel{
 
 	JSlider timepoint;
 	
-	MainPanel mainPanel;
+	BallPositionMainPanel mainPanel;
 	
-	public SliderPanel(MainPanel panelHolder) throws IOException {
+	public SliderPanel(BallPositionMainPanel panelHolder) throws IOException {
 		this.mainPanel = panelHolder;
 		init();
 	}

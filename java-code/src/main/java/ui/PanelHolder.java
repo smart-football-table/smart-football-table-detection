@@ -1,15 +1,16 @@
 package ui;
 
-import java.awt.BorderLayout;
 import java.io.IOException;
 
-import javax.swing.JFrame;
+import javax.swing.JTabbedPane;
 
-import ballPosition_module.MainPanel;
+import ballPosition_module.BallPositionMainPanel;
+import possession_module.PossessionMainPanel;
 
-public class PanelHolder extends JFrame {
+public class PanelHolder extends JTabbedPane {
 
-	MainPanel mainPanel;
+	BallPositionMainPanel ballPositionMainPanel;
+	PossessionMainPanel possessionMainPanel;
 
 	public PanelHolder() throws IOException {
 		init();
@@ -17,16 +18,11 @@ public class PanelHolder extends JFrame {
 
 	private void init() throws IOException {
 
-		mainPanel = new MainPanel();
+		ballPositionMainPanel = new BallPositionMainPanel();
 		
-		this.setLayout(new BorderLayout());
-
-		this.add(mainPanel, BorderLayout.CENTER);
-
-		this.setSize(1200, 900);
-		this.setVisible(true);
-
-		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+		this.addTab("Ballposition", ballPositionMainPanel);
+		this.addTab("Ballbesitz", possessionMainPanel);
+		
 
 	}
 
