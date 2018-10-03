@@ -12,6 +12,12 @@ export class MatchComponent implements OnInit {
   ngOnInit() {
   }
 
-  match = 'OneMatch';
+  match: Match = {
+    id: 1,
+    date: '2018-19-05-12-30',
+    durationInSec: 300,
+    goalsHomeTeam: 6,
+    goalsGuestTeam: 3
+  };
 
 }
