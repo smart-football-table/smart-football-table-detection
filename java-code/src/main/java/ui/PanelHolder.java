@@ -7,77 +7,59 @@ import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
-public class PanelHolder extends JFrame{
+public class PanelHolder extends JFrame {
 
-	JPanel contentPanel;
+	FieldPanel fieldPanel;
 	JPanel sliderPanel;
-	
+
 	JSlider timepoint;
-	
-	
+
 	public PanelHolder() throws IOException {
 		init();
 	}
 
 	private void init() throws IOException {
-		
-		contentPanel = getContentPanel();
+
+		fieldPanel = new FieldPanel();
 		sliderPanel = getSliderPanel();
-		
-		
+
 		timepoint = getTimepoint();
-		
+
 		sliderPanel.add(timepoint, BorderLayout.CENTER);
-		
+
 		this.setLayout(new BorderLayout());
-		
-		this.add(contentPanel, BorderLayout.NORTH);
+
+		this.add(fieldPanel, BorderLayout.CENTER);
 		this.add(sliderPanel, BorderLayout.SOUTH);
-		
-		this.setSize(800, 600);
+
+		this.setSize(1200, 900);
 		this.setVisible(true);
-		
+
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
-		
+
 	}
-	
-	
 
 	public JSlider getTimepoint() throws IOException {
-		
-		if(timepoint == null) {
-			
-			
+
+		if (timepoint == null) {
+
 			FileRead fileRead = new FileRead();
 			List<LocationAtTimepoint> locationsOfBall = fileRead.readFile();
-			
-			timepoint = new JSlider(JSlider.HORIZONTAL,
-	                0, locationsOfBall.size(), 0);
 
-			timepoint.addChangeListener(new ChangeListener() {
-				
-				public void stateChanged(ChangeEvent e) {
-					// TODO Auto-generated method stub
-					
-				}
-			});
-			
+			timepoint = new JSlider(JSlider.HORIZONTAL, 0, locationsOfBall.size(), 0);
+
 			timepoint.setMajorTickSpacing(20);
 			timepoint.setMinorTickSpacing(1);
 			timepoint.setPaintTicks(true);
 			timepoint.setPaintLabels(true);
-			
+
+			timepoint.addChangeListener(new SliderChangeListener(fieldPanel, timepoint));
+
 		}
-		
-		
-		
+
 		return timepoint;
-		
-		
-		
+
 	}
 
 	public void setTimepoint(JSlider timepoint) {
@@ -85,11 +67,11 @@ public class PanelHolder extends JFrame{
 	}
 
 	public JPanel getSliderPanel() {
-		if(sliderPanel == null) {
+		if (sliderPanel == null) {
 			sliderPanel = new JPanel();
 			sliderPanel.setLayout(new BorderLayout());
 		}
-		
+
 		return sliderPanel;
 	}
 
@@ -97,23 +79,4 @@ public class PanelHolder extends JFrame{
 		this.sliderPanel = sliderPanel;
 	}
 
-	public void setContentPanel(JPanel contentPanel) {
-		this.contentPanel = contentPanel;
-	}
-
-	private JPanel getContentPanel() {
-		
-		if(contentPanel == null) {
-			contentPanel = new JPanel();
-		}
-		
-		return contentPanel;
-	
-	}
-	
-	
-	
-	
 }
-
-

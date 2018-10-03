@@ -4,7 +4,7 @@ public class LocationAtTimepoint {
 
 	int xCoordinate;
 	int yCoordinate;
-	long timepoint;
+	float timepoint;
 	
 	public LocationAtTimepoint() {
 		// TODO Auto-generated constructor stub
@@ -26,12 +26,12 @@ public class LocationAtTimepoint {
 		this.yCoordinate = yCoordinate;
 	}
 
-	public long getTimepoint() {
+	public float getTimepoint() {
 		return timepoint;
 	}
 
-	public void setTimepoint(long timepoint) {
-		this.timepoint = timepoint;
+	public void setTimepoint(float f) {
+		this.timepoint = f;
 	}
 	
 	

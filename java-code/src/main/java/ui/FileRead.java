@@ -19,7 +19,8 @@ public class FileRead {
 	    while( (line = br.readLine()) != null )
 	    {
 	    	
-	    	String[] substring = line.split("|");
+	    	
+	    	String[] substring = line.split("\\|");
 	    	
 	    	LocationAtTimepoint location = new LocationAtTimepoint();
 	    	setValuesFromLineInLocation(substring, location);
@@ -36,7 +37,7 @@ public class FileRead {
 
 	private void setValuesFromLineInLocation(String[] substring, LocationAtTimepoint location) {
 		location.setxCoordinate(Integer.parseInt(substring[1]));
-		location.setyCoordinate(Integer.parseInt(substring[1]));
-		location.setTimepoint(Long.parseLong(substring[1]));
+		location.setyCoordinate(Integer.parseInt(substring[2]));
+		location.setTimepoint(Float.parseFloat(substring[0]));
 	}
 }
