@@ -8,13 +8,13 @@ import java.util.List;
 
 public class FileRead {
 
-	public List readFile() throws IOException {
+	public List<LocationAtTimepoint> readFile() throws IOException {
 
 		FileReader fr = new FileReader("test.txt");
 		BufferedReader br = new BufferedReader(fr);
 
 		String line = "";
-		List locationsOfBall = new ArrayList<LocationAtTimepoint>();
+		List<LocationAtTimepoint> locationsOfBall = new ArrayList<LocationAtTimepoint>();
 
 	    while( (line = br.readLine()) != null )
 	    {

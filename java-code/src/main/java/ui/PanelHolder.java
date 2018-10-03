@@ -1,6 +1,8 @@
 package ui;
 
 import java.awt.BorderLayout;
+import java.io.IOException;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -16,11 +18,11 @@ public class PanelHolder extends JFrame{
 	JSlider timepoint;
 	
 	
-	public PanelHolder() {
+	public PanelHolder() throws IOException {
 		init();
 	}
 
-	private void init() {
+	private void init() throws IOException {
 		
 		contentPanel = getContentPanel();
 		sliderPanel = getSliderPanel();
@@ -44,11 +46,16 @@ public class PanelHolder extends JFrame{
 	
 	
 
-	public JSlider getTimepoint() {
+	public JSlider getTimepoint() throws IOException {
 		
 		if(timepoint == null) {
+			
+			
+			FileRead fileRead = new FileRead();
+			List<LocationAtTimepoint> locationsOfBall = fileRead.readFile();
+			
 			timepoint = new JSlider(JSlider.HORIZONTAL,
-	                0, 100, 50);
+	                0, locationsOfBall.size(), 0);
 
 			timepoint.addChangeListener(new ChangeListener() {
 				
@@ -58,7 +65,7 @@ public class PanelHolder extends JFrame{
 				}
 			});
 			
-			timepoint.setMajorTickSpacing(10);
+			timepoint.setMajorTickSpacing(20);
 			timepoint.setMinorTickSpacing(1);
 			timepoint.setPaintTicks(true);
 			timepoint.setPaintLabels(true);
