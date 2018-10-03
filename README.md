@@ -60,6 +60,8 @@
 
 ### Calculations for Camera (Logitech Webcam)
 
+not up-to-date (the numbers, of course, not the formulas :D)
+
 * Frame = 600px
 * Camera-Angle = 33.3985° (height) & 43.6028° (width)
 
