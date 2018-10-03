@@ -7,25 +7,17 @@ import javax.swing.JPanel;
 
 public class FieldPanel extends JPanel {
 
-	private int x = -10;
-	private int y = -10;
+	private int x = -1000;
+	private int y = -1000;
 	
 	BallPositionMainPanel ballPositionMainPanel;
 	
 	public FieldPanel(BallPositionMainPanel panelHolder) {
 		this.ballPositionMainPanel = panelHolder;
-		init();
-		
-	}
-
-	private void init() {
-		// TODO Auto-generated method stub
-
 	}
 
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
-
 		
 		g.setColor(Color.BLACK);
 		g.drawRect(100, 100, 800, 600);

@@ -8,7 +8,6 @@ import javax.swing.JTabbedPane;
 import ballPosition_module.BallPositionController;
 import ballPosition_module.BallPositionMainPanel;
 import possession_module.PossessionController;
-import possession_module.PossessionMainPanel;
 
 public class PanelHolder extends JTabbedPane {
 
