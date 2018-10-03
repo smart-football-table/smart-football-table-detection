@@ -66,6 +66,13 @@ while(True):
         center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]), time.time())
 
 
+		# only proceed if the radius meets a minimum size
+        if radius > 10:
+			# draw the circle and centroid on the frame,
+			# then update the list of tracked points
+            cv.circle(frame, (int(x), int(y)), int(radius), (255, 255, 255), 2)
+            cv.circle(frame, (center[0],center[1]), 5, (0, 0, 255), -1)
+
     # update the points queue
     pts.appendleft(center)
 
@@ -92,7 +99,7 @@ while(True):
 
         pts.reverse()
 
-        for i in range(0, len(pts)):
+        for i in range(2, len(pts)):
             file.write(repr(pts[i][2]) + "|" + repr(pts[i][0]) + "|" + repr(pts[i][1])+"\n")
 
         file.close()
