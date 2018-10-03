@@ -1,5 +1,6 @@
 # Smart football table
 
+
 ### Calculations for Camera (Logitech Webcam)
 
 * Frame = 600px
