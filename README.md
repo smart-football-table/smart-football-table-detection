@@ -1,5 +1,7 @@
 # Smart football table
 
+![logo](https://github.com/KingMus/smart-football-table/blob/master/SFT_Logo_small.png)
+
 ### TODO
 
 * correcting the dock solution (more like improving)
