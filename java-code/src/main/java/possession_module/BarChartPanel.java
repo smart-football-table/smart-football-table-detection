@@ -33,8 +33,6 @@ public class BarChartPanel extends JPanel {
 	}
 
 	public void drawBar(double possessionLeftSide) {
-
-		System.out.println(possessionLeftSide);
 		
 		lenghtBarLeftSideWidth = (int) (500*possessionLeftSide);
 		lenghtBarRightSideWidth = 500 - lenghtBarLeftSideWidth;
