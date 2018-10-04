@@ -37,6 +37,7 @@ public class BallPositionController {
 
 		int xPosition = locationsOfBall.get(index).getxCoordinate();
 		int yPosition = locationsOfBall.get(index).getyCoordinate();
+		
 		ballPositionMainPanel.getFieldPanel().setCoordinates(xPosition, yPosition);
 
 	}

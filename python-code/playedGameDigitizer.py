@@ -67,13 +67,15 @@ while(True):
 
 
 		# only proceed if the radius meets a minimum size
-        if radius > 10:
+        if radius > 1:
 			# draw the circle and centroid on the frame,
 			# then update the list of tracked points
             cv.circle(frame, (int(x), int(y)), int(radius), (255, 255, 255), 2)
             cv.circle(frame, (center[0],center[1]), 5, (0, 0, 255), -1)
 
     # update the points queue
+    if(center == None):
+        center = (-1, -1, time.time())
     pts.appendleft(center)
 
     if pts[0] is None or pts[1] is None:
