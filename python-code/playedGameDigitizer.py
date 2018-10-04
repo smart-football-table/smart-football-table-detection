@@ -20,8 +20,8 @@ frameSize = 800
 # define the lower and upper boundaries of the "green"
 # ball in the HSV color space, then initialize the
 # list of tracked points
-greenLower = (29, 86, 6)
-greenUpper = (64, 255, 255)
+greenLower = (20, 100,100)
+greenUpper = (30,255, 255)
 pts = deque(maxlen=20000)
 
 pts.appendleft((0, 0,time.time()))
