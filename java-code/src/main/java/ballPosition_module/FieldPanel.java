@@ -22,7 +22,6 @@ public class FieldPanel extends JPanel {
 		g.setColor(Color.BLACK);
 		g.drawRect(100, 20, 800, 600);
 
-		g.setColor(Color.BLUE);
 		if (x == -1 && y == -1) {
 			g.drawString("Kein Objekt erkannt", 410, 230);
 		} else {

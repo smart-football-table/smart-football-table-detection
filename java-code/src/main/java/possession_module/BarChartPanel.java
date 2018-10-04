@@ -27,8 +27,10 @@ public class BarChartPanel extends JPanel {
 
 		g.setColor(Color.RED);
 		g.fillRect(100, 100, lenghtBarLeftSideWidth, 50);
+		g.drawString("" + (double) lenghtBarLeftSideWidth/500, 100, 250);
 		g.setColor(Color.BLUE);
 		g.fillRect(100 + lenghtBarLeftSideWidth, 100, lenghtBarRightSideWidth, 50);
+		g.drawString("" + (double) lenghtBarRightSideWidth/500, 550, 250);
 
 	}
 
