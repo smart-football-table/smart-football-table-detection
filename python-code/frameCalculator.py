@@ -9,18 +9,8 @@ if __name__ == '__main__' :
     video.set(cv2.CAP_PROP_FRAME_WIDTH,160);
     video.set(cv2.CAP_PROP_FRAME_HEIGHT,120);
 
-    # Find OpenCV version
-    (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
-
-    # With webcam get(CV_CAP_PROP_FPS) does not work.
-    # Let's see for ourselves.
-
-    if int(major_ver)  < 3 :
-        fps = video.get(cv2.cv.CV_CAP_PROP_FPS)
-        print "Frames per second using video.get(cv2.cv.CV_CAP_PROP_FPS): {0}".format(fps)
-    else :
-        fps = video.get(cv2.CAP_PROP_FPS)
-        print "Frames per second using video.get(cv2.CAP_PROP_FPS) : {0}".format(fps)
+    fps = video.get(cv2.CAP_PROP_FPS)
+    print "Frames per second using video.get(cv2.CAP_PROP_FPS) : {0}".format(fps)
 
 
     # Number of frames to capture
