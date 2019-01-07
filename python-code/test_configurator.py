@@ -18,7 +18,9 @@ class test_configurator(unittest.TestCase):
 
         ballSizeInPixel = 30
 
-        self.assertEqual(configurator.getPixelPerCentimeter(ballSizeInPixel), 0.11)
+        configurator.calculatePixelPerCentimeter(ballSizeInPixel)
+
+        self.assertEqual(configurator.getPixelPerCentimeter(), 0.11)
 
     def test_calculateCorrectGameFieldSize(self):
 
@@ -33,9 +35,14 @@ class test_configurator(unittest.TestCase):
         ballPosition2_X = 650
         ballPosition2_Y = 650
 
-        self.assertEqual(configurator.getFieldLength(ballSizeInPixel, ballPosition1_X,  ballPosition2_X), 204)
-        self.assertEqual(configurator.getFieldWidth(ballSizeInPixel, ballPosition1_Y,  ballPosition2_Y), 197.2)
+        configurator.calculateFieldLength(ballSizeInPixel, ballPosition1_X,  ballPosition2_X)
+        configurator.calculateFieldWidth(ballSizeInPixel, ballPosition1_Y,  ballPosition2_Y)
 
+        self.assertEqual(configurator.getFieldLength(), 204)
+        self.assertEqual(configurator.getFieldWidth(), 197.2)
+
+
+# isnt able to configure color yet
 
 if __name__ == '__main__':
     unittest.main()
