@@ -13,7 +13,7 @@ lower = np.array([])
 upper = np.array([])
 
 
-camera = cv2.VideoCapture('output.avi')
+camera = cv2.VideoCapture(1)
 
 def click_and_crop(event, x, y, flags, param):
     # grab references to the global variables

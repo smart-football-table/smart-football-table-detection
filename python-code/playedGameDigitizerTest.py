@@ -1,10 +1,20 @@
 import unittest
-from testedPlayedGameDigitizer import *
+from playedGameDigitizer import *
+
 
 class MyOpenCVTest(unittest.TestCase):
+    
+    def testwriteOnePointInFile(self):
+        
+        pts = deque(maxlen=20000)
 
-    def test_hello(self):
-        self.assertEqual(hello_world(), "hello world")
+        pts.appendleft(0, 0, 100)
+        
+        writePositionsWithTimeInFile(pts)
+        
+        file = open("../java-code/ballMovementInCoordinates.txt")
+        
+        self.assertEqual(file.readline(), "0|0|100")
 
 
 if __name__ == '__main__':

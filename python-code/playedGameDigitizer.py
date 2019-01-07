@@ -20,8 +20,8 @@ frameSize = 800
 # define the lower and upper boundaries of the "green"
 # ball in the HSV color space, then initialize the
 # list of tracked points
-greenLower = (20, 100,100)
-greenUpper = (30,255, 255)
+greenLower = (0,5,40)
+greenUpper = (60,255, 255)
 pts = deque(maxlen=20000)
 
 pts.appendleft((0, 0,time.time()))
@@ -97,16 +97,25 @@ while(True):
 
     #key for quit
     if cv.waitKey(1) & 0xFF == ord('q'):
-        file = open("../java-code/ballMovementInCoordinates.txt","w")
+        
+        writePositionsWithTimeInFile(pts)
 
-        pts.reverse()
-
-        for i in range(2, len(pts)):
-            file.write(repr(pts[i][2]) + "|" + repr(pts[i][0]) + "|" + repr(pts[i][1])+"\n")
-
-        file.close()
         break
 
 # When everything done, release the capture
 cap.release()
 cv.destroyAllWindows()
+
+def writePositionsWithTimeInFile(points):
+    file = open("../java-code/ballMovementInCoordinates.txt","w")
+
+    points.reverse()
+    
+    xCoordinate = repr(pts[i][2])
+    yCoordinate = repr(pts[i][0])
+    time = repr(pts[i][1])
+
+    for i in range(2, len(pts)):
+        file.write(xCoordinate + "|" + yCoordinate + "|" + time +"\n")
+
+    file.close()
