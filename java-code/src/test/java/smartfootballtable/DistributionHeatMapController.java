@@ -5,26 +5,26 @@ import java.util.List;
 
 public class DistributionHeatMapController {
 
-	private List<Integer> fieldIdOfPositions = new ArrayList<Integer>();
+	private List<Integer> listOfHeatMapTileIDsOfPositions = new ArrayList<Integer>();
 
-	public void addPositionToField(int fieldNumber) {
-		fieldIdOfPositions.add(fieldNumber);
+	public void addPositionToHeatMapTile(int fieldNumber) {
+		listOfHeatMapTileIDsOfPositions.add(fieldNumber);
 
 	}
 
-	public double getDistributionInPercentOfField(int fieldNumber) {
+	public double getDistributionInPercentOfHeatMapTile(int heatMapTileID) {
 
 		double sum = 0;
 
-		for (Integer fieldIdOfPosition : fieldIdOfPositions) {
+		for (Integer heatMapTileIDOfPosition : listOfHeatMapTileIDsOfPositions) {
 
-			if (fieldNumber == fieldIdOfPosition) {
+			if (heatMapTileID == heatMapTileIDOfPosition) {
 				sum++;
 			}
 
 		}
 
-		return (sum / fieldIdOfPositions.size()) * 100;
+		return (sum / listOfHeatMapTileIDsOfPositions.size()) * 100;
 	}
 
 }

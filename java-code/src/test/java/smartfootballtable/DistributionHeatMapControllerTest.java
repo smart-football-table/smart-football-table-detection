@@ -8,25 +8,25 @@ import org.junit.Test;
 public class DistributionHeatMapControllerTest {
 
 	@Test
-	public void settingOnePositionInField_shouldHaveDistributionOfOneHundredPercent() {
+	public void settingOnePositionInHeatMapTile_shouldHaveDistributionOfOneHundredPercent() {
 
 		DistributionHeatMapController distController = new DistributionHeatMapController();
 
-		distController.addPositionToField(1);
+		distController.addPositionToHeatMapTile(1);
 
-		assertThat(distController.getDistributionInPercentOfField(1), is(100.0));
+		assertThat(distController.getDistributionInPercentOfHeatMapTile(1), is(100.0));
 	}
 
 	@Test
-	public void settingOnePositionInTwoFields_shouldHaveDistributionOfFiftyPercentInEachField() {
+	public void settingOnePositionInTwoHeatMapTiles_shouldHaveDistributionOfFiftyPercentInEachHeatMapTile() {
 
 		DistributionHeatMapController distController = new DistributionHeatMapController();
 
-		distController.addPositionToField(1);
-		distController.addPositionToField(2);
+		distController.addPositionToHeatMapTile(1);
+		distController.addPositionToHeatMapTile(2);
 
-		assertThat(distController.getDistributionInPercentOfField(1), is(50.0));
-		assertThat(distController.getDistributionInPercentOfField(2), is(50.0));
+		assertThat(distController.getDistributionInPercentOfHeatMapTile(1), is(50.0));
+		assertThat(distController.getDistributionInPercentOfHeatMapTile(2), is(50.0));
 	}
 
 }
