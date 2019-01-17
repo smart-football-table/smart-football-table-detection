@@ -1,10 +1,12 @@
 package smartfootballtable;
 
+import java.util.Date;
+
 public class BallPosition {
 
 	private int xCoordinate;
 	private int yCoordinate;
-	private double timepoint;
+	private Date timepoint;
 	
 	public int getXCoordinate() {
 		return xCoordinate;
@@ -22,11 +24,11 @@ public class BallPosition {
 		this.yCoordinate = yCoordinate;
 	}
 
-	public void setTimepoint(double timepoint) {
-		this.timepoint = timepoint;
+	public void setTimepoint(long timepoint) {
+		this.timepoint = new Date(timepoint);
 	}
 
-	public double getTimepoint() {
+	public Date getTimepoint() {
 		return timepoint;
 	}
 

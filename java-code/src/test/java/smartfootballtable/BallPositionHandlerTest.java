@@ -20,7 +20,7 @@ public class BallPositionHandlerTest {
 	@Test
 	public void positionAsStringShouldBeTransferedCorrectlyIntoModel() {
 
-		String string = "1546885301.664638|100|200";
+		String string = "1541664638|100|200";
 
 		BallPositionHandler positionHandler = new BallPositionHandler();
 		
@@ -28,13 +28,14 @@ public class BallPositionHandlerTest {
 
 		assertThat(ballPosition.getXCoordinate(), is(100));
 		assertThat(ballPosition.getYCoordinate(), is(200));
-		assertThat(ballPosition.getTimepoint(), is(1546885301.664638));
+		
+		assertThat(String.valueOf(ballPosition.getTimepoint().getTime()), is("1541664638"));
 	}
 	
 	@Test
 	public void anotherPositionAsStringShouldBeTransferedCorrectlyIntoModel() {
 
-		String string = "123523.2348|999|111";
+		String string = "1235232348|999|111";
 
 		BallPositionHandler positionHandler = new BallPositionHandler();
 		
@@ -42,7 +43,7 @@ public class BallPositionHandlerTest {
 
 		assertThat(ballPosition.getXCoordinate(), is(999));
 		assertThat(ballPosition.getYCoordinate(), is(111));
-		assertThat(ballPosition.getTimepoint(), is(123523.2348));
+		assertThat(String.valueOf(ballPosition.getTimepoint().getTime()), is("1235232348"));
 	}
 
 }

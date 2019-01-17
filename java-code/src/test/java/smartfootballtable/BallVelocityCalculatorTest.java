@@ -22,7 +22,7 @@ public class BallVelocityCalculatorTest {
 		position2.setXCoordinate(10);
 		position2.setYCoordinate(0);
 
-		assertThat(ballVelocityCaluclator.getDistanceInMillimeterBetween(position1, position2), CoreMatchers.is(100.0));
+		assertThat(ballVelocityCaluclator.getDistanceInCentimeterBetween(position1, position2), CoreMatchers.is(10.0));
 
 	}
 
@@ -39,9 +39,37 @@ public class BallVelocityCalculatorTest {
 		position2.setXCoordinate(10);
 		position2.setYCoordinate(10);
 
-		assertThat(ballVelocityCaluclator.getDistanceInMillimeterBetween(position1, position2),
-				CoreMatchers.is(141.42));
+		
+		// d = root( (Bx - Ax)² + (By - Ay)² ) 
+		assertThat(ballVelocityCaluclator.getDistanceInCentimeterBetween(position1, position2),
+				CoreMatchers.is(14.142));
 
 	}
+	
+	@Test
+	public void calculateCorrectVelocityWithSimpleData() {
+
+		BallVelocityCalculator ballVelocityCaluclator = new BallVelocityCalculator();
+
+		BallPosition position1 = new BallPosition();
+		position1.setXCoordinate(0);
+		position1.setYCoordinate(0);
+		position1.setTimepoint(1546300800);
+
+		BallPosition position2 = new BallPosition();
+		position2.setXCoordinate(0);
+		position2.setYCoordinate(100);
+		position2.setTimepoint(1546300801);
+
+		//v = s/t
+		assertThat(ballVelocityCaluclator.calculateVelocityInMeterPerSecond(position1, position2),
+				CoreMatchers.is(1.0));
+		
+		assertThat(ballVelocityCaluclator.calculateVelocityInKilometerPerHour(position1, position2),
+				CoreMatchers.is(3.6));
+
+	}
+	
+	
 
 }

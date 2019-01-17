@@ -11,7 +11,7 @@ public class BallPositionHandler {
 		ballPosition.setXCoordinate(getValueFromString(values[1]));
 		ballPosition.setYCoordinate(getValueFromString(values[2]));
 		
-		ballPosition.setTimepoint(Double.parseDouble(values[0]));
+		ballPosition.setTimepoint(Long.parseLong(values[0]));
 		
 		return ballPosition;
 	}
