@@ -3,8 +3,18 @@ package smartfootballtable;
 public class BallVelocityCalculator {
 
 	public double getDistanceInCentimeterBetween(BallPosition position1, BallPosition position2) {
-		return (Math.floor(((Math.sqrt(Math.pow((position2.getXCoordinate() - position1.getXCoordinate()), 2)
-				+ Math.pow((position2.getYCoordinate() - position1.getYCoordinate()), 2))) * 10) * 100) / 100) /10;
+		
+		double pos1xMinusPos2x = position2.getXCoordinate() - position1.getXCoordinate();
+		double pos1yMinusPos2y = position2.getYCoordinate() - position1.getYCoordinate();
+		
+		double result = Math.pow(pos1xMinusPos2x, 2)
+				+ Math.pow(pos1yMinusPos2y, 2);
+		
+		double resultAfterRoot = Math.sqrt(result);
+		
+		double resultRounded = Math.floor(resultAfterRoot * 100) / 100;
+		
+		return resultRounded;
 	}
 
 	public double calculateVelocityInMeterPerSecond(BallPosition position1, BallPosition position2) {

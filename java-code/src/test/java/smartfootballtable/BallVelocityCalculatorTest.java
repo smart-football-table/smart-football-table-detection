@@ -42,8 +42,8 @@ public class BallVelocityCalculatorTest {
 		
 		// d = root( (Bx - Ax)² + (By - Ay)² ) 
 		assertThat(ballVelocityCaluclator.getDistanceInCentimeterBetween(position1, position2),
-				CoreMatchers.is(14.142));
-
+				CoreMatchers.is(14.14));
+		
 	}
 	
 	@Test
