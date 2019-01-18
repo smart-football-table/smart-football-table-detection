@@ -2,16 +2,6 @@
 
 ![logo](https://github.com/KingMus/smart-football-table/blob/master/SFT_Logo_small.png)
 
-### TODO
-
-* correcting the dock solution (more like improving)
-* testing on table
-* improving flexibility
-    * frame size
-    * kicker size (maybe small stickers table for detection)
-    * camera
-* adding and improving modules
-
 ### Ideas to implement
 
 ###### Spielerbezogen
