@@ -98,24 +98,20 @@ while(True):
     #key for quit
     if cv.waitKey(1) & 0xFF == ord('q'):
 
-        writePositionsWithTimeInFile(pts)
+        file = open("../java-code/ballMovementInCoordinates.txt","w")
 
+        pts.reverse()
+
+        for i in range(2, len(pts)):
+            xCoordinate = repr(pts[i][2])
+            yCoordinate = repr(pts[i][0])
+            timepoint = repr(pts[i][1])
+
+            file.write(xCoordinate + "|" + yCoordinate + "|" + timepoint +"\n")
+
+        file.close()
         break
 
 # When everything done, release the capture
 cap.release()
 cv.destroyAllWindows()
-
-def writePositionsWithTimeInFile(points):
-    file = open("../java-code/ballMovementInCoordinates.txt","w")
-
-    points.reverse()
-
-    xCoordinate = repr(pts[i][2])
-    yCoordinate = repr(pts[i][0])
-    time = repr(pts[i][1])
-
-    for i in range(2, len(pts)):
-        file.write(xCoordinate + "|" + yCoordinate + "|" + time +"\n")
-
-    file.close()
