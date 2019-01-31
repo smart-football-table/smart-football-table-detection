@@ -6,6 +6,10 @@
 
 ![arc](https://github.com/KingMus/smart-football-table/blob/master/docs/SmartFootballTable_Architecture.png)
 
+## Shortcut: --> Kicker-Maße
+
+![werte](https://github.com/KingMus/smart-football-table/blob/master/docs/kicker_werte.jpg)
+
 ### Ideas to implement
 
 ###### Spielerbezogen
