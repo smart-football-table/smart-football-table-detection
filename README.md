@@ -2,6 +2,10 @@
 
 ![logo](https://github.com/KingMus/smart-football-table/blob/master/SFT_Logo_small.png)
 
+## Shortcut: --> Architecture
+
+![arc](https://github.com/KingMus/smart-football-table/blob/master/docs/SmartFootballTable_Architecture.png)
+
 ### Ideas to implement
 
 ###### Spielerbezogen
@@ -48,7 +52,7 @@
   * nach einmaliger Anmeldung mittels NFC Chip am Kicker anmelden (Positionsbezogen)
   * daraus Statistiken erstellen (s.o.)
 
-### Calculations for Camera (Logitech Webcam)
+### Calculations for Camera (Logitech Webcam) --- old
 
 not up-to-date (the numbers, of course, not the formulas :D)
 
