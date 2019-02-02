@@ -19,6 +19,10 @@ also:
 
 1. Kamera mit hoeherem Alpha
 2. Gestellhoehe h anpassen
+* auf 881mm für Kindect V1 (wenn ganzes Feld)
+* auf 580mm für Kinect V1 (wenn halbes Feld, dafür zwei Cams)
+* auf 1350mm für Logitech C270 (wenn ganzes Feld)
+* auf 889mm für Loigtech C270 (wenn halbes Feld, dafür zwei Cams)
 
 <hr>
 
