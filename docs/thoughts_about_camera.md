@@ -19,10 +19,10 @@ also:
 
 1. Kamera mit hoeherem Alpha
 2. Gestellhoehe h anpassen
-* auf 881mm für Kindect V1 (wenn ganzes Feld)
-* auf 580mm für Kinect V1 (wenn halbes Feld, dafür zwei Cams)
-* auf 1350mm für Logitech C270 (wenn ganzes Feld)
-* auf 889mm für Loigtech C270 (wenn halbes Feld, dafür zwei Cams)
+* auf 881mm fuer Kindect V1 (wenn ganzes Feld)
+* auf 580mm fuer Kinect V1 (wenn halbes Feld, dafuer zwei Cams)
+* auf 1350mm fuer Logitech C270 (wenn ganzes Feld)
+* auf 889mm fuer Loigtech C270 (wenn halbes Feld, dafuer zwei Cams)
 
 <hr>
 
@@ -76,7 +76,7 @@ Moeglichkeiten (noch zu pruefen):
 
 ###### Notiz: faellt fast zu hunderprozent aus der Betrachtung raus
 
-### Kameras. die gekauft werden muessten:
+### Kameras, die gekauft werden muessten:
 
 #### GoPro Hero 7 Black
 
@@ -87,7 +87,7 @@ Moeglichkeiten (noch zu pruefen):
 [GoPro-API Python](https://pypi.org/project/goprocam/) <br>
 [Use GoPro with OpenCV](https://stackoverflow.com/questions/36112313/how-connect-my-gopro-hero-4-camera-live-stream-to-opencv-using-python) <br>
 
-###### Notiz: folgende Fragen muessten beantwortet werden: kann die GoPro ohne Probleme angesteuert werden (siehe Links) und braucht man für die erhoehte Datenmenge mehr Leistung bzw. kann ueberhaupt mit maximalen Einstellungen uebertragen werden.
+###### Notiz: folgende Fragen muessten beantwortet werden: kann die GoPro ohne Probleme angesteuert werden (siehe Links) und braucht man fuer die erhoehte Datenmenge mehr Leistung bzw. kann ueberhaupt mit maximalen Einstellungen uebertragen werden.
 
 #### Genius F100 Widecam
 
