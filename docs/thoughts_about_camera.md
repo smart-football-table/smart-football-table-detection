@@ -1,4 +1,4 @@
-# Situation Sichtfeld
+# Situation: Sichtfeld
 
 Gestellhoehe h = 540mm oder 620mm (je nach Aufstellung). <br>
 Kickerfeld Breite b * Laenge l --> b = 680mm, l = 1195mm. <br>
@@ -12,7 +12,7 @@ Berechnung des benoetigten Kamerasichtfeld-Winkel alpha (diagonal) mit diesen We
 
 Welchen alpha haben die aktuellen Kameras (gemessen):
 
-Kinect V1 - 76°
+Kinect V1 - 76° <br>
 Logitech C270 - 54°
 
 also:
@@ -22,7 +22,7 @@ also:
 
 <hr>
 
-# Situation Bilder pro Sekunde
+# Situation: Bilder pro Sekunde
 
 Maximale Ballgeschwindigkeit laut SAP bei 45 km/h, laut diverser Foren um die 60 km/h.
 
@@ -48,11 +48,11 @@ Aber: kuerzeste Schussstrecke ist von Stange A bis zur Nachbarstange bei Block (
 
 # Resultat: Anforderungen an Kamera
 
-Bestenfalls: Sichtfeld = >96° & Framerate = 90fps
+#### Bestenfalls: Sichtfeld = >96° & Framerate = 90fps
 
 Moeglichkeiten (noch zu pruefen):
 
-## vorhanden
+### vorhandene Kameras:
 
 #### Kinect V1 (and V2)
 
@@ -63,16 +63,16 @@ Moeglichkeiten (noch zu pruefen):
 [Pretty good detection of ball](https://vvvv.org/contribution/kinect-hitboxes-dx11) --> [video](https://www.youtube.com/watch?v=I9TyfeeTKFk&feature=youtu.be&t=32) <br>
 [Precision Comparison V1 and V2, also some good details](https://www.dfki.de/fileadmin/user_upload/import/8767_wasenmuller2016comparison.pdf) <br>
 
-###### man muesste definitv Gestellhoehe h anpassen, außerdem sollte ueber die Framerate nachgedacht werden. Unsicher ist auch, welchen Mehrwert die Tiefenerkennung bietet.
+###### Notiz: man muesste definitv Gestellhoehe h anpassen, außerdem sollte ueber die Framerate nachgedacht werden. Unsicher ist auch, welchen Mehrwert die Tiefenerkennung bietet.
 
 #### Logitech C270
 
 * Sichtfeld = 54°
 * Framerate = von Haus aus 15fps, scheinbar aber softwareseitig (und laut Hersteller) auf 30fps aufskalierbar
 
-###### faellt fast zu hunderprozent aus der Betrachtung raus
+###### Notiz: faellt fast zu hunderprozent aus der Betrachtung raus
 
-## muesste gekauft werden
+### Kameras. die gekauft werden muessten:
 
 #### GoPro Hero 7 Black
 
@@ -83,7 +83,7 @@ Moeglichkeiten (noch zu pruefen):
 [GoPro-API Python](https://pypi.org/project/goprocam/) <br>
 [Use GoPro with OpenCV](https://stackoverflow.com/questions/36112313/how-connect-my-gopro-hero-4-camera-live-stream-to-opencv-using-python) <br>
 
-###### folgende Fragen muessten beantwortet werden: kann die GoPro ohne Probleme angesteuert werden (siehe Links) und braucht man für die erhoehte Datenmenge mehr Leistung bzw. kann ueberhaupt mit maximalen Einstellungen uebertragen werden.
+###### Notiz: folgende Fragen muessten beantwortet werden: kann die GoPro ohne Probleme angesteuert werden (siehe Links) und braucht man für die erhoehte Datenmenge mehr Leistung bzw. kann ueberhaupt mit maximalen Einstellungen uebertragen werden.
 
 #### Genius F100 Widecam
 
@@ -93,8 +93,8 @@ Moeglichkeiten (noch zu pruefen):
 
 [Amazon](https://www.amazon.de/Genius-32200213101-F100-Widecam/dp/B0080CE5M4/ref=sr_1_fkmr0_1?ie=UTF8&qid=1549121342&sr=8-1-fkmr0&keywords=Genius+120-degree+Ultra+Wide+Angle+Full+HD+Conference+Webcam%28WideCam+F100%29)
 
-###### an sich ja gutes Sichtfeld, aber schlechte Bewertungen im Bezug auf Fokus und Framerate. Dafuer guenstig.
+###### Notiz: an sich ja gutes Sichtfeld, aber schlechte Bewertungen im Bezug auf Fokus und Framerate. Dafuer guenstig.
 
-## Vergleiche/Tests:
+### Vergleiche/Tests:
 
 [All Top Logitech Cams](https://addpipe.com/blog/top-logitech-webcams-compared/)
