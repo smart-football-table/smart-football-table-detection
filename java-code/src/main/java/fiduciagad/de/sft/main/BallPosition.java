@@ -8,6 +8,12 @@ public class BallPosition {
 	private int yCoordinate;
 	private Date timepoint;
 	
+	public BallPosition(int xCoordinate, int yCoordinate, Date timepoint) {
+		this.xCoordinate = xCoordinate;
+		this.yCoordinate = yCoordinate;
+		this.timepoint = timepoint;
+	}
+
 	public int getXCoordinate() {
 		return xCoordinate;
 	}
