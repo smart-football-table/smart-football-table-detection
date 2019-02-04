@@ -1,14 +1,16 @@
 # Smart football table
 
-![logo](https://github.com/KingMus/smart-football-table/blob/master/SFT_Logo_small.png)
+![logo](https://github.com/KingMus/smart-football-table/blob/master/docs/logo/SFT_Logo_small.png)
+
+## Shortcut: --> [Kamera-Gedanken](https://github.com/KingMus/smart-football-table/blob/master/docs/calculations/situation_fov_fps_camera.md)
 
 ## Shortcut: --> Architecture
 
-![arc](https://github.com/KingMus/smart-football-table/blob/master/docs/SmartFootballTable_Architecture.png)
+![arc](https://github.com/KingMus/smart-football-table/blob/master/docs/architecture/SmartFootballTable_Architecture.png)
 
 ## Shortcut: --> Kicker-Maße
 
-![werte](https://github.com/KingMus/smart-football-table/blob/master/docs/kicker_werte.jpg)
+![werte](https://github.com/KingMus/smart-football-table/blob/master/docs/calculations/kicker_werte.jpg)
 
 ### Ideas to implement
 
