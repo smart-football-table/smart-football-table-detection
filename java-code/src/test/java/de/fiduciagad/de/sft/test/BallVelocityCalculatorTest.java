@@ -1,6 +1,6 @@
 package de.fiduciagad.de.sft.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;

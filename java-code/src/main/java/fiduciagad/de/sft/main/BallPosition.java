@@ -14,6 +14,9 @@ public class BallPosition {
 		this.timepoint = timepoint;
 	}
 
+	public BallPosition() {
+	}
+
 	public int getXCoordinate() {
 		return xCoordinate;
 	}

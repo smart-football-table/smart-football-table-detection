@@ -5,14 +5,15 @@ import static org.junit.Assert.assertThat;
 
 import java.util.Date;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import fiduciagad.de.sft.main.BallPosition;
 
 public class GoalDetectorTest {
 
-	private int xMaxOfGame = 1000;
-	private int yMaxOfGame = 500;
+	private int xMaxOfGame = 200;
+	private int yMaxOfGame = 50; // put them elsewhere
 
 	BallPosition ballPosition_t;
 	BallPosition ballPosition_tMinus1;
@@ -35,6 +36,112 @@ public class GoalDetectorTest {
 		GoalDetector goalDetector = new GoalDetector();
 
 		assertThat(goalDetector.isThereAGoal(ballPosition_t, ballPosition_tMinus1, ballPosition_tMinus2), is(false));
+
+	}
+
+	@Test
+	public void gettingThreePositionsWhereLatestIsMissingOnGoalSideIsAGoal() {
+
+		String gameField = // field with 20x5, each one is 10 pixel (200*50)
+				"----------------------," + //
+						"|00000000000000000000|," + //
+						"-00000000000000000000-," + //
+						" 00000000000000001020 ," + //
+						"-00000000000000000000-," + //
+						"|00000000000000000000|," + //
+						"----------------------";
+
+		initalizeBallPositionsFrom(gameField);
+
+		GoalDetector goalDetector = new GoalDetector();
+
+		assertThat(goalDetector.isThereAGoal(ballPosition_t, ballPosition_tMinus1, ballPosition_tMinus2), is(true));
+
+	}
+
+	@Ignore // TODO: add global config file with field coordiates (neccessary for the
+			// following calculations)
+	@Test
+	public void gettingThreePositionsWhereLatestIsMissingSomewhereElseIsntAGoal() {
+
+		String gameField = // field with 20x5, each one is 10 pixel (200*50)
+				"----------------------," + //
+						"|00000000000000000000|," + //
+						"-00000000000000000000-," + //
+						" 00000000010000000000 ," + //
+						"-00000000000000000000-," + //
+						"|00000000020000000000|," + //
+						"----------------------";
+
+		initalizeBallPositionsFrom(gameField);
+
+		GoalDetector goalDetector = new GoalDetector();
+
+		assertThat(goalDetector.isThereAGoal(ballPosition_t, ballPosition_tMinus1, ballPosition_tMinus2), is(false));
+
+	}
+
+	@Test
+	public void getCorrectSiteOfGoal_Right_StraightShot() {
+
+		String gameField = // field with 20x5, each one is 10 pixel (200*50)
+				"----------------------," + //
+						"|00000000000000000000|," + //
+						"-00000000000000000000-," + //
+						" 00000000000000001020 ," + //
+						"-00000000000000000000-," + //
+						"|00000000000000000000|," + //
+						"----------------------";
+
+		initalizeBallPositionsFrom(gameField);
+
+		GoalDetector goalDetector = new GoalDetector();
+
+		assertThat(goalDetector.whereHappendTheGoal(ballPosition_t, ballPosition_tMinus1, ballPosition_tMinus2),
+				is("on the right"));
+
+	}
+
+	@Test
+	public void getCorrectSiteOfGoal_Left_StraightShot() {
+
+		String gameField = // field with 20x5, each one is 10 pixel (200*50)
+				"----------------------," + //
+						"|00000000000000000000|," + //
+						"-00000000000000000000-," + //
+						" 02010000000000000000 ," + //
+						"-00000000000000000000-," + //
+						"|00000000000000000000|," + //
+						"----------------------";
+
+		initalizeBallPositionsFrom(gameField);
+
+		GoalDetector goalDetector = new GoalDetector();
+
+		assertThat(goalDetector.whereHappendTheGoal(ballPosition_t, ballPosition_tMinus1, ballPosition_tMinus2),
+				is("on the left"));
+
+	}
+
+	@Ignore // TODO: try to figure out how to detect this kind of shots the correct way
+	@Test
+	public void getCorrectSiteOfGoal_Right_BlockShot() {
+
+		String gameField = // field with 20x5, each one is 10 pixel (200*50)
+				"----------------------," + //
+						"|00000000000000000000|," + //
+						"-00000000000000000010-," + //
+						" 00000000000000000200 ," + //
+						"-00000000000000000000-," + //
+						"|00000000000000000000|," + //
+						"----------------------";
+
+		initalizeBallPositionsFrom(gameField);
+
+		GoalDetector goalDetector = new GoalDetector();
+
+		assertThat(goalDetector.whereHappendTheGoal(ballPosition_t, ballPosition_tMinus1, ballPosition_tMinus2),
+				is("on the right"));
 
 	}
 
@@ -64,6 +171,18 @@ public class GoalDetectorTest {
 				}
 
 			}
+		}
+
+		// set default: no position
+
+		if (ballPosition_tMinus2 == null) {
+			ballPosition_tMinus2 = new BallPosition(-1, -1, new Date());
+		}
+		if (ballPosition_tMinus1 == null) {
+			ballPosition_tMinus1 = new BallPosition(-1, -1, new Date());
+		}
+		if (ballPosition_t == null) {
+			ballPosition_t = new BallPosition(-1, -1, new Date());
 		}
 
 	}
