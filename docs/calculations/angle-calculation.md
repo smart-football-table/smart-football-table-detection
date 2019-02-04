@@ -1,3 +1,7 @@
+# Gegebene Maße des Kickerfeldes
+
+![Werte](https://github.com/KingMus/smart-football-table/blob/master/docs/calculations/kicker_werte.jpg)
+
 # Was fuer ein Sichtfeld wuerde benoetigt werden (fuer das gegebenen Kickerspielfeld)?
 
 ![angles-vert-hori](https://github.com/KingMus/smart-football-table/blob/master/docs/calculations/calculations_angle_hori_vert.JPG)
