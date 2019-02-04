@@ -1,4 +1,4 @@
-package de.fiduciagad.de.sft.test;
+package fiduciagad.de.sft.goaldetector;
 
 import fiduciagad.de.sft.main.BallPosition;
 

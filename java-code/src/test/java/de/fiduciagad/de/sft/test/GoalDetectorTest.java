@@ -8,6 +8,7 @@ import java.util.Date;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import fiduciagad.de.sft.goaldetector.GoalDetector;
 import fiduciagad.de.sft.main.BallPosition;
 
 public class GoalDetectorTest {
