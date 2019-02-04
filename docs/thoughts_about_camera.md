@@ -66,6 +66,7 @@ Moeglichkeiten (noch zu pruefen):
 [Precision of Depth Sensor](https://stackoverflow.com/questions/7696436/precision-of-the-kinect-depth-camera) <br>
 [Pretty good detection of ball](https://vvvv.org/contribution/kinect-hitboxes-dx11) --> [video](https://www.youtube.com/watch?v=I9TyfeeTKFk&feature=youtu.be&t=32) <br>
 [Precision Comparison V1 and V2, also some good details](https://www.dfki.de/fileadmin/user_upload/import/8767_wasenmuller2016comparison.pdf) <br>
+[Complete Comparison V1 and V2](https://www.researchgate.net/publication/299132365/figure/tbl1/AS:613865867989009@1523368436499/Comparison-between-Kinect-v1-and-Kinect-v2.png)
 
 ###### Notiz: man muesste definitv Gestellhoehe h anpassen, außerdem sollte ueber die Framerate nachgedacht werden. Unsicher ist auch, welchen Mehrwert die Tiefenerkennung bietet.
 
@@ -86,6 +87,7 @@ Moeglichkeiten (noch zu pruefen):
 
 [GoPro-API Python](https://pypi.org/project/goprocam/) <br>
 [Use GoPro with OpenCV](https://stackoverflow.com/questions/36112313/how-connect-my-gopro-hero-4-camera-live-stream-to-opencv-using-python) <br>
+[GoPro Hero 7 FoV](https://gopro.com/help/articles/question_answer/hero7-field-of-view-fov-information) <br>
 
 ###### Notiz: folgende Fragen muessten beantwortet werden: kann die GoPro ohne Probleme angesteuert werden (siehe Links) und braucht man fuer die erhoehte Datenmenge mehr Leistung bzw. kann ueberhaupt mit maximalen Einstellungen uebertragen werden.
 
