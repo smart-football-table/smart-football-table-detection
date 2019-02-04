@@ -1,4 +1,6 @@
-package smartfootballtable;
+package fiduciagad.de.sft.ballvelocity;
+
+import fiduciagad.de.sft.main.BallPosition;
 
 public class BallVelocityCalculator {
 

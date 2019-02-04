@@ -1,9 +1,12 @@
-package smartfootballtable;
+package de.fiduciagad.de.sft.test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
+
+import fiduciagad.de.sft.main.BallPosition;
+import fiduciagad.de.sft.main.BallPositionHandler;
 
 public class BallPositionHandlerTest {
 

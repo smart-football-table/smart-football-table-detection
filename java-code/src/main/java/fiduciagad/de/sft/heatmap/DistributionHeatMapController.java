@@ -1,4 +1,4 @@
-package smartfootballtable;
+package fiduciagad.de.sft.heatmap;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package smartfootballtable;
+package fiduciagad.de.sft.heatmap;
 
 public class HeatMapTileCalculator {
 

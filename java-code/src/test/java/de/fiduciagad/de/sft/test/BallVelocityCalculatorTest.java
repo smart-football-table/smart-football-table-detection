@@ -1,9 +1,12 @@
-package smartfootballtable;
+package de.fiduciagad.de.sft.test;
 
 import static org.junit.Assert.*;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
+
+import fiduciagad.de.sft.ballvelocity.BallVelocityCalculator;
+import fiduciagad.de.sft.main.BallPosition;
 
 public class BallVelocityCalculatorTest {
 

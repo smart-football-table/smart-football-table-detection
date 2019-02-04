@@ -1,4 +1,4 @@
-package smartfootballtable;
+package fiduciagad.de.sft.main;
 
 import java.util.Date;
 

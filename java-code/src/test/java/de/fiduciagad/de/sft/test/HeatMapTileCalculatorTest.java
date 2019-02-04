@@ -1,10 +1,12 @@
-package smartfootballtable;
+package de.fiduciagad.de.sft.test;
 
 import static org.junit.Assert.*;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import fiduciagad.de.sft.heatmap.HeatMapTileCalculator;
 
 public class HeatMapTileCalculatorTest {
 
