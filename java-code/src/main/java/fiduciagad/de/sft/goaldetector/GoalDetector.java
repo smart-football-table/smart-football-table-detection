@@ -29,7 +29,8 @@ public class GoalDetector {
 
 		double twentyPercentOfXMaxOfGameField = ConfiguratorValues.getXMaxOfGameField() * 0.2;
 		double xStartOfAreaWhereBallIsntBeforeAGoal = twentyPercentOfXMaxOfGameField;
-		double xEndOfAreaWhereBallIsntBeforeAGoal = ConfiguratorValues.getXMaxOfGameField() - twentyPercentOfXMaxOfGameField;
+		double xEndOfAreaWhereBallIsntBeforeAGoal = ConfiguratorValues.getXMaxOfGameField()
+				- twentyPercentOfXMaxOfGameField;
 
 		ballWasNotInFrontOfAGoal = xStartOfAreaWhereBallIsntBeforeAGoal < ballPosition_tMinus1.getXCoordinate()
 				&& ballPosition_tMinus1.getXCoordinate() < xEndOfAreaWhereBallIsntBeforeAGoal;
