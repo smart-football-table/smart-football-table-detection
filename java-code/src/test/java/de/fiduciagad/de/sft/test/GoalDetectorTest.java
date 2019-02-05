@@ -5,6 +5,7 @@ import static org.junit.Assert.assertThat;
 
 import java.util.Date;
 
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -13,12 +14,14 @@ import fiduciagad.de.sft.main.BallPosition;
 
 public class GoalDetectorTest {
 
-	private int xMaxOfGame = 200;
-	private int yMaxOfGame = 50; // put them elsewhere
-
 	BallPosition ballPosition_t;
 	BallPosition ballPosition_tMinus1;
 	BallPosition ballPosition_tMinus2;
+
+	@Before
+	public void initialize() {
+		FootballTable.setGameFieldSize(200, 50);
+	}
 
 	@Test
 	public void gettingThreePositionsMidfieldIsntAGoal() {
@@ -41,7 +44,7 @@ public class GoalDetectorTest {
 	}
 
 	@Test
-	public void gettingThreePositionsWhereLatestIsMissingOnGoalSideIsAGoal() {
+	public void gettingThreePositionsWhereLatestIsMissingOnGoalSideIsAGoalRight() {
 
 		String gameField = // field with 20x5, each one is 10 pixel (200*50)
 				"----------------------," + //
@@ -59,9 +62,29 @@ public class GoalDetectorTest {
 		assertThat(goalDetector.isThereAGoal(ballPosition_t, ballPosition_tMinus1, ballPosition_tMinus2), is(true));
 
 	}
+	
+	@Test
+	public void gettingThreePositionsWhereLatestIsMissingOnGoalSideIsAGoalLeft() {
 
-	@Ignore // TODO: add global config file with field coordiates (neccessary for the
-			// following calculations)
+		String gameField = // field with 20x5, each one is 10 pixel (200*50)
+				"----------------------," + //
+						"|00000000000000000000|," + //
+						"-00000000000000000000-," + //
+						" 02010000000000000000 ," + //
+						"-00000000000000000000-," + //
+						"|00000000000000000000|," + //
+						"----------------------";
+
+		initalizeBallPositionsFrom(gameField);
+
+		GoalDetector goalDetector = new GoalDetector();
+
+		assertThat(goalDetector.isThereAGoal(ballPosition_t, ballPosition_tMinus1, ballPosition_tMinus2), is(true));
+
+	}
+
+	// TODO: add global config file with field coordiates (neccessary for the
+	// following calculations)
 	@Test
 	public void gettingThreePositionsWhereLatestIsMissingSomewhereElseIsntAGoal() {
 
