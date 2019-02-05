@@ -20,7 +20,7 @@ public class GoalDetectorTest {
 
 	@Before
 	public void initialize() {
-		FootballTable.setGameFieldSize(200, 50);
+		ConfiguratorValues.setGameFieldSize(200, 50);
 	}
 
 	@Test
@@ -62,7 +62,7 @@ public class GoalDetectorTest {
 		assertThat(goalDetector.isThereAGoal(ballPosition_t, ballPosition_tMinus1, ballPosition_tMinus2), is(true));
 
 	}
-	
+
 	@Test
 	public void gettingThreePositionsWhereLatestIsMissingOnGoalSideIsAGoalLeft() {
 
@@ -83,8 +83,6 @@ public class GoalDetectorTest {
 
 	}
 
-	// TODO: add global config file with field coordiates (neccessary for the
-	// following calculations)
 	@Test
 	public void gettingThreePositionsWhereLatestIsMissingSomewhereElseIsntAGoal() {
 
