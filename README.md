@@ -1,6 +1,6 @@
 # Smart football table
 
-![logo](https://github.com/KingMus/smart-football-table/blob/master/docs/logo/SFT_Logo_small.png)
+![logo](https://github.com/KingMus/smart-football-table/blob/master/docs/logo/SFT_Logo_Color_small.png)
 
 ## Shortcut: --> [Kamera-Gedanken](https://github.com/KingMus/smart-football-table/blob/master/docs/calculations/situation_fov_fps_camera.md)
 
