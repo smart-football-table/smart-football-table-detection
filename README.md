@@ -53,10 +53,15 @@
   * Kameragröße/-höhe und dadurch reslutierend Framegröße
   * Tischkicker hinterlegen und einstellen
   * Buttons am Tischkicker für neues Spiel (Reset und Start) und Spiel beenden (Abschließen und Auswerten)
-  * LEDs oder so für visuelles Schmankerl
 * eigenes Spielerkonto
   * nach einmaliger Anmeldung mittels NFC Chip am Kicker anmelden (Positionsbezogen)
   * daraus Statistiken erstellen (s.o.)
+* LED-Leiste
+  * an Position des Balls heller leuchten
+  * bei Regelbruch Signallicht
+  * bei Ballbesitz in Teamfarbe
+  * bei Torgefahr Spannungslicht
+  * Visualisierung des Spielstandes
 
 ### Calculations for Camera (Logitech Webcam) --- old
 
