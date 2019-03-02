@@ -1,6 +1,8 @@
 package de.fiduciagad.de.sft.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
+
+import java.util.List;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
@@ -14,10 +16,12 @@ public class OpenCVHandlerTest {
 		
 		opencv.startPythonModule("test.py");
 		
-		String output = opencv.readConsole();
+		List<String> output = opencv.listenToOutput();
 		
-		assertThat(output, CoreMatchers.is("1"));
+		assertThat(output.size(), CoreMatchers.is(9));
+		assertThat(output.get(0), CoreMatchers.is("1"));
 		
 	}
+	
 
 }

@@ -2,17 +2,24 @@ package de.fiduciagad.de.sft.test;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.lang.ProcessBuilder.Redirect;
+import java.util.ArrayList;
+import java.util.List;
 
 public class OpenCVHandler {
 
 	private Process p;
 
 	public void startPythonModule(String string) {
-		ProcessBuilder pb = new ProcessBuilder("python "+string);
-		pb.redirectOutput(Redirect.INHERIT);
-		pb.redirectError(Redirect.INHERIT);
+
+		String path = System.getProperty("user.dir").replace('\\', '/');
+
+		ProcessBuilder pb = new ProcessBuilder("python", path + "/" + string);
+		pb.redirectOutput();
+		pb.redirectError();
 		try {
 			p = pb.start();
 		} catch (IOException e) {
@@ -20,23 +27,29 @@ public class OpenCVHandler {
 		}
 
 	}
+	//
+	// public static boolean isAlive(Process p) {
+	// try {
+	// p.exitValue();
+	// return false;
+	// } catch (IllegalThreadStateException e) {
+	// return true;
+	// }
+	// }
 
-	public String readConsole() {
-
+	public List<String> listenToOutput() {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-		StringBuilder builder = new StringBuilder();
 		String line = null;
+		List<String> result = new ArrayList<String>();
+
 		try {
 			while ((line = reader.readLine()) != null) {
-				builder.append(line);
-				builder.append(System.getProperty("line.separator"));
+				result.add(line);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		String result = builder.toString();
-
-		return "1";
+		return result;
 	}
 
 }
