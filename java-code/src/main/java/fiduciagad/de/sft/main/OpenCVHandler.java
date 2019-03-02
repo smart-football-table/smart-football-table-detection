@@ -27,17 +27,8 @@ public class OpenCVHandler {
 		}
 
 	}
-	//
-	// public static boolean isAlive(Process p) {
-	// try {
-	// p.exitValue();
-	// return false;
-	// } catch (IllegalThreadStateException e) {
-	// return true;
-	// }
-	// }
 
-	public List<String> listenToOutput() {
+	public List<String> getOpenCVOutputAsList() {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		String line = null;
 		List<String> result = new ArrayList<String>();
@@ -49,6 +40,7 @@ public class OpenCVHandler {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		result.remove(0); //remove first line which is a useless testline from python
 		return result;
 	}
 

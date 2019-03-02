@@ -25,7 +25,7 @@ public class BallPositionHandlerTest {
 
 		int xCoordinate = 100;
 		int yCoordinate = 200;
-		int timepoint = anyTimepoint();
+		String timepoint = anyTimepoint();
 
 		BallPositionHandler positionHandler = new BallPositionHandler();
 
@@ -35,17 +35,17 @@ public class BallPositionHandlerTest {
 		assertThat(ballPosition.getXCoordinate(), is(100));
 		assertThat(ballPosition.getYCoordinate(), is(200));
 
-		assertThat(String.valueOf(ballPosition.getTimepoint().getTime()), is("1541664638"));
+		assertThat(String.valueOf(ballPosition.getTimepoint().getTime()), is("154166463822"));
 	}
 
-	private int anyTimepoint() {
-		return 1541664638;
+	private String anyTimepoint() {
+		return "1541664638.22";
 	}
 
 	@Test
 	public void anotherPositionAsStringShouldBeTransferedCorrectlyIntoModel() {
 
-		String string = "1235232348|999|111";
+		String string = "1235232348.00|999|111";
 
 		BallPositionHandler positionHandler = new BallPositionHandler();
 
@@ -53,7 +53,7 @@ public class BallPositionHandlerTest {
 
 		assertThat(ballPosition.getXCoordinate(), is(999));
 		assertThat(ballPosition.getYCoordinate(), is(111));
-		assertThat(String.valueOf(ballPosition.getTimepoint().getTime()), is("1235232348"));
+		assertThat(String.valueOf(ballPosition.getTimepoint().getTime()), is("123523234800"));
 	}
 
 }
