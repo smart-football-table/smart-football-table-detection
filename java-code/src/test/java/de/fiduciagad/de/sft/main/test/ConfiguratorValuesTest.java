@@ -1,9 +1,11 @@
-package de.fiduciagad.de.sft.test;
+package de.fiduciagad.de.sft.main.test;
 
 import static org.junit.Assert.assertThat;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
+
+import fiduciagad.de.sft.main.ConfiguratorValues;
 
 public class ConfiguratorValuesTest {
 

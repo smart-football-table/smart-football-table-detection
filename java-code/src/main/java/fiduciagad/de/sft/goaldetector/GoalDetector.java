@@ -1,7 +1,7 @@
 package fiduciagad.de.sft.goaldetector;
 
-import de.fiduciagad.de.sft.test.ConfiguratorValues;
 import fiduciagad.de.sft.main.BallPosition;
+import fiduciagad.de.sft.main.ConfiguratorValues;
 
 public class GoalDetector {
 

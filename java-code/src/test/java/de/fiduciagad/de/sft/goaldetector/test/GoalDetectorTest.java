@@ -1,4 +1,4 @@
-package de.fiduciagad.de.sft.test;
+package de.fiduciagad.de.sft.goaldetector.test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import fiduciagad.de.sft.goaldetector.GoalDetector;
 import fiduciagad.de.sft.main.BallPosition;
+import fiduciagad.de.sft.main.ConfiguratorValues;
 
 public class GoalDetectorTest {
 

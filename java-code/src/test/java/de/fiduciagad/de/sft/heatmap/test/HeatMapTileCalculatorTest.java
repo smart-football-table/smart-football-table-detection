@@ -1,4 +1,4 @@
-package de.fiduciagad.de.sft.test;
+package de.fiduciagad.de.sft.heatmap.test;
 
 import static org.junit.Assert.*;
 

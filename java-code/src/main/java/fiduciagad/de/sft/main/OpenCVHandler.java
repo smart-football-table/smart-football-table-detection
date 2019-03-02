@@ -1,4 +1,4 @@
-package de.fiduciagad.de.sft.test;
+package fiduciagad.de.sft.main;
 
 import java.io.BufferedReader;
 import java.io.IOException;

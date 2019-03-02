@@ -1,4 +1,4 @@
-package de.fiduciagad.de.sft.test;
+package de.fiduciagad.de.sft.ballvelocity.test;
 
 import static org.junit.Assert.assertThat;
 
@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import fiduciagad.de.sft.ballvelocity.BallVelocityCalculator;
 import fiduciagad.de.sft.main.BallPosition;
+import fiduciagad.de.sft.main.ConfiguratorValues;
 
 public class BallVelocityCalculatorTest {
 
