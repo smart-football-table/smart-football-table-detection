@@ -13,10 +13,24 @@ public class GoalDetector {
 		}
 
 		if (newestBallPositionIsNotInGameField(ballPosition_t)) {
+
+			if (theOtherPositionsAreAlsoNotInGameField(ballPosition_tMinus1, ballPosition_tMinus2)) {
+				return false;
+			}
 			return true;
 		}
 
 		return false;
+	}
+
+	private boolean theOtherPositionsAreAlsoNotInGameField(BallPosition ballPosition_tMinus1,
+			BallPosition ballPosition_tMinus2) {
+
+		boolean pos1NotInField = ballPosition_tMinus1.getXCoordinate() == -1
+				&& ballPosition_tMinus1.getYCoordinate() == -1;
+		boolean pos2NotInField = ballPosition_tMinus2.getXCoordinate() == -1
+				&& ballPosition_tMinus2.getYCoordinate() == -1;
+		return pos1NotInField && pos2NotInField;
 	}
 
 	private boolean newestBallPositionIsNotInGameField(BallPosition ballPosition_t) {
@@ -35,7 +49,10 @@ public class GoalDetector {
 		ballWasNotInFrontOfAGoal = xStartOfAreaWhereBallIsntBeforeAGoal < ballPosition_tMinus1.getXCoordinate()
 				&& ballPosition_tMinus1.getXCoordinate() < xEndOfAreaWhereBallIsntBeforeAGoal;
 
-		return ballWasNotInFrontOfAGoal;
+		boolean ballWasNotInField = ballPosition_tMinus1.getXCoordinate() == -1
+				&& ballPosition_tMinus1.getYCoordinate() == -1;
+
+		return ballWasNotInFrontOfAGoal || ballWasNotInField;
 	}
 
 	public String whereHappendTheGoal(BallPosition ballPosition_t, BallPosition ballPosition_tMinus1,

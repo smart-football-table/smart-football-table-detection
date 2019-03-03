@@ -23,7 +23,67 @@ public class GoalDetectorTest {
 	public void initialize() {
 		ConfiguratorValues.setGameFieldSize(200, 50);
 	}
+	
+	@Test
+	public void gettingThreeTimesNoPositionIsntAGoal() {
 
+		String gameField = // field with 20x5, each one is 10 pixel (200*50)
+				"----------------------," + //
+						"|00000000000000000000|," + //
+						"-00000000000000000000-," + //
+						" 00000000000000000000 ," + //
+						"-00000000000000000000-," + //
+						"|00000000000000000000|," + //
+						"----------------------";
+
+		initalizeBallPositionsFrom(gameField);
+
+		GoalDetector goalDetector = new GoalDetector();
+
+		assertThat(goalDetector.isThereAGoal(ballPosition_t, ballPosition_tMinus1, ballPosition_tMinus2), is(false));
+
+	}
+	
+	@Test
+	public void gettingThirdPositionAndTheFirstTwoNotIsntAGoal() {
+
+		String gameField = // field with 20x5, each one is 10 pixel (200*50)
+				"----------------------," + //
+						"|00000000000000000000|," + //
+						"-00000000000000000000-," + //
+						" 03000000000000000000 ," + //
+						"-00000000000000000000-," + //
+						"|00000000000000000000|," + //
+						"----------------------";
+
+		initalizeBallPositionsFrom(gameField);
+
+		GoalDetector goalDetector = new GoalDetector();
+
+		assertThat(goalDetector.isThereAGoal(ballPosition_t, ballPosition_tMinus1, ballPosition_tMinus2), is(false));
+
+	}
+	
+	@Test
+	public void gettingThirdAndSecondPositionAndTheFirstOneNotIsntAGoal() {
+
+		String gameField = // field with 20x5, each one is 10 pixel (200*50)
+				"----------------------," + //
+						"|00000000000000000000|," + //
+						"-00000000000000000000-," + //
+						" 02030000000000000000 ," + //
+						"-00000000000000000000-," + //
+						"|00000000000000000000|," + //
+						"----------------------";
+
+		initalizeBallPositionsFrom(gameField);
+
+		GoalDetector goalDetector = new GoalDetector();
+
+		assertThat(goalDetector.isThereAGoal(ballPosition_t, ballPosition_tMinus1, ballPosition_tMinus2), is(false));
+
+	}
+	
 	@Test
 	public void gettingThreePositionsMidfieldIsntAGoal() {
 
@@ -103,7 +163,27 @@ public class GoalDetectorTest {
 		assertThat(goalDetector.isThereAGoal(ballPosition_t, ballPosition_tMinus1, ballPosition_tMinus2), is(false));
 
 	}
+	
+	@Test
+	public void gettingThreePositionsWhereLatestTwoAreMissingOnGoalSideIsAGoalRight() {
 
+		String gameField = // field with 20x5, each one is 10 pixel (200*50)
+				"----------------------," + //
+						"|00000000000000000000|," + //
+						"-00000000000000000000-," + //
+						" 00000000000000000010 ," + //
+						"-00000000000000000000-," + //
+						"|00000000000000000000|," + //
+						"----------------------";
+
+		initalizeBallPositionsFrom(gameField);
+
+		GoalDetector goalDetector = new GoalDetector();
+
+		assertThat(goalDetector.isThereAGoal(ballPosition_t, ballPosition_tMinus1, ballPosition_tMinus2), is(false));
+
+	}
+	
 	@Test
 	public void getCorrectSiteOfGoal_Right_StraightShot() {
 
@@ -145,7 +225,7 @@ public class GoalDetectorTest {
 				is("on the left"));
 
 	}
-
+	
 	@Ignore // TODO: try to figure out how to detect this kind of shots the correct way
 	@Test
 	public void getCorrectSiteOfGoal_Right_BlockShot() {
