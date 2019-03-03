@@ -4,14 +4,6 @@
 	<groupId>de.kingmus.smartfootballtable</groupId>
 	<artifactId>smartfootballtable</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<repositories>
-		<!-- org.rxtx:rxtx -->
-		<repository>
-			<id>opennms</id>
-			<name>OpenNMS Repository</name>
-			<url>http://repo.opennms.org/maven2</url>
-		</repository>
-	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
@@ -22,6 +14,12 @@
 			<groupId>org.eclipse.paho</groupId>
 			<artifactId>org.eclipse.paho.client.mqttv3</artifactId>
 			<version>1.2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>hu.blackbelt.bundles.moquette</groupId>
+			<artifactId>io.moquette</artifactId>
+			<version>0.11_1</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

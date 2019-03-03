@@ -6,6 +6,8 @@ import static org.junit.Assert.assertThat;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import fiduciagad.de.sft.main.Game;
+
 public class GameTest {
 
 	@Test

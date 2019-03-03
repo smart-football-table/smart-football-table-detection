@@ -1,12 +1,10 @@
-package de.fiduciagad.de.sft.main.test;
+package fiduciagad.de.sft.main;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import de.fiduciagad.de.sft.main.test.Team;
 import fiduciagad.de.sft.goaldetector.GoalDetector;
-import fiduciagad.de.sft.main.BallPosition;
-import fiduciagad.de.sft.main.BallPositionHandler;
-import fiduciagad.de.sft.main.OpenCVHandler;
 
 public class Game {
 
