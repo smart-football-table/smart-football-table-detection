@@ -40,7 +40,9 @@ public class Game {
 		BallPosition ballPosMinusOne;
 		BallPosition ballPos;
 		Setup setup = new Setup("localhost", 1883);
-
+		
+		setup.sendFoul();
+		
 		for (int i = 2; i < ballPositions.size(); i++) {
 
 			ballPosMinusTwo = ballPositions.get(i - 2);

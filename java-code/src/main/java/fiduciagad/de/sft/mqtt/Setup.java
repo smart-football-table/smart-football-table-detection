@@ -35,7 +35,8 @@ public class Setup implements Closeable {
 
 	public void sendIdle(String string) throws MqttPersistenceException, MqttException {
 
-		mqttClient.publish("idle", string.getBytes(), 0, false);
+		String finalString = "{\"idle\":["+string+"]}";
+		mqttClient.publish("idle", finalString.getBytes(), 0, false);
 
 	}
 
@@ -44,6 +45,13 @@ public class Setup implements Closeable {
 		String finalString = "{\"score\":["+string.split("-")[0]+","+string.split("-")[1]+"]}";
 		
 		mqttClient.publish("score", finalString.getBytes(), 0, false);
+		
+	}
+
+	public void sendFoul() throws MqttPersistenceException, MqttException {
+		
+		String empty = "";
+		mqttClient.publish("foul", empty.getBytes(), 0, false);
 		
 	}
 
