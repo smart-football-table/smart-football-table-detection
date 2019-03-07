@@ -2,6 +2,7 @@ package de.fiduciagad.de.sft.mqtt.test;
 
 import static io.moquette.BrokerConstants.HOST_PROPERTY_NAME;
 import static io.moquette.BrokerConstants.PORT_PROPERTY_NAME;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -63,8 +64,30 @@ public class SetupTest {
 
 	@Ignore
 	@Test
-	public void test() {
-		fail("Not yet implemented");
+	public void sendIdleMessage() throws MqttSecurityException, MqttException {
+
+		Setup setup = new Setup(LOCALHOST, brokerPort);
+
+		setup.sendIdle("true");
+
+		// TODO:
+
+		// assertThat(there is idle, matcher);
+
+	}
+
+	@Ignore
+	@Test
+	public void sendScoreMessage() throws MqttSecurityException, MqttException {
+
+		Setup setup = new Setup(LOCALHOST, brokerPort);
+
+		setup.sendScore("1-0");
+
+		// TODO:
+
+		// assertThat(there is score, matcher);
+
 	}
 
 	@After
