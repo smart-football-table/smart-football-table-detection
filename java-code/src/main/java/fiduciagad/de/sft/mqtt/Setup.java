@@ -43,7 +43,7 @@ public class Setup implements Closeable {
 		
 		String finalString = "{\"score\":["+string.split("-")[0]+","+string.split("-")[1]+"]}";
 		
-		mqttClient.publish("score", string.getBytes(), 0, false);
+		mqttClient.publish("score", finalString.getBytes(), 0, false);
 		
 	}
 
