@@ -27,7 +27,7 @@ pts = deque(maxlen=20000)
 pts.appendleft((0, 0,time.time()))
 pts.appendleft((0, 0,time.time()))
 
-cap = cv.VideoCapture(0)
+cap = cv.VideoCapture(1)
 # cap = cv.VideoCapture("udp://127.0.0.1:10000") for goPro
 
 cap.set(28,0)
