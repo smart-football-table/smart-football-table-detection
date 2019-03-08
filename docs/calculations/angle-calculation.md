@@ -1,15 +1,13 @@
-# Gegebene Maße des Kickerfeldes
+# Values of football table game field
 
 ![Werte](https://github.com/KingMus/smart-football-table/blob/master/docs/calculations/kicker_werte.jpg)
 
-# Was fuer ein Sichtfeld wuerde benoetigt werden (fuer das gegebenen Kickerspielfeld)?
+# Requirements for the field of view with the football table game field values:
 
 ![angles-vert-hori](https://github.com/KingMus/smart-football-table/blob/master/docs/calculations/calculations_angle_hori_vert.JPG)
 
 ![angles-diago](https://github.com/KingMus/smart-football-table/blob/master/docs/calculations/calculations_angle_diagonal.JPG)
 
-# Was haben die Kameras fuer ein Sichtfeld?
+# Calculations for camera
 
 ![angles-camera](https://github.com/KingMus/smart-football-table/blob/master/docs/calculations/calculations_fov_cameras.JPG)
-
-###### Formelgrundlage: Berechnung von Winkel alpha durch Halbierung des Dreiecks (und somit der Gegenkathete) um rechten Winkel im Dreieck zu gewinnen. Anschließend Verwendung von Tangens.
