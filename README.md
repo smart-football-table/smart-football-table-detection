@@ -2,22 +2,6 @@
 
 ![logo](https://github.com/KingMus/smart-football-table/blob/master/docs/logo/SFT_Logo_Color_small.png)
 
-## Einkaufen
-
-* Kamera
-* Rock64 + Zubehör
-  * Netzteil
-  * SD-Karte
-  * HDMI-Adapter
-  * +Ersatz
-* USB-Verlängerungskabel + Ersatz
-* Befestigung Hardware Brett
-* Tastatur (manueller Zugriff) (nur wenn auch Rock64)
-
-## Packen
-
-noch todo
-
 ## Shortcut: --> [Kamera-Gedanken](https://github.com/KingMus/smart-football-table/blob/master/docs/calculations/situation_fov_fps_camera.md)
 
 ## Shortcut: --> Architecture
