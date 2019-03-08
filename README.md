@@ -2,66 +2,62 @@
 
 ![logo](https://github.com/KingMus/smart-football-table/blob/master/docs/logo/SFT_Logo_Color_small.png)
 
-## Shortcut: --> [Kamera-Gedanken](https://github.com/KingMus/smart-football-table/blob/master/docs/calculations/situation_fov_fps_camera.md)
+## Shortcut: --> [Thoughts on camera](https://github.com/KingMus/smart-football-table/blob/master/docs/calculations/situation_fov_fps_camera.md)
 
 ## Shortcut: --> Architecture
 
 ![arc](https://github.com/KingMus/smart-football-table/blob/master/docs/architecture/SmartFootballTable_Architecture.png)
 
-## Shortcut: --> Kicker-Maße
+## Shortcut: --> Football Table values
 
 ![werte](https://github.com/KingMus/smart-football-table/blob/master/docs/calculations/kicker_werte.jpg)
 
 ### Ideas to implement
 
-* Wiederholung
-* Livebild
+###### general
 
-###### Spielerbezogen
+* configuration
+  * Camera size/height and the resulting frame size
+  * football table values
+  * Buttons on table kicker for new game (reset and start) and end game (close and evaluate)
+* own account
+  * after a single registration, register with the NFC chip at the kicker (position-related)
+  * create statistics (see above)
+* LED
+  * for possession of the ball in team colour
+  * goal seems to happen?
+* Replay of special events
+* Livestream of Video
 
-* Siege/Niederlage
-* Siege/Position
-* durschn. Ballbesitz
-* Tore nach Lokation/Figur
-* Schussgeschwindigkeit
-* gehaltene Bälle
-* Siege/anderer Spieler
-* Siege/Tageszeit
+###### related to player
+
+* Wins/Loss
+* Wins in combination with position
+* average ball possession
+* Goals in combination with position
+* shot velocity
+* prevented goals
+* Wins in combination with other player
+* Wins in combination with daytime
 * [...]
 
-###### Spielbezogen
+###### related to game
 
-* Ergebnis
-* Ballbesitz/Seite
-* Heatmap Ball
-* teilnehmende Spieler, Uhrzeit, ... (Metadaten)
-* Ballbesitz/Spieler
-* Ballbesitz pro Spielfigur
-* Tore von wo/wem
-* durschn. Ballgeschw.
-* gehaltene Bälle/Seite
+* Result
+* Ballpossession in combination with team
+* Heatmap
+* Metadata (which players, daytime)
+* Ballpossession in combination with player
+* Ballpossession in combination with soccer figure
+* Goals who/where
+* average ball velocity
+* prevented goals/site
 * [...]
 
-###### Kickerbezogen
+###### related football table
 
-* welche Farbe gewinnt öfter
-* durchschn. Ballgesch.
-* Tore von wo
-* Uhrzeit/Benutzung
-* Preis, Maße, ... (Metadaten)
-
-###### außerdem
-
-* Konfigurierkram
-  * Kameragröße/-höhe und dadurch reslutierend Framegröße
-  * Tischkicker hinterlegen und einstellen
-  * Buttons am Tischkicker für neues Spiel (Reset und Start) und Spiel beenden (Abschließen und Auswerten)
-* eigenes Spielerkonto
-  * nach einmaliger Anmeldung mittels NFC Chip am Kicker anmelden (Positionsbezogen)
-  * daraus Statistiken erstellen (s.o.)
-* LED-Leiste
-  * an Position des Balls heller leuchten
-  * bei Regelbruch Signallicht
-  * bei Ballbesitz in Teamfarbe
-  * bei Torgefahr Spannungslicht
-  * Visualisierung des Spielstandes
+* which team wins more often
+* average ball velocity
+* Goals in combination with position
+* when is played
+* Metadata (price, size values, ...)
