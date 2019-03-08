@@ -14,12 +14,15 @@
 
 ### Ideas to implement
 
+* Wiederholung
+* Livebild
+
 ###### Spielerbezogen
 
 * Siege/Niederlage
 * Siege/Position
 * durschn. Ballbesitz
-* Tore nach Lokation
+* Tore nach Lokation/Figur
 * Schussgeschwindigkeit
 * gehaltene Bälle
 * Siege/anderer Spieler
