@@ -1,4 +1,4 @@
-package de.fiduciagad.de.sft.main.test;
+package fiduciagad.de.sft.main;
 
 public class Team {
 

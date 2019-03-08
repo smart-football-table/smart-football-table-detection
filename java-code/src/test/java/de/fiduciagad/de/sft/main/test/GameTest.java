@@ -12,6 +12,7 @@ import fiduciagad.de.sft.main.Game;
 
 public class GameTest {
 
+	@Ignore
 	@Test
 	public void startAndStopAGame() {
 
@@ -26,6 +27,7 @@ public class GameTest {
 		assertThat(game.isOngoing(), is(false));
 	}
 	
+	@Ignore
 	@Test
 	public void gameStopsWhenDetectionEnds() throws MqttSecurityException, MqttException {
 
@@ -37,6 +39,7 @@ public class GameTest {
 		assertThat(game.isOngoing(), is(false));
 	}
 	
+	@Ignore
 	@Test
 	public void canSetScore() {
 
@@ -49,6 +52,7 @@ public class GameTest {
 		assertThat(game.getScoreAsString(), is("2-1"));
 	}
 	
+	@Ignore
 	@Test
 	public void canDetectGoalFromTestVideo() throws MqttSecurityException, MqttException {
 

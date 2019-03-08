@@ -8,7 +8,7 @@ public class Application {
 	public static void main(String[] args) throws MqttSecurityException, MqttException {
 		Game game = new Game();
 
-		game.setPythonModule("../python-code/playedGameDigitizer.py");
+		game.setPythonModule("playedGameDigitizer.py");
 		game.startTheDetection();
 	}
 

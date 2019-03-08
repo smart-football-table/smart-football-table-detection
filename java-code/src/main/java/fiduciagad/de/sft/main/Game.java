@@ -6,7 +6,6 @@ import java.util.List;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
-import de.fiduciagad.de.sft.main.test.Team;
 import fiduciagad.de.sft.goaldetector.GoalDetector;
 import fiduciagad.de.sft.mqtt.Setup;
 
@@ -40,9 +39,10 @@ public class Game {
 		BallPosition ballPosMinusOne;
 		BallPosition ballPos;
 		Setup setup = new Setup("localhost", 1883);
-		
+		setup.sendScore("0-0");
+
 		setup.sendFoul();
-		
+
 		for (int i = 2; i < ballPositions.size(); i++) {
 
 			ballPosMinusTwo = ballPositions.get(i - 2);
@@ -66,7 +66,6 @@ public class Game {
 		}
 
 		stop();
-		setup.sendIdle("true");
 
 	}
 

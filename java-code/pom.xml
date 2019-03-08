@@ -4,6 +4,12 @@
 	<groupId>de.kingmus.smartfootballtable</groupId>
 	<artifactId>smartfootballtable</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+
+	<properties>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
@@ -30,6 +36,9 @@
 				<artifactId>jib-maven-plugin</artifactId>
 				<version>1.0.1</version>
 				<configuration>
+					<from>
+						<image>opencvbase</image>
+					</from>
 					<container>
 						<mainClass>fiduciagad.de.sft.main.Application</mainClass>
 					</container>
