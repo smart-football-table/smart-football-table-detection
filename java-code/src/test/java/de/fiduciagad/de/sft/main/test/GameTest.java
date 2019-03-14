@@ -38,7 +38,7 @@ public class GameTest {
 		cv.setPythonModule("testCase_playedGameDigitizerWithoutBall.py");
 
 		game.setGameDetection(cv);
-		game.startTheDetection();
+		game.startTheGame();
 
 		assertThat(game.isOngoing(), is(false));
 	}
@@ -66,7 +66,7 @@ public class GameTest {
 		cv.setPythonModule("testCase_playedGameDigitizerWithBallAndGoal.py");
 
 		game.setGameDetection(cv);
-		game.startTheDetection();
+		game.startTheGame();
 
 		assertThat(game.getScoreAsString(), is("1-0"));
 	}

@@ -139,7 +139,7 @@ while True:
 
     key = cv2.waitKey(45) & 0xFF
     # if the 'q' key is pressed, stop the loop
-    if key == ord("c"):
+    if key == ord("q"):
         break
     elif key == ord("r"):
         getROI = False

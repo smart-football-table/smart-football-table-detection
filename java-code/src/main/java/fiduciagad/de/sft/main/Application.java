@@ -19,7 +19,7 @@ public class Application {
 		game.setGameDetection(gameDetection);
 		game.setColorHandler(colorHandler);
 
-		game.startTheDetection();
+		game.startTheGame();
 	}
 
 }

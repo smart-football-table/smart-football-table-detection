@@ -2,10 +2,7 @@ package fiduciagad.de.sft.main;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.lang.ProcessBuilder.Redirect;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,12 +11,13 @@ public class OpenCVHandler {
 	private Process p;
 	private String pythonModule = "";
 	private String pythonArguments = "";
+	private ProcessBuilder pb;
 
 	public void startPythonModule() {
 
 		String path = System.getProperty("user.dir").replace('\\', '/');
 
-		ProcessBuilder pb = new ProcessBuilder("python", path + "/" + pythonModule + pythonArguments);
+		pb = new ProcessBuilder("python", path + "/" + pythonModule, pythonArguments);
 		pb.redirectOutput();
 		pb.redirectError();
 		try {
@@ -60,8 +58,6 @@ public class OpenCVHandler {
 				if (line.contains(";")) {
 					String[] colorValues = line.split(";");
 
-					System.out.println(line);
-
 					ConfiguratorValues.setColorHSVMinH(Integer.parseInt(colorValues[0]));
 					ConfiguratorValues.setColorHSVMinS(Integer.parseInt(colorValues[1]));
 					ConfiguratorValues.setColorHSVMinV(Integer.parseInt(colorValues[2]));
@@ -73,8 +69,7 @@ public class OpenCVHandler {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		p.destroy();
+
 	}
 
 	public void setPythonArguments(String pythonArguments) {

@@ -19,13 +19,13 @@ public class Game {
 	private OpenCVHandler gameDetection = new OpenCVHandler();
 	private OpenCVHandler colorHandler = new OpenCVHandler();
 
-	public void startTheDetection() throws MqttSecurityException, MqttException {
+	public void startTheGame() throws MqttSecurityException, MqttException {
 
 		colorHandler.startPythonModule();
 		colorHandler.startTheAdjustment();
 
-		String pythonArgument = " " + ConfiguratorValues.getColorHSVMinH() + "," + ConfiguratorValues.getColorHSVMinS()
-				+ "," + ConfiguratorValues.getColorHSVMinV() + "," + ConfiguratorValues.getColorHSVMaxH() + ","
+		String pythonArgument = ConfiguratorValues.getColorHSVMinH() + "," + ConfiguratorValues.getColorHSVMinS() + ","
+				+ ConfiguratorValues.getColorHSVMinV() + "," + ConfiguratorValues.getColorHSVMaxH() + ","
 				+ ConfiguratorValues.getColorHSVMaxS() + "," + ConfiguratorValues.getColorHSVMaxV();
 
 		gameDetection.setPythonArguments(pythonArgument);
