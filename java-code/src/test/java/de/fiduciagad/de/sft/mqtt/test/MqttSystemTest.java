@@ -2,8 +2,6 @@ package de.fiduciagad.de.sft.mqtt.test;
 
 import static io.moquette.BrokerConstants.HOST_PROPERTY_NAME;
 import static io.moquette.BrokerConstants.PORT_PROPERTY_NAME;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -19,18 +17,18 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import fiduciagad.de.sft.mqtt.Setup;
+import fiduciagad.de.sft.mqtt.MqttSystem;
 import io.moquette.server.Server;
 import io.moquette.server.config.MemoryConfig;
 
-public class SetupTest {
+public class MqttSystemTest {
 
 	private static final String LOCALHOST = "localhost";
 
 	private int brokerPort;
 
 	private Server server;
-	private Setup setup;
+	private MqttSystem setup;
 	private IMqttClient secondClient;
 
 	@Before
@@ -38,7 +36,7 @@ public class SetupTest {
 		brokerPort = randomPort();
 		server = newMqttServer(LOCALHOST, brokerPort);
 		secondClient = newMqttClient(LOCALHOST, brokerPort, "client2");
-		setup = new Setup(LOCALHOST, brokerPort);
+		setup = new MqttSystem(LOCALHOST, brokerPort);
 	}
 
 	private int randomPort() throws IOException {
@@ -66,9 +64,9 @@ public class SetupTest {
 	@Test
 	public void sendIdleMessage() throws MqttSecurityException, MqttException {
 
-		Setup setup = new Setup(LOCALHOST, brokerPort);
+		MqttSystem mqtt = new MqttSystem(LOCALHOST, brokerPort);
 
-		setup.sendIdle("true");
+		mqtt.sendIdle("true");
 
 		// TODO:
 
@@ -80,9 +78,9 @@ public class SetupTest {
 	@Test
 	public void sendScoreMessage() throws MqttSecurityException, MqttException {
 
-		Setup setup = new Setup(LOCALHOST, brokerPort);
+		MqttSystem mqtt = new MqttSystem(LOCALHOST, brokerPort);
 
-		setup.sendScore("1-0");
+		mqtt.sendScore("1-0");
 
 		// TODO:
 

@@ -1,8 +1,5 @@
 package fiduciagad.de.sft.main;
 
-import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertThat;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +7,6 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
 import fiduciagad.de.sft.goaldetector.GoalDetector;
-import fiduciagad.de.sft.mqtt.Setup;
 
 public class Game {
 

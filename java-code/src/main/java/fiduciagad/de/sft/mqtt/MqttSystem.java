@@ -9,11 +9,11 @@ import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
-public class Setup implements Closeable {
+public class MqttSystem implements Closeable {
 
 	private final IMqttClient mqttClient;
 
-	public Setup(String host, int port) throws MqttSecurityException, MqttException {
+	public MqttSystem(String host, int port) throws MqttSecurityException, MqttException {
 		mqttClient = makeMqttClient(host, port);
 
 	}
