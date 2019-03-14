@@ -7,6 +7,7 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
 import fiduciagad.de.sft.goaldetector.GoalDetector;
+import fiduciagad.de.sft.mqtt.MqttSystem;
 
 public class Game {
 
@@ -45,8 +46,9 @@ public class Game {
 		BallPosition ballPosMinusTwo;
 		BallPosition ballPosMinusOne;
 		BallPosition ballPos;
-		// Setup setup = new Setup("localhost", 1883);
-		// setup.sendScore("0-0");
+
+		MqttSystem mqtt = new MqttSystem("localhost", 1883);
+		mqtt.sendScore("0-0");
 
 		for (int i = 2; i < ballPositions.size(); i++) {
 
@@ -58,14 +60,9 @@ public class Game {
 
 			if (goalDetector.isThereAGoal(ballPos, ballPosMinusOne, ballPosMinusTwo)) {
 
-				String where = goalDetector.whereHappendTheGoal(ballPos, ballPosMinusOne, ballPosMinusTwo);
-				if (where.equals("on the right")) {
-					teamOne.increaseScore();
-
-				} else {
-					teamTwo.increaseScore();
-				}
-				// setup.sendScore(getScoreAsString());
+				String atPostion = goalDetector.whereHappendTheGoal(ballPos, ballPosMinusOne, ballPosMinusTwo);
+				setGoalForTeamWhenGoalHappend(atPostion);
+				mqtt.sendScore(getScoreAsString());
 			}
 
 		}
@@ -98,9 +95,9 @@ public class Game {
 		return teamOne.getScore() + "-" + teamTwo.getScore();
 	}
 
-	public void setGoalForTeam(int i) {
+	public void setGoalForTeamWhenGoalHappend(String atPostion) {
 
-		if (i == 1) {
+		if (atPostion.equals("on the right")) {
 			teamOne.increaseScore();
 		} else {
 			teamTwo.increaseScore();

@@ -48,9 +48,9 @@ public class GameTest {
 
 		Game game = new Game();
 
-		game.setGoalForTeam(1);
-		game.setGoalForTeam(1);
-		game.setGoalForTeam(2);
+		game.setGoalForTeamWhenGoalHappend("on the right");
+		game.setGoalForTeamWhenGoalHappend("on the right");
+		game.setGoalForTeamWhenGoalHappend("on the left");
 
 		assertThat(game.getScoreAsString(), is("2-1"));
 	}

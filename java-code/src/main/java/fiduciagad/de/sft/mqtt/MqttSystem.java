@@ -35,24 +35,32 @@ public class MqttSystem implements Closeable {
 
 	public void sendIdle(String string) throws MqttPersistenceException, MqttException {
 
-		String finalString = "{\"idle\":["+string+"]}";
-		mqttClient.publish("idle", finalString.getBytes(), 0, false);
+		String finalString = "{\"idle\":" + string + "}";
+		mqttClient.publish("game/idle", finalString.getBytes(), 0, false);
 
 	}
 
 	public void sendScore(String string) throws MqttPersistenceException, MqttException {
-		
-		String finalString = "{\"score\":["+string.split("-")[0]+","+string.split("-")[1]+"]}";
-		
-		mqttClient.publish("score", finalString.getBytes(), 0, false);
-		
+
+		String finalString = "{\"score\":[" + string.split("-")[0] + "," + string.split("-")[1] + "]}";
+
+		mqttClient.publish("game/score", finalString.getBytes(), 0, false);
+
 	}
 
 	public void sendFoul() throws MqttPersistenceException, MqttException {
-		
+
 		String empty = "";
-		mqttClient.publish("foul", empty.getBytes(), 0, false);
-		
+		mqttClient.publish("game/foul", empty.getBytes(), 0, false);
+
+	}
+
+	public void sendGameOver(String string) throws MqttPersistenceException, MqttException {
+
+		String finalString = "{\"winners\":[" + string + "]}";
+
+		mqttClient.publish("game/gameover", finalString.getBytes(), 0, false);
+
 	}
 
 }
