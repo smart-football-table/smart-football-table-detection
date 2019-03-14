@@ -3,8 +3,11 @@ package fiduciagad.de.sft.main;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
+
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttSecurityException;
+
+import fiduciagad.de.sft.mqtt.MqttSystem;
 
 public class OpenCVHandler {
 
@@ -12,6 +15,7 @@ public class OpenCVHandler {
 	private String pythonModule = "";
 	private String pythonArguments = "";
 	private ProcessBuilder pb;
+	private GameManager manager;
 
 	public void startPythonModule() {
 
@@ -28,20 +32,21 @@ public class OpenCVHandler {
 
 	}
 
-	public List<String> getOpenCVOutputAsList() {
+	public void handleWithOpenCVOutput(Detector detector) throws MqttSecurityException, MqttException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		manager = new GameManager();
 		String line = null;
-		List<String> result = new ArrayList<String>();
 
 		try {
 			while ((line = reader.readLine()) != null) {
-				result.add(line);
+
+				manager.createBallPosition(line);
+				manager.doTheLogic();
+
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		result.remove(0); // remove first line which is a useless testline from python
-		return result;
 	}
 
 	public void setPythonModule(String string) {
@@ -74,6 +79,14 @@ public class OpenCVHandler {
 
 	public void setPythonArguments(String pythonArguments) {
 		this.pythonArguments = pythonArguments;
+	}
+
+	public GameManager getManager() {
+		return manager;
+	}
+
+	public void setManager(GameManager manager) {
+		this.manager = manager;
 	}
 
 }

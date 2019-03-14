@@ -6,7 +6,7 @@ import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 public class Application {
 
 	public static void main(String[] args) throws MqttSecurityException, MqttException {
-		Game game = new Game();
+		Detector detector = new Detector();
 
 		OpenCVHandler gameDetection = new OpenCVHandler();
 		gameDetection.setPythonModule("playedGameDigitizer.py");
@@ -16,10 +16,10 @@ public class Application {
 
 		ConfiguratorValues.setDefaultColorRangeYellow();
 
-		game.setGameDetection(gameDetection);
-		game.setColorHandler(colorHandler);
+		detector.setGameDetection(gameDetection);
+		detector.setColorGrabber(colorHandler);
 
-		game.startTheGame();
+		detector.startTheDetection();
 	}
 
 }

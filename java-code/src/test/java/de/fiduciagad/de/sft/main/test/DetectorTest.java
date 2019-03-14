@@ -8,15 +8,16 @@ import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import fiduciagad.de.sft.main.Game;
+import fiduciagad.de.sft.main.Detector;
+import fiduciagad.de.sft.main.GameManager;
 import fiduciagad.de.sft.main.OpenCVHandler;
 
-public class GameTest {
+public class DetectorTest {
 
 	@Test
 	public void startAndStopAGame() {
 
-		Game game = new Game();
+		Detector game = new Detector();
 
 		game.start();
 
@@ -31,44 +32,32 @@ public class GameTest {
 	@Test
 	public void gameStopsWhenDetectionEnds() throws MqttSecurityException, MqttException {
 
-		Game game = new Game();
+		Detector game = new Detector();
 
 		OpenCVHandler cv = new OpenCVHandler();
 
 		cv.setPythonModule("testCase_playedGameDigitizerWithoutBall.py");
 
 		game.setGameDetection(cv);
-		game.startTheGame();
+		game.startTheDetection();
 
 		assertThat(game.isOngoing(), is(false));
-	}
-
-	@Test
-	public void canSetScore() {
-
-		Game game = new Game();
-
-		game.setGoalForTeamWhenGoalHappend("on the right");
-		game.setGoalForTeamWhenGoalHappend("on the right");
-		game.setGoalForTeamWhenGoalHappend("on the left");
-
-		assertThat(game.getScoreAsString(), is("2-1"));
 	}
 
 	@Ignore
 	@Test
 	public void canDetectGoalFromTestVideo() throws MqttSecurityException, MqttException {
 
-		Game game = new Game();
+		Detector detector = new Detector();
 
 		OpenCVHandler cv = new OpenCVHandler();
 
 		cv.setPythonModule("testCase_playedGameDigitizerWithBallAndGoal.py");
 
-		game.setGameDetection(cv);
-		game.startTheGame();
+		detector.setGameDetection(cv);
+		detector.startTheDetection();
 
-		assertThat(game.getScoreAsString(), is("1-0"));
+		// assertThat(detector.getScoreAsString(), is("1-0"));
 	}
 
 }
