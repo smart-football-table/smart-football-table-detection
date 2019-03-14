@@ -5,6 +5,61 @@ public class ConfiguratorValues {
 	private static int xSizeGameField = 0;
 	private static int ySizeGameField = 0;
 
+	private static int colorHSVMinH = 0;
+	private static int colorHSVMinS = 0;
+	private static int colorHSVMinV = 0;
+	private static int colorHSVMaxH = 0;
+	private static int colorHSVMaxS = 0;
+	private static int colorHSVMaxV = 0;
+
+	public static int getColorHSVMinH() {
+		return colorHSVMinH;
+	}
+
+	public static void setColorHSVMinH(int colorHSVMinH) {
+		ConfiguratorValues.colorHSVMinH = colorHSVMinH;
+	}
+
+	public static int getColorHSVMinS() {
+		return colorHSVMinS;
+	}
+
+	public static void setColorHSVMinS(int colorHSVMinS) {
+		ConfiguratorValues.colorHSVMinS = colorHSVMinS;
+	}
+
+	public static int getColorHSVMinV() {
+		return colorHSVMinV;
+	}
+
+	public static void setColorHSVMinV(int colorHSVMinV) {
+		ConfiguratorValues.colorHSVMinV = colorHSVMinV;
+	}
+
+	public static int getColorHSVMaxH() {
+		return colorHSVMaxH;
+	}
+
+	public static void setColorHSVMaxH(int colorHSVMaxH) {
+		ConfiguratorValues.colorHSVMaxH = colorHSVMaxH;
+	}
+
+	public static int getColorHSVMaxS() {
+		return colorHSVMaxS;
+	}
+
+	public static void setColorHSVMaxS(int colorHSVMaxS) {
+		ConfiguratorValues.colorHSVMaxS = colorHSVMaxS;
+	}
+
+	public static int getColorHSVMaxV() {
+		return colorHSVMaxV;
+	}
+
+	public static void setColorHSVMaxV(int colorHSVMaxV) {
+		ConfiguratorValues.colorHSVMaxV = colorHSVMaxV;
+	}
+
 	private static int millimeterPerPixel = 0;
 
 	public static void setGameFieldSize(int xSize, int ySize) {

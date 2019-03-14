@@ -9,10 +9,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import fiduciagad.de.sft.main.Game;
+import fiduciagad.de.sft.main.OpenCVHandler;
 
 public class GameTest {
 
-	@Ignore
 	@Test
 	public void startAndStopAGame() {
 
@@ -21,25 +21,26 @@ public class GameTest {
 		game.start();
 
 		assertThat(game.isOngoing(), is(true));
-		
+
 		game.stop();
-		
+
 		assertThat(game.isOngoing(), is(false));
 	}
-	
+
 	@Ignore
 	@Test
 	public void gameStopsWhenDetectionEnds() throws MqttSecurityException, MqttException {
 
 		Game game = new Game();
 
-		game.setPythonModule("testCase_playedGameDigitizerWithoutBall.py");
-		game.startTheDetection();
-		
+		OpenCVHandler cv = new OpenCVHandler();
+
+		cv.setPythonModule("testCase_playedGameDigitizerWithoutBall.py");
+		game.startTheDetection(cv);
+
 		assertThat(game.isOngoing(), is(false));
 	}
-	
-	@Ignore
+
 	@Test
 	public void canSetScore() {
 
@@ -48,23 +49,23 @@ public class GameTest {
 		game.setGoalForTeam(1);
 		game.setGoalForTeam(1);
 		game.setGoalForTeam(2);
-		
+
 		assertThat(game.getScoreAsString(), is("2-1"));
 	}
-	
+
 	@Ignore
 	@Test
 	public void canDetectGoalFromTestVideo() throws MqttSecurityException, MqttException {
 
-		
-		System.out.println("T");
-		
 		Game game = new Game();
 
-		game.setPythonModule("testCase_playedGameDigitizerWithBallAndGoal.py");
-		game.startTheDetection();
 		
+		OpenCVHandler cv = new OpenCVHandler();
+
+		cv.setPythonModule("testCase_playedGameDigitizerWithBallAndGoal.py");
+		game.startTheDetection(cv);
+
 		assertThat(game.getScoreAsString(), is("1-0"));
 	}
-	
+
 }

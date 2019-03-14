@@ -1,5 +1,8 @@
 package fiduciagad.de.sft.main;
 
+import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.assertThat;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,18 +15,21 @@ import fiduciagad.de.sft.mqtt.Setup;
 public class Game {
 
 	private boolean gameIsAlive = false;
-	private String pythonModule = "";
+
 	private Team teamOne = new Team();
 	private Team teamTwo = new Team();
 	private List<BallPosition> ballPositions = new ArrayList<BallPosition>();
 	private GoalDetector goalDetector;
 
-	public void startTheDetection() throws MqttSecurityException, MqttException {
+	public void startTheDetection(OpenCVHandler opencv) throws MqttSecurityException, MqttException {
 
-		OpenCVHandler opencv = new OpenCVHandler();
+		OpenCVHandler colorHandler = new OpenCVHandler();
 
-		opencv.startPythonModule(pythonModule);
+		colorHandler.setPythonModule("colorGrabber.py");
+		colorHandler.startPythonModule();
+		colorHandler.startTheAdjustment();
 
+		opencv.startPythonModule();
 		List<String> ballPositionsAsStrings = opencv.getOpenCVOutputAsList();
 
 		for (String ballPositionAsString : ballPositionsAsStrings) {
@@ -38,10 +44,8 @@ public class Game {
 		BallPosition ballPosMinusTwo;
 		BallPosition ballPosMinusOne;
 		BallPosition ballPos;
-		Setup setup = new Setup("localhost", 1883);
-		setup.sendScore("0-0");
-
-		setup.sendFoul();
+		// Setup setup = new Setup("localhost", 1883);
+		// setup.sendScore("0-0");
 
 		for (int i = 2; i < ballPositions.size(); i++) {
 
@@ -60,7 +64,7 @@ public class Game {
 				} else {
 					teamTwo.increaseScore();
 				}
-				setup.sendScore(getScoreAsString());
+				// setup.sendScore(getScoreAsString());
 			}
 
 		}
@@ -75,10 +79,6 @@ public class Game {
 
 	public void stop() {
 		gameIsAlive = false;
-	}
-
-	public void setPythonModule(String string) {
-		pythonModule = string;
 	}
 
 	public void start() {

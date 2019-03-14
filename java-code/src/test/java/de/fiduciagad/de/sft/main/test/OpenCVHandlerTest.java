@@ -19,7 +19,8 @@ public class OpenCVHandlerTest {
 
 		OpenCVHandler opencv = new OpenCVHandler();
 
-		opencv.startPythonModule("test.py");
+		opencv.setPythonModule("test.py");
+		opencv.startPythonModule();
 
 		List<String> output = opencv.getOpenCVOutputAsList();
 
@@ -33,7 +34,8 @@ public class OpenCVHandlerTest {
 
 		OpenCVHandler opencv = new OpenCVHandler();
 
-		opencv.startPythonModule("testCase_playedGameDigitizerWithoutBall.py");
+		opencv.setPythonModule("testCase_playedGameDigitizerWithoutBall.py");
+		opencv.startPythonModule();
 
 		List<String> output = opencv.getOpenCVOutputAsList();
 
@@ -51,7 +53,8 @@ public class OpenCVHandlerTest {
 
 		OpenCVHandler opencv = new OpenCVHandler();
 
-		opencv.startPythonModule("testCase_playedGameDigitizerWithBall.py");
+		opencv.setPythonModule("testCase_playedGameDigitizerWithBall.py");
+		opencv.startPythonModule();
 
 		List<String> output = opencv.getOpenCVOutputAsList();
 
