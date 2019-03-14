@@ -82,7 +82,7 @@ while True:
         hsvRoi = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
         #this is for nice output
         #print('min H = {}, min S = {}, min V = {}; max H = {}, max S = {}, max V = {}'.format(hsvRoi[:,:,0].min(), hsvRoi[:,:,1].min(), hsvRoi[:,:,2].min(), hsvRoi[:,:,0].max(), hsvRoi[:,:,1].max(), hsvRoi[:,:,2].max()))
-        print('{}|{}|{}|{}|{}|{}'.format(hsvRoi[:,:,0].min(), hsvRoi[:,:,1].min(), hsvRoi[:,:,2].min(), hsvRoi[:,:,0].max(), hsvRoi[:,:,1].max(), hsvRoi[:,:,2].max()))
+        print('{};{};{};{};{};{}'.format(hsvRoi[:,:,0].min(), hsvRoi[:,:,1].min(), hsvRoi[:,:,2].min(), hsvRoi[:,:,0].max(), hsvRoi[:,:,1].max(), hsvRoi[:,:,2].max()))
 
         #file = open("hsvminmax.txt","w")
 
@@ -139,7 +139,7 @@ while True:
 
     key = cv2.waitKey(45) & 0xFF
     # if the 'q' key is pressed, stop the loop
-    if key == ord("q"):
+    if key == ord("c"):
         break
     elif key == ord("r"):
         getROI = False

@@ -15,19 +15,37 @@ import os
 #    help="max buffer size")
 #args = vars(ap.parse_args())
 
+
+parser = argparse.ArgumentParser()
+parser.add_argument("a", nargs='?', default="empty")
+args = parser.parse_args()
+
+if args.a == 'empty':
+    greenLower = (20,100,100)
+    greenUpper = (30,255, 255)
+else:
+    x = args.a.split(",")
+    hsvminh = int(x[0])
+    hsvmins = int(x[1])
+    hsvminv = int(x[2])
+    hsvmaxh = int(x[3])
+    hsvmaxs = int(x[4])
+    hsvmaxv = int(x[5])
+    greenLower = (hsvminh,hsvmins,hsvminv)
+    greenUpper = (hsvmaxh,hsvmaxs,hsvmaxv)
+
 frameSize = 800
 
 # define the lower and upper boundaries of the "green"
 # ball in the HSV color space, then initialize the
 # list of tracked points
-greenLower = (20,100,100)
-greenUpper = (30,255, 255)
+
 pts = deque(maxlen=20000)
 
 pts.appendleft((0, 0,time.time()))
 pts.appendleft((0, 0,time.time()))
 
-cap = cv.VideoCapture(1)
+cap = cv.VideoCapture(0)
 # cap = cv.VideoCapture("udp://127.0.0.1:10000") for goPro
 
 cap.set(28,0)

@@ -5,10 +5,27 @@ import imutils
 import time
 import os
 
+parser = argparse.ArgumentParser()
+parser.add_argument("a", nargs='?', default="empty")
+args = parser.parse_args()
+
+if args.a == 'empty':
+    greenLower = (0,0,0)
+    greenUpper = (0,0,0)
+else:
+    x = args.a.split(",")
+    hsvminh = int(x[0])
+    hsvmins = int(x[1])
+    hsvminv = int(x[2])
+    hsvmaxh = int(x[3])
+    hsvmaxs = int(x[4])
+    hsvmaxv = int(x[5])
+    greenLower = (hsvminh,hsvmins,hsvminv)
+    greenUpper = (hsvmaxh,hsvmaxs,hsvmaxv)
+
+
 frameSize = 800
 
-greenLower = (20, 100, 100)
-greenUpper = (30, 255, 255)
 pts = deque(maxlen=20000)
 
 pts.appendleft((0, 0, time.time()))

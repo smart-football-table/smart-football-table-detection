@@ -24,6 +24,12 @@ public class Game {
 		colorHandler.startPythonModule();
 		colorHandler.startTheAdjustment();
 
+		String pythonArgument = " " + ConfiguratorValues.getColorHSVMinH() + "," + ConfiguratorValues.getColorHSVMinS()
+				+ "," + ConfiguratorValues.getColorHSVMinV() + "," + ConfiguratorValues.getColorHSVMaxH() + ","
+				+ ConfiguratorValues.getColorHSVMaxS() + "," + ConfiguratorValues.getColorHSVMaxV();
+
+		gameDetection.setPythonArguments(pythonArgument);
+
 		gameDetection.startPythonModule();
 		List<String> ballPositionsAsStrings = gameDetection.getOpenCVOutputAsList();
 

@@ -11,7 +11,6 @@ import fiduciagad.de.sft.main.OpenCVHandler;
 
 public class ColorAdjustmentTest {
 
-	@Ignore
 	@Test
 	public void canConfigureColor() {
 

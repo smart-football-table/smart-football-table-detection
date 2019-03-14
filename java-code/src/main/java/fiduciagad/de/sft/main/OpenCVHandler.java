@@ -13,12 +13,13 @@ public class OpenCVHandler {
 
 	private Process p;
 	private String pythonModule = "";
+	private String pythonArguments = "";
 
 	public void startPythonModule() {
 
 		String path = System.getProperty("user.dir").replace('\\', '/');
 
-		ProcessBuilder pb = new ProcessBuilder("python", path + "/" + pythonModule);
+		ProcessBuilder pb = new ProcessBuilder("python", path + "/" + pythonModule + pythonArguments);
 		pb.redirectOutput();
 		pb.redirectError();
 		try {
@@ -56,19 +57,28 @@ public class OpenCVHandler {
 		try {
 			while ((line = reader.readLine()) != null) {
 
-				String[] colorValues = line.split("\\|");
+				if (line.contains(";")) {
+					String[] colorValues = line.split(";");
 
-				ConfiguratorValues.setColorHSVMinH(Integer.parseInt(colorValues[0]));
-				ConfiguratorValues.setColorHSVMinS(Integer.parseInt(colorValues[1]));
-				ConfiguratorValues.setColorHSVMinV(Integer.parseInt(colorValues[2]));
-				ConfiguratorValues.setColorHSVMaxH(Integer.parseInt(colorValues[3]));
-				ConfiguratorValues.setColorHSVMaxS(Integer.parseInt(colorValues[4]));
-				ConfiguratorValues.setColorHSVMaxV(Integer.parseInt(colorValues[5]));
+					System.out.println(line);
 
+					ConfiguratorValues.setColorHSVMinH(Integer.parseInt(colorValues[0]));
+					ConfiguratorValues.setColorHSVMinS(Integer.parseInt(colorValues[1]));
+					ConfiguratorValues.setColorHSVMinV(Integer.parseInt(colorValues[2]));
+					ConfiguratorValues.setColorHSVMaxH(Integer.parseInt(colorValues[3]));
+					ConfiguratorValues.setColorHSVMaxS(Integer.parseInt(colorValues[4]));
+					ConfiguratorValues.setColorHSVMaxV(Integer.parseInt(colorValues[5]));
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		p.destroy();
+	}
+
+	public void setPythonArguments(String pythonArguments) {
+		this.pythonArguments = pythonArguments;
 	}
 
 }
