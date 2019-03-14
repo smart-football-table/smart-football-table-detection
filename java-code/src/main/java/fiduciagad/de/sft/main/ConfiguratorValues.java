@@ -83,4 +83,13 @@ public class ConfiguratorValues {
 		return ySizeGameField;
 	}
 
+	public static void setDefaultColorRangeYellow() {
+		colorHSVMinH = 20;
+		colorHSVMinS = 100;
+		colorHSVMinV = 100;
+		colorHSVMaxH = 30;
+		colorHSVMaxS = 255;
+		colorHSVMaxV = 255;
+	}
+
 }

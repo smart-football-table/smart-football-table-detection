@@ -8,13 +8,18 @@ public class Application {
 	public static void main(String[] args) throws MqttSecurityException, MqttException {
 		Game game = new Game();
 
-		
-		OpenCVHandler opencv = new OpenCVHandler();
+		OpenCVHandler gameDetection = new OpenCVHandler();
+		gameDetection.setPythonModule("playedGameDigitizer.py");
 
-		opencv.setPythonModule("playedGameDigitizer.py");
-		
-		
-		game.startTheDetection(opencv);
+		OpenCVHandler colorHandler = new OpenCVHandler();
+		colorHandler.setPythonModule("colorGrabber.py");
+
+		ConfiguratorValues.setDefaultColorRangeYellow();
+
+		game.setGameDetection(gameDetection);
+		game.setColorHandler(colorHandler);
+
+		game.startTheDetection();
 	}
 
 }

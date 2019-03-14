@@ -16,17 +16,16 @@ public class Game {
 	private Team teamTwo = new Team();
 	private List<BallPosition> ballPositions = new ArrayList<BallPosition>();
 	private GoalDetector goalDetector;
+	private OpenCVHandler gameDetection = new OpenCVHandler();
+	private OpenCVHandler colorHandler = new OpenCVHandler();
 
-	public void startTheDetection(OpenCVHandler opencv) throws MqttSecurityException, MqttException {
+	public void startTheDetection() throws MqttSecurityException, MqttException {
 
-		OpenCVHandler colorHandler = new OpenCVHandler();
-
-		colorHandler.setPythonModule("colorGrabber.py");
 		colorHandler.startPythonModule();
 		colorHandler.startTheAdjustment();
 
-		opencv.startPythonModule();
-		List<String> ballPositionsAsStrings = opencv.getOpenCVOutputAsList();
+		gameDetection.startPythonModule();
+		List<String> ballPositionsAsStrings = gameDetection.getOpenCVOutputAsList();
 
 		for (String ballPositionAsString : ballPositionsAsStrings) {
 			BallPositionHandler ballPositionHandler = new BallPositionHandler();
@@ -67,6 +66,14 @@ public class Game {
 
 		stop();
 
+	}
+
+	public void setGameDetection(OpenCVHandler gameDetection) {
+		this.gameDetection = gameDetection;
+	}
+
+	public void setColorHandler(OpenCVHandler colorHandler) {
+		this.colorHandler = colorHandler;
 	}
 
 	public Boolean isOngoing() {

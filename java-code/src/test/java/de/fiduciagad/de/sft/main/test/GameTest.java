@@ -36,7 +36,9 @@ public class GameTest {
 		OpenCVHandler cv = new OpenCVHandler();
 
 		cv.setPythonModule("testCase_playedGameDigitizerWithoutBall.py");
-		game.startTheDetection(cv);
+
+		game.setGameDetection(cv);
+		game.startTheDetection();
 
 		assertThat(game.isOngoing(), is(false));
 	}
@@ -59,11 +61,12 @@ public class GameTest {
 
 		Game game = new Game();
 
-		
 		OpenCVHandler cv = new OpenCVHandler();
 
 		cv.setPythonModule("testCase_playedGameDigitizerWithBallAndGoal.py");
-		game.startTheDetection(cv);
+
+		game.setGameDetection(cv);
+		game.startTheDetection();
 
 		assertThat(game.getScoreAsString(), is("1-0"));
 	}
