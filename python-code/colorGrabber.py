@@ -80,20 +80,16 @@ while True:
         #cv2.imshow("ROI", roi)
 
         hsvRoi = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
-        print('min H = {}, min S = {}, min V = {}; max H = {}, max S = {}, max V = {}'.format(hsvRoi[:,:,0].min(), hsvRoi[:,:,1].min(), hsvRoi[:,:,2].min(), hsvRoi[:,:,0].max(), hsvRoi[:,:,1].max(), hsvRoi[:,:,2].max()))
+        #this is for nice output
+        #print('min H = {}, min S = {}, min V = {}; max H = {}, max S = {}, max V = {}'.format(hsvRoi[:,:,0].min(), hsvRoi[:,:,1].min(), hsvRoi[:,:,2].min(), hsvRoi[:,:,0].max(), hsvRoi[:,:,1].max(), hsvRoi[:,:,2].max()))
+        print('{}|{}|{}|{}|{}|{}'.format(hsvRoi[:,:,0].min(), hsvRoi[:,:,1].min(), hsvRoi[:,:,2].min(), hsvRoi[:,:,0].max(), hsvRoi[:,:,1].max(), hsvRoi[:,:,2].max()))
 
-        file = open("hsvminmax.txt","w")
+        #file = open("hsvminmax.txt","w")
 
-        file.write('{}|{}|{}|{}|{}|{}'.format(hsvRoi[:,:,0].min(), hsvRoi[:,:,1].min(), hsvRoi[:,:,2].min(), hsvRoi[:,:,0].max(), hsvRoi[:,:,1].max(), hsvRoi[:,:,2].max()))
-        file.close()
-
-
+        #file.write('{}|{}|{}|{}|{}|{}'.format(hsvRoi[:,:,0].min(), hsvRoi[:,:,1].min(), hsvRoi[:,:,2].min(), hsvRoi[:,:,0].max(), hsvRoi[:,:,1].max(), hsvRoi[:,:,2].max()))
+        #file.close()
         lower = np.array([hsvRoi[:,:,0].min(), hsvRoi[:,:,1].min(), hsvRoi[:,:,2].min()])
         upper = np.array([hsvRoi[:,:,0].max(), hsvRoi[:,:,1].max(), hsvRoi[:,:,2].max()])
-
-
-
-
 
     # grab the current frame
     (grabbed, frame) = camera.read()
@@ -137,8 +133,6 @@ while True:
             # draw the circle and centroid on the frame,
             # then update the list of tracked points
             cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 0), 2)
-            cv2.putText(frame, 'center: {}, {}'.format(int(x), int(y)), (int(x-radius),int(y-radius)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,255), 2)
-
 
     # show the frame to our screen
     cv2.imshow("image", frame)
