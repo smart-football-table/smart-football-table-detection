@@ -61,8 +61,6 @@ public class GoalDetector {
 				}
 			}
 
-			System.out.println(counter);
-
 		}
 
 		return thereIsAGoal;

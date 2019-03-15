@@ -8,6 +8,7 @@ import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
 import fiduciagad.de.sft.ballvelocity.BallVelocityCalculator;
+import fiduciagad.de.sft.foul.FoulChecker;
 import fiduciagad.de.sft.goaldetector.GoalDetector;
 import fiduciagad.de.sft.mqtt.MqttSystem;
 
@@ -17,6 +18,7 @@ public class GameManager {
 	private List<BallPosition> ballPositions = new ArrayList<BallPosition>();
 	private GoalDetector goalDetector = new GoalDetector();
 	private BallVelocityCalculator velocityCalculator = new BallVelocityCalculator();
+	private FoulChecker foulChecker = new FoulChecker();
 
 	private MqttSystem mqtt;
 	private BallPositionHandler ballPositionHandler = new BallPositionHandler();
@@ -44,7 +46,7 @@ public class GameManager {
 		if (ballPositions.size() > 2) {
 			double velocity = velocityCalculator.getVelocityOfBallInKilometerPerHour(
 					ballPositions.get(ballPositions.size() - 2), ballPositions.get(ballPositions.size() - 1));
-			System.out.println("Ball ist gerade " + velocity + " km/h schnell!");
+			// here send velocity
 		}
 
 		if (ballPositions.size() > 50) {
@@ -54,8 +56,14 @@ public class GameManager {
 				String atPostion = goalDetector.whereHappendTheGoal(ballPositions.get(ballPositions.size() - 51),
 						ballPositions.get(ballPositions.size() - 52));
 				setGoalForTeamWhenGoalHappend(atPostion);
-				System.out.println(getScoreAsString());
 				mqtt.sendScore(getScoreAsString());
+			}
+		}
+
+		if (ballPositions.size() > 300) {
+
+			if (foulChecker.isThereAFoul(ballPositions)) {
+				mqtt.sendFoul();
 			}
 		}
 

@@ -1,4 +1,4 @@
-package de.fiduciagad.de.sft.foul.test;
+package fiduciagad.de.sft.foul;
 
 import java.util.Date;
 import java.util.List;
@@ -7,7 +7,7 @@ import fiduciagad.de.sft.main.BallPosition;
 
 public class FoulChecker {
 
-	public boolean isThereAFoal(List<BallPosition> ballPositions) {
+	public boolean isThereAFoul(List<BallPosition> ballPositions) {
 		boolean thereIsAFoul = false;
 		int counter = 0;
 		BallPosition lastPosition = new BallPosition(-1, -1, new Date());
@@ -27,8 +27,6 @@ public class FoulChecker {
 				thereIsAFoul = true;
 			}
 
-			System.out.println(counter);
-
 			lastPosition = position;
 
 		}
@@ -38,8 +36,8 @@ public class FoulChecker {
 
 	private boolean noVerticalPositionChangeDetected(BallPosition lastPosition, BallPosition position) {
 
-		boolean xInSameRange = position.getXCoordinate() >= lastPosition.getXCoordinate() - 10
-				&& position.getXCoordinate() <= lastPosition.getXCoordinate() + 10;
+		boolean xInSameRange = position.getXCoordinate() >= lastPosition.getXCoordinate() - 50
+				&& position.getXCoordinate() <= lastPosition.getXCoordinate() + 50;
 
 		return xInSameRange;
 	}

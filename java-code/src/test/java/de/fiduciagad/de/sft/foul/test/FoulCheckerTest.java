@@ -10,6 +10,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import fiduciagad.de.sft.foul.FoulChecker;
 import fiduciagad.de.sft.main.BallPosition;
 
 public class FoulCheckerTest {
@@ -31,7 +32,7 @@ public class FoulCheckerTest {
 
 		FoulChecker checker = new FoulChecker();
 
-		assertThat(checker.isThereAFoal(ballPositions), is(true));
+		assertThat(checker.isThereAFoul(ballPositions), is(true));
 
 	}
 
@@ -42,7 +43,7 @@ public class FoulCheckerTest {
 
 		ballPositions.add(150, new BallPosition(1000, 1000, new Date()));
 
-		assertThat(checker.isThereAFoal(ballPositions), is(false));
+		assertThat(checker.isThereAFoul(ballPositions), is(false));
 
 	}
 

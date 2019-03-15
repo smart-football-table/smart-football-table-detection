@@ -23,13 +23,17 @@ public class Detector {
 				+ ConfiguratorValues.getColorHSVMaxS() + "," + ConfiguratorValues.getColorHSVMaxV();
 
 		MqttSystem mqtt = new MqttSystem("localhost", 1883);
-		mqtt.sendIdle("true");
 
 		while (detectionIsAlive) {
+
+			mqtt.sendIdle("false");
+			mqtt.sendScore("0-0");
 
 			gameDetection.setPythonArguments(pythonArgument);
 			gameDetection.startPythonModule();
 			gameDetection.handleWithOpenCVOutput(this);
+
+			mqtt.sendIdle("true");
 
 			stop();
 		}
