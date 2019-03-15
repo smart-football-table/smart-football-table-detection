@@ -80,7 +80,7 @@ public class MqttSystemTest {
 
 		MqttSystem mqtt = new MqttSystem(LOCALHOST, brokerPort);
 
-		mqtt.sendScore("1-0");
+		mqtt.sendPostion("1-0");
 
 		// TODO:
 

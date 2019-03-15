@@ -9,6 +9,8 @@ import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
+import fiduciagad.de.sft.main.BallPosition;
+
 public class MqttSystem implements Closeable {
 
 	private final IMqttClient mqttClient;
@@ -40,7 +42,7 @@ public class MqttSystem implements Closeable {
 
 	}
 
-	public void sendScore(String string) throws MqttPersistenceException, MqttException {
+	public void sendPostion(String string) throws MqttPersistenceException, MqttException {
 
 		String finalString = "{\"score\":[" + string.split("-")[0] + "," + string.split("-")[1] + "]}";
 
@@ -60,6 +62,15 @@ public class MqttSystem implements Closeable {
 		String finalString = "{\"winners\":[" + string + "]}";
 
 		mqttClient.publish("game/gameover", finalString.getBytes(), 0, false);
+
+	}
+
+	public void sendPostion(BallPosition ballPosition) throws MqttPersistenceException, MqttException {
+
+		String finalString = "{\"x\":" + ballPosition.getXCoordinate() + ",\"y\":" + ballPosition.getYCoordinate()
+				+ "}";
+
+		mqttClient.publish("position", finalString.getBytes(), 0, false);
 
 	}
 

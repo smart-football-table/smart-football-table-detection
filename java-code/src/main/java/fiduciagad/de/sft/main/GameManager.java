@@ -43,6 +43,8 @@ public class GameManager {
 
 	public void doTheLogic() throws MqttPersistenceException, MqttException {
 
+		mqtt.sendPostion(ballPositions.get(ballPositions.size()-1));
+
 		if (ballPositions.size() > 2) {
 			double velocity = velocityCalculator.getVelocityOfBallInKilometerPerHour(
 					ballPositions.get(ballPositions.size() - 2), ballPositions.get(ballPositions.size() - 1));
@@ -56,7 +58,7 @@ public class GameManager {
 				String atPostion = goalDetector.whereHappendTheGoal(ballPositions.get(ballPositions.size() - 51),
 						ballPositions.get(ballPositions.size() - 52));
 				setGoalForTeamWhenGoalHappend(atPostion);
-				mqtt.sendScore(getScoreAsString());
+				mqtt.sendPostion(getScoreAsString());
 			}
 		}
 

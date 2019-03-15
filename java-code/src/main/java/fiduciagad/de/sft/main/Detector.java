@@ -27,7 +27,7 @@ public class Detector {
 		while (detectionIsAlive) {
 
 			mqtt.sendIdle("false");
-			mqtt.sendScore("0-0");
+			mqtt.sendPostion("0-0");
 
 			gameDetection.setPythonArguments(pythonArgument);
 			gameDetection.startPythonModule();
