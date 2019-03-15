@@ -7,6 +7,7 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
+import fiduciagad.de.sft.ballvelocity.BallVelocityCalculator;
 import fiduciagad.de.sft.goaldetector.GoalDetector;
 import fiduciagad.de.sft.mqtt.MqttSystem;
 
@@ -15,6 +16,7 @@ public class GameManager {
 	private Team teamTwo = new Team();
 	private List<BallPosition> ballPositions = new ArrayList<BallPosition>();
 	private GoalDetector goalDetector = new GoalDetector();
+	private BallVelocityCalculator velocityCalculator = new BallVelocityCalculator();
 
 	private MqttSystem mqtt;
 	private BallPositionHandler ballPositionHandler = new BallPositionHandler();
@@ -38,6 +40,12 @@ public class GameManager {
 	}
 
 	public void doTheLogic() throws MqttPersistenceException, MqttException {
+
+		if (ballPositions.size() > 2) {
+			double velocity = velocityCalculator.getVelocityOfBallInKilometerPerHour(
+					ballPositions.get(ballPositions.size() - 2), ballPositions.get(ballPositions.size() - 1));
+			System.out.println("Ball ist gerade " + velocity + " km/h schnell!");
+		}
 
 		if (ballPositions.size() > 50) {
 

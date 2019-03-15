@@ -20,7 +20,7 @@ public class BallVelocityCalculator {
 	private double calculateVelocity(long timeDifference, double distanceDifference) {
 		double velocity = distanceDifference / timeDifference;// v = s/t
 		double velocityRounded = (velocity * 100) / 100;
-		return velocityRounded;
+		return velocityRounded * 100;
 	}
 
 	private long getTimeDifferenceInSecondsBetween(BallPosition oldPosition, BallPosition newPosition) {

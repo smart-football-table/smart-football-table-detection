@@ -43,7 +43,7 @@ public class GoalDetector {
 		for (int i = 0; i < 50; i++) {
 
 			// iterate over the last 50 positions
-			BallPosition position = ballPositions.get(ballPositions.size() - 50 + i);
+			BallPosition position = ballPositions.get((ballPositions.size() - 50) + i);
 
 			if (noPositionDetected(position)) {
 				counter++;
@@ -60,6 +60,8 @@ public class GoalDetector {
 					thereIsAGoal = true;
 				}
 			}
+
+			System.out.println(counter);
 
 		}
 

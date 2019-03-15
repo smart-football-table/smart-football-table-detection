@@ -2,6 +2,8 @@ package fiduciagad.de.sft.main;
 
 public class ConfiguratorValues {
 
+	private static int millimeterPerPixel = 0;
+
 	private static int xSizeGameField = 0;
 	private static int ySizeGameField = 0;
 
@@ -59,8 +61,6 @@ public class ConfiguratorValues {
 	public static void setColorHSVMaxV(int colorHSVMaxV) {
 		ConfiguratorValues.colorHSVMaxV = colorHSVMaxV;
 	}
-
-	private static int millimeterPerPixel = 0;
 
 	public static void setGameFieldSize(int xSize, int ySize) {
 		xSizeGameField = xSize;

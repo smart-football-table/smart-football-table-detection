@@ -57,11 +57,11 @@ public class BallVelocityCalculatorTest {
 
 		position1.setXCoordinate(0);
 		position1.setYCoordinate(0);
-		position1.setTimepoint(1546300800);
+		position1.setTimepoint(Long.parseLong("154630080000"));
 
 		position2.setXCoordinate(0);
 		position2.setYCoordinate(100);
-		position2.setTimepoint(1546300801);
+		position2.setTimepoint(Long.parseLong("154630080100"));
 
 		// v = s/t
 		assertThat(ballVelocityCaluclator.getVelocityOfBallInMeterPerSecond(position1, position2),
@@ -79,11 +79,11 @@ public class BallVelocityCalculatorTest {
 
 		position1.setXCoordinate(0);
 		position1.setYCoordinate(0);
-		position1.setTimepoint(1546300800);
+		position1.setTimepoint(Long.parseLong("154630080000"));
 
 		position2.setXCoordinate(0);
 		position2.setYCoordinate(1000);
-		position2.setTimepoint(1546300801);
+		position2.setTimepoint(Long.parseLong("154630080100"));
 
 		// v = s/t
 		assertThat(ballVelocityCaluclator.getVelocityOfBallInMeterPerSecond(position1, position2),
