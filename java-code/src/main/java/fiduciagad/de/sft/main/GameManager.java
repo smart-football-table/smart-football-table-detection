@@ -86,8 +86,9 @@ public class GameManager {
 		BallPosition ballposition = ballPositionHandler.createBallPositionFrom(line);
 		ballPositions.add(ballposition);
 
-		System.out.println(" x " + ballposition.getXCoordinate() + " y " + ballposition.getYCoordinate() + " time "
-				+ ballposition.getTimepoint().getTime() + " size " + ballPositions.size());
+		// System.out.println(" x " + ballposition.getXCoordinate() + " y " +
+		// ballposition.getYCoordinate() + " time "
+		// + ballposition.getTimepoint().getTime() + " size " + ballPositions.size());
 
 	}
 
