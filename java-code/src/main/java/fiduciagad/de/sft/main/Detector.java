@@ -29,6 +29,7 @@ public class Detector {
 
 			gameDetection.setPythonArguments(pythonArgument);
 			gameDetection.startPythonModule();
+			gameDetection.handleWithOpenCVOutput(this);
 
 			stop();
 		}

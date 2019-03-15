@@ -14,6 +14,7 @@ public class GameManager {
 	private Team teamOne = new Team();
 	private Team teamTwo = new Team();
 	private List<BallPosition> ballPositions = new ArrayList<BallPosition>();
+	private GoalDetector goalDetector = new GoalDetector();
 
 	private MqttSystem mqtt;
 	private BallPositionHandler ballPositionHandler = new BallPositionHandler();
@@ -38,31 +39,27 @@ public class GameManager {
 
 	public void doTheLogic() throws MqttPersistenceException, MqttException {
 
-		BallPosition ballPosMinusTwo;
-		BallPosition ballPosMinusOne;
-		BallPosition ballPos;
+		if (ballPositions.size() > 50) {
 
-		for (int i = 2; i < ballPositions.size(); i++) {
+			if (goalDetector.isThereAGoal(ballPositions)) {
 
-			ballPosMinusTwo = ballPositions.get(i - 2);
-			ballPosMinusOne = ballPositions.get(i - 1);
-			ballPos = ballPositions.get(i);
-
-			GoalDetector goalDetector = new GoalDetector();
-
-			if (goalDetector.isThereAGoal(ballPos, ballPosMinusOne, ballPosMinusTwo)) {
-
-				String atPostion = goalDetector.whereHappendTheGoal(ballPos, ballPosMinusOne, ballPosMinusTwo);
+				String atPostion = goalDetector.whereHappendTheGoal(ballPositions.get(ballPositions.size() - 51),
+						ballPositions.get(ballPositions.size() - 52));
 				setGoalForTeamWhenGoalHappend(atPostion);
+				System.out.println(getScoreAsString());
 				mqtt.sendScore(getScoreAsString());
 			}
-
 		}
+
 	}
 
 	public void createBallPosition(String line) {
 		BallPosition ballposition = ballPositionHandler.createBallPositionFrom(line);
 		ballPositions.add(ballposition);
+
+		System.out.println(" x " + ballposition.getXCoordinate() + " y " + ballposition.getYCoordinate() + " size "
+				+ ballPositions.size());
+
 	}
 
 	public List<BallPosition> getBallPositions() {
