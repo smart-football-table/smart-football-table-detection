@@ -37,7 +37,7 @@ public class FoulChecker {
 	private boolean noVerticalPositionChangeDetected(BallPosition lastPosition, BallPosition position) {
 
 		boolean xInSameRange = position.getXCoordinate() >= lastPosition.getXCoordinate() - 50
-				&& position.getXCoordinate() <= lastPosition.getXCoordinate() + 50;
+				&& position.getXCoordinate() <= lastPosition.getXCoordinate() + 50 && position.getXCoordinate() != -1;
 
 		return xInSameRange;
 	}

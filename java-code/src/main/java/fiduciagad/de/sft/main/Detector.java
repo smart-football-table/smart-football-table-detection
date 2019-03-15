@@ -33,8 +33,6 @@ public class Detector {
 			gameDetection.startPythonModule();
 			gameDetection.handleWithOpenCVOutput(this);
 
-			mqtt.sendIdle("true");
-
 			stop();
 		}
 

@@ -47,4 +47,18 @@ public class FoulCheckerTest {
 
 	}
 
+	@Test
+	public void gettingMoreThan10SecondsNoVertcialPositionChangeTriggersNotAFoulWhenNoPositionOnField() {
+
+		FoulChecker checker = new FoulChecker();
+
+		for (int i = 0; i < 301; i++) {
+			BallPosition position = new BallPosition(-1, -1, new Date());
+			ballPositions.add(position);
+		}
+
+		assertThat(checker.isThereAFoul(ballPositions), is(false));
+
+	}
+
 }
