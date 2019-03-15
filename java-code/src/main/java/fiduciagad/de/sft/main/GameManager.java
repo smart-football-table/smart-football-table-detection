@@ -67,6 +67,19 @@ public class GameManager {
 			}
 		}
 
+		if (teamOne.getScore() == 6) {
+			mqtt.sendGameOver("0");
+			ballPositions = new ArrayList<BallPosition>();
+			teamOne.setScore(0);
+			teamTwo.setScore(0);
+		}
+		if (teamTwo.getScore() == 6) {
+			mqtt.sendGameOver("1");
+			ballPositions = new ArrayList<BallPosition>();
+			teamOne.setScore(0);
+			teamTwo.setScore(0);
+		}
+
 	}
 
 	public void createBallPosition(String line) {
