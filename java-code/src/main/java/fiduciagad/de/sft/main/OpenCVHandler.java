@@ -7,15 +7,14 @@ import java.io.InputStreamReader;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
-import fiduciagad.de.sft.mqtt.MqttSystem;
-
 public class OpenCVHandler {
 
-	private Process p;
+	private Process process;
 	private String pythonModule = "";
 	private String pythonArguments = "";
 	private ProcessBuilder pb;
 	private GameManager manager;
+	private boolean processAlive = false;
 
 	public void startPythonModule() {
 
@@ -25,7 +24,8 @@ public class OpenCVHandler {
 		pb.redirectOutput();
 		pb.redirectError();
 		try {
-			p = pb.start();
+			process = pb.start();
+			processAlive = true;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -33,7 +33,7 @@ public class OpenCVHandler {
 	}
 
 	public void handleWithOpenCVOutput(Controller detector) throws MqttSecurityException, MqttException {
-		BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		manager = new GameManager();
 		String line = null;
 		int deleteFirstLine = 0;
@@ -59,7 +59,7 @@ public class OpenCVHandler {
 	}
 
 	public void startTheAdjustment() {
-		BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		String line = null;
 
 		try {
@@ -92,6 +92,10 @@ public class OpenCVHandler {
 
 	public void setManager(GameManager manager) {
 		this.manager = manager;
+	}
+
+	public boolean isProcessAlive() {
+		return processAlive;
 	}
 
 }
