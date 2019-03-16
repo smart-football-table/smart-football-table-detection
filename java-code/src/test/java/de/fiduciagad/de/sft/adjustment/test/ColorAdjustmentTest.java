@@ -11,13 +11,12 @@ import fiduciagad.de.sft.main.OpenCVHandler;
 
 public class ColorAdjustmentTest {
 
-	@Ignore
 	@Test
 	public void canConfigureColor() {
 
 		OpenCVHandler cv = new OpenCVHandler();
 
-		int hsvminh = ConfiguratorValues.getColorHSVMinH();
+		int hsvminh = -1;
 
 		cv.setPythonModule("colorGrabber.py");
 		cv.startPythonModule();

@@ -6,7 +6,7 @@ import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 public class Application {
 
 	public static void main(String[] args) throws MqttSecurityException, MqttException {
-		Detector detector = new Detector();
+		Controller detector = new Controller();
 
 		OpenCVHandler gameDetection = new OpenCVHandler();
 		gameDetection.setPythonModule("playedGameDigitizer.py");

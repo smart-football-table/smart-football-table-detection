@@ -32,16 +32,21 @@ public class OpenCVHandler {
 
 	}
 
-	public void handleWithOpenCVOutput(Detector detector) throws MqttSecurityException, MqttException {
+	public void handleWithOpenCVOutput(Controller detector) throws MqttSecurityException, MqttException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		manager = new GameManager();
 		String line = null;
+		int deleteFirstLine = 0;
 
 		try {
 			while ((line = reader.readLine()) != null) {
 
-				manager.createBallPosition(line);
-				manager.doTheLogic();
+				if (deleteFirstLine != 0) {
+					manager.createBallPosition(line);
+					manager.doTheLogic();
+				}
+
+				deleteFirstLine++;
 
 			}
 		} catch (IOException e) {

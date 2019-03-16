@@ -5,7 +5,7 @@ import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
 import fiduciagad.de.sft.mqtt.MqttSystem;
 
-public class Detector {
+public class Controller {
 
 	private boolean detectionIsAlive = false;
 	private OpenCVHandler gameDetection = new OpenCVHandler();

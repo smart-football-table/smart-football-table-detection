@@ -8,16 +8,16 @@ import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import fiduciagad.de.sft.main.Detector;
+import fiduciagad.de.sft.main.Controller;
 import fiduciagad.de.sft.main.GameManager;
 import fiduciagad.de.sft.main.OpenCVHandler;
 
-public class DetectorTest {
+public class ControllerTest {
 
 	@Test
 	public void startAndStopAGame() {
 
-		Detector game = new Detector();
+		Controller game = new Controller();
 
 		game.start();
 
@@ -28,11 +28,10 @@ public class DetectorTest {
 		assertThat(game.isOngoing(), is(false));
 	}
 
-	@Ignore
 	@Test
 	public void gameStopsWhenDetectionEnds() throws MqttSecurityException, MqttException {
 
-		Detector game = new Detector();
+		Controller game = new Controller();
 
 		OpenCVHandler cv = new OpenCVHandler();
 
@@ -42,22 +41,23 @@ public class DetectorTest {
 		game.startTheDetection();
 
 		assertThat(game.isOngoing(), is(false));
+
 	}
 
 	@Ignore
 	@Test
 	public void canDetectGoalFromTestVideo() throws MqttSecurityException, MqttException {
 
-		Detector detector = new Detector();
+		Controller controller = new Controller();
 
 		OpenCVHandler cv = new OpenCVHandler();
 
 		cv.setPythonModule("testCase_playedGameDigitizerWithBallAndGoal.py");
 
-		detector.setGameDetection(cv);
-		detector.startTheDetection();
+		controller.setGameDetection(cv);
+		controller.startTheDetection();
 
-		// assertThat(detector.getScoreAsString(), is("1-0"));
+		// assertThat(controller.getScoreAsString(), is("1-0"));
 	}
 
 }
