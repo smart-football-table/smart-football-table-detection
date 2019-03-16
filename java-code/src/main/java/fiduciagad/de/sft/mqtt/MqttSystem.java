@@ -70,7 +70,7 @@ public class MqttSystem implements Closeable {
 		String finalString = "{\"x\":" + ballPosition.getXCoordinate() + ",\"y\":" + ballPosition.getYCoordinate()
 				+ "}";
 
-		mqttClient.publish("position", finalString.getBytes(), 0, false);
+		mqttClient.publish("game/position", finalString.getBytes(), 0, false);
 
 	}
 
