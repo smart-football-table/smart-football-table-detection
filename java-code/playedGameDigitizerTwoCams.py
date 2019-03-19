@@ -10,8 +10,8 @@ parser.add_argument("a", nargs='?', default="empty")
 args = parser.parse_args()
 
 if args.a == 'empty':
-    greenLower = (0,0,0)
-    greenUpper = (0,0,0)
+    greenLower = (20, 100,100)
+    greenUpper = (30,255, 255)
 else:
     x = args.a.split(",")
     hsvminh = int(x[0])
@@ -73,9 +73,9 @@ while(True):
             cv.circle(frame, (center[0], center[1]), 5, (0, 0, 255), -1)
 
     if len(cnts2) > 0:
-        c2 = max(cnts, key=cv.contourArea)
-        ((x2, y2), radius2) = cv.minEnclosingCircle(c)
-        M2 = cv.moments(c)
+        c2 = max(cnts2, key=cv.contourArea)
+        ((x2, y2), radius2) = cv.minEnclosingCircle(c2)
+        M2 = cv.moments(c2)
         center2 = (int(M2["m10"] / M2["m00"]), int(M2["m01"] / M2["m00"]), time.time())
 
         if radius2 > 1:
