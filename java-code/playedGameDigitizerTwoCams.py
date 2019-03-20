@@ -31,6 +31,11 @@ pts = deque(maxlen=20000)
 pts.appendleft((0, 0, time.time()))
 pts.appendleft((0, 0, time.time()))
 
+pts2 = deque(maxlen=20000)
+
+pts2.appendleft((0, 0, time.time()))
+pts2.appendleft((0, 0, time.time()))
+
 cap = cv.VideoCapture(0)
 cap2 = cv.VideoCapture(1)
 
@@ -89,7 +94,6 @@ while(True):
         center2 = (-1, -1, time.time())
 
     pts.appendleft(center)
-    pts.appendleft(center2)
 
     if pts[0] is None or pts[1] is None:
         actualPointX, actualPointY = 0, 0
@@ -100,7 +104,20 @@ while(True):
         previousPointX = pts[0][0]
         previousPointY = pts[0][1]
 
-    print(str(time.time()) + "|" + str(actualPointY) + "|" + str(actualPointX))
+    print("1|" + str(time.time()) + "|" + str(actualPointY) + "|" + str(actualPointX))
+    
+    pts2.appendleft(center2)
+
+    if pts2[0] is None or pts2[1] is None:
+        actualPointX, actualPointY = 0, 0
+        previousPointX, previousPointY = 0, 0
+    else:
+        actualPointX = pts2[1][0]
+        actualPointY = pts2[1][1]
+        previousPointX = pts2[0][0]
+        previousPointY = pts2[0][1]
+
+    print("2|" + str(time.time()) + "|" + str(actualPointY) + "|" + str(actualPointX))
 
     # uncomment to see vid through test
     cv.imshow('frame', frame)
