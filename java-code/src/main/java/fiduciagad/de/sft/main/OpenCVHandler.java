@@ -36,14 +36,21 @@ public class OpenCVHandler {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		manager = new GameManager();
 		String line = null;
+		String lineBefore = "";
 		int deleteFirstLine = 0;
+		boolean itsTheSecondOne = false;
 
 		try {
 			while ((line = reader.readLine()) != null) {
 
 				if (deleteFirstLine != 0) {
-					manager.createBallPosition(line);
-					manager.doTheLogic();
+
+					if (itsTheSecondOne) {
+						manager.createBallPosition(lineBefore, line);
+						manager.doTheLogic();
+					}
+					lineBefore = line;
+					itsTheSecondOne = !itsTheSecondOne;
 				}
 
 				deleteFirstLine++;

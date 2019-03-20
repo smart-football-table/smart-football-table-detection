@@ -84,8 +84,8 @@ public class GameManager {
 
 	}
 
-	public void createBallPosition(String line) {
-		BallPosition ballposition = ballPositionHandler.createBallPositionFrom(line);
+	public void createBallPosition(String lineBefore, String line) {
+		BallPosition ballposition = ballPositionHandler.createBallPositionFrom(lineBefore, line);
 		ballPositions.add(ballposition);
 
 		// System.out.println(" x " + ballposition.getXCoordinate() + " y " +
