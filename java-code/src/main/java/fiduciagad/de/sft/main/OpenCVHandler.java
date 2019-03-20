@@ -3,6 +3,8 @@ package fiduciagad.de.sft.main;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
@@ -65,28 +67,22 @@ public class OpenCVHandler {
 		pythonModule = string;
 	}
 
-	public void startTheAdjustment() {
+	public List<String> startTheAdjustment() {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		String line = null;
+		List<String> result = new ArrayList<String>();
 
 		try {
 			while ((line = reader.readLine()) != null) {
-
-				if (line.contains(";")) {
-					String[] colorValues = line.split(";");
-
-					ConfiguratorValues.setColorHSVMinH(Integer.parseInt(colorValues[0]));
-					ConfiguratorValues.setColorHSVMinS(Integer.parseInt(colorValues[1]));
-					ConfiguratorValues.setColorHSVMinV(Integer.parseInt(colorValues[2]));
-					ConfiguratorValues.setColorHSVMaxH(Integer.parseInt(colorValues[3]));
-					ConfiguratorValues.setColorHSVMaxS(Integer.parseInt(colorValues[4]));
-					ConfiguratorValues.setColorHSVMaxV(Integer.parseInt(colorValues[5]));
-				}
+				result.add(line);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
+		if (!result.isEmpty()) {
+			result.remove(0); // remove first line which is a useless testline from python
+		}
+		return result;
 	}
 
 	public void setPythonArguments(String pythonArguments) {

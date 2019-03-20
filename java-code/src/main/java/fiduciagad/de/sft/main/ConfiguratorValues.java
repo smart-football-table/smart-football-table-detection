@@ -129,5 +129,7 @@ public class ConfiguratorValues {
 	public static void setyOffsetCameraTwo(int yOffsetCameraTwo) {
 		ConfiguratorValues.yOffsetCameraTwo = yOffsetCameraTwo;
 	}
+	
+	
 
 }
