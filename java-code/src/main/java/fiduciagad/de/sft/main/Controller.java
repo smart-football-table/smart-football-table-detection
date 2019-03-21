@@ -1,5 +1,6 @@
 package fiduciagad.de.sft.main;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -16,7 +17,7 @@ public class Controller {
 	private OpenCVHandler gameDetectionOpenCV = new OpenCVHandler();
 	private OpenCVHandler adjustmentOpenCV = new OpenCVHandler();
 
-	public void startTheDetection() throws MqttSecurityException, MqttException {
+	public void startTheDetection() throws MqttSecurityException, MqttException, IOException {
 
 		MqttSystem mqttpub = new MqttSystem("localhost", 1883);
 
@@ -31,6 +32,7 @@ public class Controller {
 
 				List<String> theOutput = adjustmentOpenCV.startTheAdjustment();
 				AdjustmentController.convertOutputIntoValues(theOutput);
+				FileController.writeDataIntoFile();
 				adjustmentWanted = false;
 			}
 

@@ -3,6 +3,8 @@ package de.fiduciagad.de.sft.main.test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+import java.io.IOException;
+
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.junit.Ignore;
@@ -31,7 +33,7 @@ public class ControllerTest {
 
 	@Ignore
 	@Test
-	public void gameStopsWhenDetectionEnds() throws MqttSecurityException, MqttException {
+	public void gameStopsWhenDetectionEnds() throws MqttSecurityException, MqttException, IOException {
 
 		Controller game = new Controller();
 
@@ -90,7 +92,7 @@ public class ControllerTest {
 
 	@Ignore
 	@Test
-	public void canDetectGoalFromTestVideo() throws MqttSecurityException, MqttException {
+	public void canDetectGoalFromTestVideo() throws MqttSecurityException, MqttException, IOException {
 
 		Controller controller = new Controller();
 

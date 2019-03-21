@@ -1,11 +1,13 @@
 package fiduciagad.de.sft.main;
 
+import java.io.IOException;
+
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
 public class Application {
 
-	public static void main(String[] args) throws MqttSecurityException, MqttException {
+	public static void main(String[] args) throws MqttSecurityException, MqttException, IOException {
 		Controller detector = new Controller();
 
 		OpenCVHandler gameDetection = new OpenCVHandler();
@@ -14,8 +16,10 @@ public class Application {
 		OpenCVHandler colorHandler = new OpenCVHandler();
 		colorHandler.setPythonModule("adjustment.py");
 
-		ConfiguratorValues.setDefaultColorRangeYellow();
-		ConfiguratorValues.setMillimeterPerPixel(1);
+		FileController.loadDataFromFile();
+
+		// ConfiguratorValues.setDefaultColorRangeYellow();
+		// ConfiguratorValues.setMillimeterPerPixel(1);
 
 		detector.setGameDetection(gameDetection);
 		detector.setColorGrabber(colorHandler);

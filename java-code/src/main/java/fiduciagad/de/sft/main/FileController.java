@@ -1,6 +1,10 @@
 package fiduciagad.de.sft.main;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,7 +19,7 @@ public class FileController {
 
 		List<String> data = null;
 
-		Path p = Paths.get(path + "confFile.txt");
+		Path p = Paths.get(path + "/confFile.txt");
 
 		try {
 			data = Files.readAllLines(p, Charset.defaultCharset());
@@ -47,8 +51,43 @@ public class FileController {
 		ConfiguratorValues.setxOffsetCameraTwo(Integer.parseInt(offsetCameraTwo[0]));
 		ConfiguratorValues.setyOffsetCameraTwo(Integer.parseInt(offsetCameraTwo[1]));
 
-		ConfiguratorValues.setMillimeterPerPixel(Integer.parseInt(data.get(10)));
+		ConfiguratorValues.setMillimeterPerPixel(Integer.parseInt(data.get(11)));
 
+	}
+
+	public static void writeDataIntoFile() throws IOException {
+		File fileOut = new File("confFile.txt");
+		FileOutputStream fos = new FileOutputStream(fileOut);
+		BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+
+		bw.write("//HSV Lower");
+		bw.newLine();
+		bw.write("" + ConfiguratorValues.getColorHSVMinH() + "," + ConfiguratorValues.getColorHSVMinS() + ","
+				+ ConfiguratorValues.getColorHSVMinV());
+		bw.newLine();
+		bw.write("//HSV Upper");
+		bw.newLine();
+		bw.write("" + ConfiguratorValues.getColorHSVMaxH() + "," + ConfiguratorValues.getColorHSVMaxS() + ","
+				+ ConfiguratorValues.getColorHSVMaxV());
+		bw.newLine();
+		bw.write("//GamefieldSize");
+		bw.newLine();
+		bw.write("" + ConfiguratorValues.getXMaxOfGameField() + "," + ConfiguratorValues.getYMaxOfGameField());
+		bw.newLine();
+		bw.write("//OffsetCameraOne");
+		bw.newLine();
+		bw.write("" + ConfiguratorValues.getxOffsetCameraOne() + "," + ConfiguratorValues.getyOffsetCameraOne());
+		bw.newLine();
+		bw.write("//OffsetCameraTwo");
+		bw.newLine();
+		bw.write("" + ConfiguratorValues.getxOffsetCameraTwo() + "," + ConfiguratorValues.getyOffsetCameraTwo());
+		bw.newLine();
+		bw.write("//MillimeterPerPixel");
+		bw.newLine();
+		bw.write("" + ConfiguratorValues.getMillimeterPerPixel());
+		bw.newLine();
+
+		bw.close();
 	}
 
 }
