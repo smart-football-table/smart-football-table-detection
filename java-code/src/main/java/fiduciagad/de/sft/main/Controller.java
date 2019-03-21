@@ -1,8 +1,11 @@
 package fiduciagad.de.sft.main;
 
+import java.util.List;
+
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
+import fiduciagad.de.sft.adjustment.AdjustmentController;
 import fiduciagad.de.sft.mqtt.MqttSystem;
 
 public class Controller {
@@ -16,7 +19,9 @@ public class Controller {
 		start();
 
 		colorGrabber.startPythonModule();
-		colorGrabber.startTheAdjustment();
+
+		List<String> theOutput = colorGrabber.startTheAdjustment();
+		AdjustmentController.convertOutputIntoValues(theOutput);
 
 		String pythonArgument = ConfiguratorValues.getColorHSVMinH() + "," + ConfiguratorValues.getColorHSVMinS() + ","
 				+ ConfiguratorValues.getColorHSVMinV() + "," + ConfiguratorValues.getColorHSVMaxH() + ","

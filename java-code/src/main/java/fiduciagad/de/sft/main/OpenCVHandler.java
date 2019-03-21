@@ -79,9 +79,6 @@ public class OpenCVHandler {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		if (!result.isEmpty()) {
-			result.remove(0); // remove first line which is a useless testline from python
-		}
 		return result;
 	}
 
