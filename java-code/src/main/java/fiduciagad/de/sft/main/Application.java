@@ -9,10 +9,10 @@ public class Application {
 		Controller detector = new Controller();
 
 		OpenCVHandler gameDetection = new OpenCVHandler();
-		gameDetection.setPythonModule("playedGameDigitizer.py");
+		gameDetection.setPythonModule("playedGameDigitizerTwoCams.py");
 
 		OpenCVHandler colorHandler = new OpenCVHandler();
-		colorHandler.setPythonModule("colorGrabber.py");
+		colorHandler.setPythonModule("adjustment.py");
 
 		ConfiguratorValues.setDefaultColorRangeYellow();
 		ConfiguratorValues.setMillimeterPerPixel(1);

@@ -43,7 +43,7 @@ public class OpenCVHandler {
 		boolean itsTheSecondOne = false;
 
 		try {
-			while ((line = reader.readLine()) != null) {
+			while ((line = reader.readLine()) != null && detector.isOngoing()) {
 
 				if (deleteFirstLine != 0) {
 

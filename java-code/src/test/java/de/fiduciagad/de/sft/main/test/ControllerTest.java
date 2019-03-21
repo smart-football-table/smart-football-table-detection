@@ -20,11 +20,11 @@ public class ControllerTest {
 
 		Controller game = new Controller();
 
-		game.start();
+		game.startGameDetection();
 
 		assertThat(game.isOngoing(), is(true));
 
-		game.stop();
+		game.stopGameDetection();
 
 		assertThat(game.isOngoing(), is(false));
 	}
@@ -53,7 +53,7 @@ public class ControllerTest {
 		OpenCVHandler opencv = new OpenCVHandler();
 
 		Controller controller = new Controller();
-		controller.start();
+		controller.startGameDetection();
 
 		opencv.setPythonModule("testCase_playedGameDigitizerWithoutBall.py");
 		opencv.startPythonModule();
@@ -74,7 +74,7 @@ public class ControllerTest {
 		OpenCVHandler opencv = new OpenCVHandler();
 
 		Controller controller = new Controller();
-		controller.start();
+		controller.startGameDetection();
 
 		opencv.setPythonModule("testCase_playedGameDigitizerWithBall.py");
 		opencv.startPythonModule();

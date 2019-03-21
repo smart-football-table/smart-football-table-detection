@@ -10,14 +10,22 @@ import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import fiduciagad.de.sft.main.BallPosition;
+import fiduciagad.de.sft.main.SimpleMqttCallBack;
 
 public class MqttSystem implements Closeable {
 
 	private final IMqttClient mqttClient;
 
 	public MqttSystem(String host, int port) throws MqttSecurityException, MqttException {
-		mqttClient = makeMqttClient(host, port);
+		mqttClient = new MqttClient("tcp://" + host + ":" + port, "SetupClient", new MemoryPersistence());
+		mqttClient.connect();
 
+	}
+
+	public MqttSystem(String host, int port, SimpleMqttCallBack simpleMqttCallBack) throws MqttException {
+		mqttClient = new MqttClient("tcp://" + host + ":" + port, "SetupClient", new MemoryPersistence());
+		mqttClient.setCallback(simpleMqttCallBack);
+		mqttClient.connect();
 	}
 
 	public void close() {
@@ -27,12 +35,6 @@ public class MqttSystem implements Closeable {
 		} catch (MqttException e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	private IMqttClient makeMqttClient(String host, int port) throws MqttException, MqttSecurityException {
-		IMqttClient client = new MqttClient("tcp://" + host + ":" + port, "SetupClient", new MemoryPersistence());
-		client.connect();
-		return client;
 	}
 
 	public void sendIdle(String string) throws MqttPersistenceException, MqttException {

@@ -10,57 +10,68 @@ import fiduciagad.de.sft.mqtt.MqttSystem;
 
 public class Controller {
 
-	private boolean detectionIsAlive = false;
-	private OpenCVHandler gameDetection = new OpenCVHandler();
-	private OpenCVHandler colorGrabber = new OpenCVHandler();
+	private boolean gameDetectionIsAlive = false;
+	private boolean adjustmentWanted = true;
+
+	private OpenCVHandler gameDetectionOpenCV = new OpenCVHandler();
+	private OpenCVHandler adjustmentOpenCV = new OpenCVHandler();
 
 	public void startTheDetection() throws MqttSecurityException, MqttException {
 
-		start();
+		MqttSystem mqttpub = new MqttSystem("localhost", 1883);
 
-		colorGrabber.startPythonModule();
+		// SimpleMqttCallBack simpleMqttCallBack = new SimpleMqttCallBack(this);
+		// MqttSystem mqttsub = new MqttSystem("localhost", 1883, simpleMqttCallBack);
 
-		List<String> theOutput = colorGrabber.startTheAdjustment();
-		AdjustmentController.convertOutputIntoValues(theOutput);
+		startGameDetection();
 
-		String pythonArgument = ConfiguratorValues.getColorHSVMinH() + "," + ConfiguratorValues.getColorHSVMinS() + ","
-				+ ConfiguratorValues.getColorHSVMinV() + "," + ConfiguratorValues.getColorHSVMaxH() + ","
-				+ ConfiguratorValues.getColorHSVMaxS() + "," + ConfiguratorValues.getColorHSVMaxV();
+		while (true) {
+			if (adjustmentWanted) {
+				adjustmentOpenCV.startPythonModule();
 
-		MqttSystem mqtt = new MqttSystem("localhost", 1883);
+				List<String> theOutput = adjustmentOpenCV.startTheAdjustment();
+				AdjustmentController.convertOutputIntoValues(theOutput);
+				adjustmentWanted = false;
+			}
 
-		while (detectionIsAlive) {
+			if (gameDetectionIsAlive) {
 
-			mqtt.sendIdle("false");
-			mqtt.sendPostion("0-0");
+				mqttpub.sendIdle("false");
+				mqttpub.sendPostion("0-0");
 
-			gameDetection.setPythonArguments(pythonArgument);
-			gameDetection.startPythonModule();
-			gameDetection.handleWithOpenCVOutput(this);
+				String pythonArgument = ConfiguratorValues.getColorHSVMinH() + ","
+						+ ConfiguratorValues.getColorHSVMinS() + "," + ConfiguratorValues.getColorHSVMinV() + ","
+						+ ConfiguratorValues.getColorHSVMaxH() + "," + ConfiguratorValues.getColorHSVMaxS() + ","
+						+ ConfiguratorValues.getColorHSVMaxV();
+				gameDetectionOpenCV.setPythonArguments(pythonArgument);
+				gameDetectionOpenCV.startPythonModule();
+				gameDetectionOpenCV.handleWithOpenCVOutput(this);
 
-			stop();
+				stopGameDetection();
+			}
+			break;
 		}
-
+		System.exit(0);
 	}
 
 	public void setGameDetection(OpenCVHandler gameDetection) {
-		this.gameDetection = gameDetection;
+		this.gameDetectionOpenCV = gameDetection;
 	}
 
 	public void setColorGrabber(OpenCVHandler colorGrabber) {
-		this.colorGrabber = colorGrabber;
+		this.adjustmentOpenCV = colorGrabber;
 	}
 
 	public Boolean isOngoing() {
-		return detectionIsAlive;
+		return gameDetectionIsAlive;
 	}
 
-	public void stop() {
-		detectionIsAlive = false;
+	public void stopGameDetection() {
+		gameDetectionIsAlive = false;
 	}
 
-	public void start() {
-		detectionIsAlive = true;
+	public void startGameDetection() {
+		gameDetectionIsAlive = true;
 	}
 
 }
