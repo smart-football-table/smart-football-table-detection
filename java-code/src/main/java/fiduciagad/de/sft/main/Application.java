@@ -18,9 +18,6 @@ public class Application {
 
 		FileController.loadDataFromFile();
 
-		// ConfiguratorValues.setDefaultColorRangeYellow();
-		// ConfiguratorValues.setMillimeterPerPixel(1);
-
 		detector.setGameDetection(gameDetection);
 		detector.setColorGrabber(colorHandler);
 

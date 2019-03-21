@@ -41,6 +41,12 @@ cap2 = cv.VideoCapture(1)
 
 cap.set(28, 0)
 
+cv.namedWindow("frame")
+cv.moveWindow("frame", 20,20);
+        
+cv.namedWindow("frame2")
+cv.moveWindow("frame2", 820,20);
+
 while(True):
     # Capture frame-by-frame
     ret, frame = cap.read()

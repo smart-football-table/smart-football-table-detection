@@ -43,6 +43,7 @@ def click_and_crop(event, x, y, flags, param):
 
 
 cv2.namedWindow("cam1")
+cv2.moveWindow("cam1", 20,20);
 cv2.setMouseCallback("cam1", click_and_crop)
 
 # keep looping
@@ -142,6 +143,12 @@ while True:
         mode = mode + 1
 
     if (mode == 2) or (mode == 4) or (mode == 6) or (mode == 8):
+
+        cv2.namedWindow("cam1")
+        cv2.moveWindow("cam1", 20,20);
+        
+        cv2.namedWindow("cam2")
+        cv2.moveWindow("cam2", 720,20);
 
         (grabbed, frame) = camera.read()
         (grabbed2, frame2) = camera2.read()
