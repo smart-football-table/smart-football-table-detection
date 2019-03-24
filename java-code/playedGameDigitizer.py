@@ -4,6 +4,7 @@ import argparse
 import imutils
 import time
 import os
+import numpy as np
 
 parser = argparse.ArgumentParser()
 parser.add_argument("a", nargs='?', default="empty")
@@ -31,7 +32,7 @@ pts = deque(maxlen=20000)
 pts.appendleft((0, 0, time.time()))
 pts.appendleft((0, 0, time.time()))
 
-cap = cv.VideoCapture(1)
+cap = cv.VideoCapture(0)
 
 cap.set(28, 0)
 
@@ -47,34 +48,44 @@ while(True):
     mask = cv.erode(mask, None, iterations=2)
     mask = cv.dilate(mask, None, iterations=2)
 
-    cnts = cv.findContours(mask.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[-2]
-    center = None
+    circles = cv.HoughCircles(mask,cv.HOUGH_GRADIENT,1,20,param1=50,param2=30,minRadius=0,maxRadius=0)
+    print(circles)
+    if(circles != None):
+        circles = np.uint16(np.around(circles))
+        for i in circles[0,:]:
+            # draw the outer circle
+            cv.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2)
+            # draw the center of the circle
+            cv.circle(cimg,(i[0],i[1]),2,(0,0,255),3)
 
-    if len(cnts) > 0:
-        c = max(cnts, key=cv.contourArea)
-        ((x, y), radius) = cv.minEnclosingCircle(c)
-        M = cv.moments(c)
-        center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]), time.time())
-
-        if radius > 1:
-            cv.circle(frame, (int(x), int(y)), int(radius), (255, 255, 255), 2)
-            cv.circle(frame, (center[0], center[1]), 5, (0, 0, 255), -1)
-
-    if(center == None):
-        center = (-1, -1, time.time())
-    pts.appendleft(center)
-
-    if pts[0] is None or pts[1] is None:
-        actualPointX, actualPointY = 0, 0
-        previousPointX, previousPointY = 0, 0
-    else:
-        actualPointX = pts[1][0]
-        actualPointY = pts[1][1]
-        previousPointX = pts[0][0]
-        previousPointY = pts[0][1]
-
-    print("1|" + str(time.time()) + "|" + str(actualPointY) + "|" + str(actualPointX))
-
+#   cnts = cv.findContours(mask.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[-2]
+#   center = None
+#
+#   if len(cnts) > 0:
+#       c = max(cnts, key=cv.contourArea)
+#       ((x, y), radius) = cv.minEnclosingCircle(c)
+#       M = cv.moments(c)
+#       center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]), time.time())
+#
+#       if radius > 1:
+#           cv.circle(frame, (int(x), int(y)), int(radius), (255, 255, 255), 2)
+#           cv.circle(frame, (center[0], center[1]), 5, (0, 0, 255), -1)
+#
+#   if(center == None):
+#       center = (-1, -1, time.time())
+#   pts.appendleft(center)
+#
+#   if pts[0] is None or pts[1] is None:
+#       actualPointX, actualPointY = 0, 0
+#       previousPointX, previousPointY = 0, 0
+#   else:
+#       actualPointX = pts[1][0]
+#       actualPointY = pts[1][1]
+#       previousPointX = pts[0][0]
+#       previousPointY = pts[0][1]
+#
+#   print("1|" + str(time.time()) + "|" + str(actualPointY) + "|" + str(actualPointX))
+#
     # uncomment to see vid through test
     cv.imshow('frame', frame)
 
