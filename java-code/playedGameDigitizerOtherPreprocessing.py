@@ -11,8 +11,8 @@ parser.add_argument("a", nargs='?', default="empty")
 args = parser.parse_args()
 
 if args.a == 'empty':
-    greenLower = (0,0,0)
-    greenUpper = (0,0,0)
+    greenLower = (20, 100, 100)
+    greenUpper = (30, 255, 255)
 else:
     x = args.a.split(",")
     hsvminh = int(x[0])
@@ -21,9 +21,8 @@ else:
     hsvmaxh = int(x[3])
     hsvmaxs = int(x[4])
     hsvmaxv = int(x[5])
-    greenLower = (hsvminh,hsvmins,hsvminv)
-    greenUpper = (hsvmaxh,hsvmaxs,hsvmaxv)
-
+    greenLower = (hsvminh, hsvmins, hsvminv)
+    greenUpper = (hsvmaxh, hsvmaxs, hsvmaxv)
 
 frameSize = 800
 
@@ -32,7 +31,7 @@ pts = deque(maxlen=20000)
 pts.appendleft((0, 0, time.time()))
 pts.appendleft((0, 0, time.time()))
 
-cap = cv.VideoCapture(0)
+cap = cv.VideoCapture("../../../Schreibtisch/testvideos/output.avi")
 
 cap.set(28, 0)
 
@@ -41,13 +40,25 @@ while(True):
     ret, frame = cap.read()
 
     frame = imutils.resize(frame, width=frameSize)
+    
+   # gaussian = cv.adaptiveThreshold(frame,255,cv.ADAPTIVE_THRESH_GAUSSIAN_C,cv.THRESH_BINARY,11,2)
+    #cv.imshow('gaussian', gaussian)
 
+    edges = cv.Canny(frame, 100, 200)
+    cv.imshow('edges', edges)
+    
     hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
-    mask = cv.inRange(hsv, greenLower, greenUpper)
-    mask = cv.erode(mask, None, iterations=2)
-    mask = cv.dilate(mask, None, iterations=2)
+    cv.imshow('hsv', hsv)
 
+    mask = cv.inRange(hsv, greenLower, greenUpper)
+    
+    cv.imshow('onlycolor', mask)
+    
+    mask = cv.erode(mask, None, iterations=2)
+    cv.imshow('erode', mask)
+    mask = cv.dilate(mask, None, iterations=2)
+    cv.imshow('dialte', mask)
    
     cnts = cv.findContours(mask.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[-2]
     center = None

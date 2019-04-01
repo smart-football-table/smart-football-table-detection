@@ -32,6 +32,21 @@ public class BallPositionHandlerTest {
 	}
 
 	@Test
+	public void ballPositionValuesGetNormedCorrectly() {
+
+		BallPosition ballPosition = new BallPosition();
+
+		ballPosition.setXCoordinate(100);
+		ballPosition.setYCoordinate(500);
+		ballPosition.setTimepoint(1541664638);
+
+		ConfiguratorValues.setGameFieldSize(1000, 1000);
+
+		assertThat(ballPosition.normedXPosition(), is(0.1));
+		assertThat(ballPosition.normedYPosition(), is(0.5));
+	}
+
+	@Test
 	public void twoIdenticalpositionsAsStringShouldBeTransferedCorrectlyIntoBallPosition() {
 
 		int camera = 1;
