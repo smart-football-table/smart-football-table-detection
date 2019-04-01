@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-cap = cv2.VideoCapture('../../../Schreibtisch/testvideos/schief.avi')
+cap = cv2.VideoCapture('../../../Schreibtisch/testvideos/test_logitech1.avi')
 
 
 onlyOnePerTwentyFrames = 0
@@ -35,10 +35,11 @@ while(cap.isOpened()):
         
     onlyOnePerTwentyFrames = 0
 
-    treshold = 200
+    x_treshold =  np.random.randint(100,150)
+    y_treshold =  np.random.randint(100,150)
     
-    x_end = x_start+treshold
-    y_end = y_start+treshold
+    x_end = x_start+x_treshold
+    y_end = y_start+y_treshold
     
     if(x_end > 639):
         x_end = 639
@@ -54,13 +55,13 @@ while(cap.isOpened()):
     cv2.imshow("cam1", frame)
     
     if(cropping == True):    
-        out = cv2.imwrite("../../../Schreibtisch/testvideos/frames/vid-1-%s.jpg" % i, tmp_image)
+        out = cv2.imwrite("../../../Schreibtisch/testvideos/frames-high/vid-4-%s.jpg" % i, tmp_image)
         i= i+1
 
     onlyOnePerTwentyFrames += 1
 
     
-    if cv2.waitKey(80) & 0xFF == ord('q'):
+    if cv2.waitKey(200) & 0xFF == ord('q'):
         print("done")
         break
 
