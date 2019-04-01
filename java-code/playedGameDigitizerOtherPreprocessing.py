@@ -31,7 +31,7 @@ pts = deque(maxlen=20000)
 pts.appendleft((0, 0, time.time()))
 pts.appendleft((0, 0, time.time()))
 
-cap = cv.VideoCapture("../../../Schreibtisch/testvideos/output.avi")
+cap = cv.VideoCapture("../../../Schreibtisch/testvideos/schief.avi")
 
 cap.set(28, 0)
 
@@ -50,6 +50,16 @@ while(True):
     hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
     cv.imshow('hsv', hsv)
+    
+    (channel_h, channel_s, channel_v) = cv.split(hsv)
+    
+    cv.imshow("h channel",channel_h);
+    cv.imshow("s channel",channel_s);
+    cv.imshow("v channel",channel_v);
+    
+    channel_s.fill(0)
+    hsv_image_edited = cv.merge([channel_h, channel_s, channel_v])
+    cv.imshow("h+s+v after",hsv_image_edited);
 
     mask = cv.inRange(hsv, greenLower, greenUpper)
     
