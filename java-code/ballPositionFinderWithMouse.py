@@ -1,12 +1,6 @@
 import numpy as np
 import cv2
 
-cap = cv2.VideoCapture('../../../Schreibtisch/testvideos/test_logitech1.avi')
-
-
-onlyOnePerTwentyFrames = 0
-i = 0
-
 def click_and_crop(event, x, y, flags, param):
     global x_start, y_start, cropping
     
@@ -19,6 +13,7 @@ def click_and_crop(event, x, y, flags, param):
         
     elif event == cv2.EVENT_LBUTTONUP:
         cropping = False
+        
     
 cv2.namedWindow("cam1")
 cv2.setMouseCallback("cam1", click_and_crop)
@@ -27,24 +22,16 @@ x_start=0;
 y_start=0;
 cropping=False;
 
-while(cap.isOpened()):
+listing = os.listdir('../../../Schreibtisch/testvideos/testfor')    
+for file in listing:
+    cap = cv2.VideoCapture('../../../Schreibtisch/testvideos/testfor')
 
     ret, frame = cap.read()
 
-    #if(onlyOnePerTwentyFrames == 20):
-        
-    onlyOnePerTwentyFrames = 0
-
-    x_treshold =  np.random.randint(100,150)
-    y_treshold =  np.random.randint(100,150)
+    treshold =  100
     
-    x_end = x_start+x_treshold
-    y_end = y_start+y_treshold
-    
-    if(x_end > 639):
-        x_end = 639
-    if(y_end > 479):
-        y_end = 479
+    x_end = x_start+treshold
+    y_end = y_start+treshold
     
     upper_left = (x_start, y_start)
     bottom_right = (x_end, y_end)
@@ -57,11 +44,8 @@ while(cap.isOpened()):
     if(cropping == True):    
         out = cv2.imwrite("../../../Schreibtisch/testvideos/frames-high/vid-4-%s.jpg" % i, tmp_image)
         i= i+1
-
-    onlyOnePerTwentyFrames += 1
-
     
-    if cv2.waitKey(200) & 0xFF == ord('q'):
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         print("done")
         break
 
