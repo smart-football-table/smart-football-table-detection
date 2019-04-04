@@ -12,7 +12,7 @@ Contains a really short step-by-step list. Check the article section for some re
 
 2) Install [OpenCV](https://docs.opencv.org/trunk/d7/d9f/tutorial_linux_install.html) sources (not lib)
 
-3) Clone [Darknet](https://github.com/pjreddie/darknet) (or this one [AlexeyAB-Darknet](https://github.com/AlexeyAB/darknet). You often read it is the better one. Everything below is only tested with the common solution, but most stuff should work the same.)
+3) Clone [Darknet](https://github.com/pjreddie/darknet) (or this one [AlexeyAB-Darknet](https://github.com/AlexeyAB/darknet). You often read it is the better one. Everything below is only tested with the common solution, but most stuff should work the same. Imporant: their readme is great for tips and information)
 
 #### Training
 
@@ -55,11 +55,14 @@ Contains a really short step-by-step list. Check the article section for some re
 
 ## Links & Articles
 
+* [YOLO Paper](https://arxiv.org/pdf/1506.02640.pdf)
+* [YOLO9000](https://arxiv.org/pdf/1612.08242.pdf) (also a good paper)
+* [YOLO Explanation](https://medium.com/@jonathan_hui/real-time-object-detection-with-yolo-yolov2-28b1b93e2088)
 * [CUDA&OpenCV-Docker](https://medium.com/techlogs/compiling-opencv-for-cuda-for-yolo-and-other-cnn-libraries-9ce427c00ff8)
-* [AlexeyAB Version of Darknet](https://github.com/AlexeyAB/darknet) (does have an informative readme)
-
+* [AlexeyAB Version of Darknet](https://github.com/AlexeyAB/darknet) (read the readme!)
+* [How to train with custom data](https://timebutt.github.io/static/how-to-train-yolov2-to-detect-custom-objects/) (short explanation, but hits the point)
 * article about [faced](https://towardsdatascience.com/faced-cpu-real-time-face-detection-using-deep-learning-1488681c1602) (some values to speed)
-
+* [CPU Running Time Reduction](http://guanghan.info/blog/en/my-works/yolo-cpu-running-time-reduction-basic-knowledge-and-strategies/)
 
 ## some Cuda stuff...
 
