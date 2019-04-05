@@ -118,7 +118,7 @@ while(True):
     #key for quit
     if cv.waitKey(1) & 0xFF == ord('q'):
 
-        file = open("../java-code/ballMovementInCoordinates.txt","w")
+        file = open("ballMovementInCoordinates.txt","w")
 
         pts.reverse()
 
