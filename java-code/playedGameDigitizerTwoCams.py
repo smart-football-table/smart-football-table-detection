@@ -37,7 +37,7 @@ pts2.appendleft((0, 0, time.time()))
 pts2.appendleft((0, 0, time.time()))
 
 cap = cv.VideoCapture(1)
-cap2 = cv.VideoCapture(2)
+cap2 = cv.VideoCapture(0)
 
 cap.set(28, 0)
 

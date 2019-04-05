@@ -72,14 +72,14 @@ public class MqttSystem implements Closeable {
 		String finalString = "{\"x\":" + ballPosition.normedXPosition() + ",\"y\":" + ballPosition.normedYPosition()
 				+ "}";
 
-		mqttClient.publish("game/ball/position", finalString.getBytes(), 0, false);
+		mqttClient.publish("game/position", finalString.getBytes(), 0, false);
 
 	}
 
 	public void sendVelocity(double velocity) throws MqttPersistenceException, MqttException {
 
 		String finalString = "{\"velocity\":[" + velocity + "]}";
-		mqttClient.publish("game/ball/velocity", finalString.getBytes(), 0, false);
+		mqttClient.publish("game/velocity", finalString.getBytes(), 0, false);
 
 	}
 
