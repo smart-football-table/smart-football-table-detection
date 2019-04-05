@@ -14,8 +14,8 @@ upper = np.array([])
 
 mode = 0
 
-camera = cv2.VideoCapture(0)
-camera2 = cv2.VideoCapture(1)
+camera = cv2.VideoCapture(1)
+camera2 = cv2.VideoCapture(2)
 
 
 def click_and_crop(event, x, y, flags, param):

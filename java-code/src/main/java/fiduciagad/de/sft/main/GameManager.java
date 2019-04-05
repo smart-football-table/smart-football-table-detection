@@ -48,7 +48,7 @@ public class GameManager {
 		if (ballPositions.size() > 2) {
 			double velocity = velocityCalculator.getVelocityOfBallInKilometerPerHour(
 					ballPositions.get(ballPositions.size() - 2), ballPositions.get(ballPositions.size() - 1));
-			// here send velocity
+			mqtt.sendVelocity(velocity);
 		}
 
 		if (ballPositions.size() > 50) {

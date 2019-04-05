@@ -12,7 +12,7 @@ import fiduciagad.de.sft.mqtt.MqttSystem;
 public class Controller {
 
 	private boolean gameDetectionIsAlive = false;
-	private boolean adjustmentWanted = true;
+	private boolean adjustmentWanted = false;
 
 	private OpenCVHandler gameDetectionOpenCV = new OpenCVHandler();
 	private OpenCVHandler adjustmentOpenCV = new OpenCVHandler();
