@@ -75,7 +75,7 @@ while(True):
         previousPointX = pts[0][0]
         previousPointY = pts[0][1]
  
-    print("1|" + str(time.time()) + "|" + str(actualPointY) + "|" + str(actualPointX))
+    print("1|" + str(time.time()) + "|" + str(actualPointX) + "|" + str(actualPointY))
  
     # uncomment to see vid through test
     cv.imshow('frame', frame)
