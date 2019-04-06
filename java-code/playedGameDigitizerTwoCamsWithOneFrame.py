@@ -44,7 +44,19 @@ while(True):
     frame = imutils.resize(frame, width=frameSize)
     frame2 = imutils.resize(frame2, width=frameSize)
 
-    frame = frame[10:300, 10:300]
+
+    x1_start = 200
+    x1_end = 300
+    y1_start = 10
+    y1_end = 300
+    
+    x2_start = 10
+    x2_end = 300
+    y2_start = 10
+    y2_end = 300
+    
+    frame = frame[x1_start:x1_end, y1_start:y1_end]
+    frame2 = frame2[x2_start:x2_end, y2_start:y2_end]
 
     frame = cv.resize(frame, (600, 800))
     frame2 = cv.resize(frame2, (600, 800))
