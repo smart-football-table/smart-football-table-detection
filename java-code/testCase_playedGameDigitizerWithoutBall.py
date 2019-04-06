@@ -14,7 +14,7 @@ pts = deque(maxlen=20000)
 pts.appendleft((0, 0, time.time()))
 pts.appendleft((0, 0, time.time()))
 
-cap = cv.VideoCapture('../python-code/samplevideos/testVid_noBall.avi')
+cap = cv.VideoCapture('../../../../../Schreibtisch/testvideos/testVid_noBall.avi')
 
 cap.set(28, 0)
 

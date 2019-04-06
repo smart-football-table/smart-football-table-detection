@@ -11,13 +11,13 @@ public class Application {
 		Controller detector = new Controller();
 
 		OpenCVHandler gameDetection = new OpenCVHandler();
-		gameDetection.setPythonModule("playedGameDigitizerTwoCams.py");
-
+		gameDetection.setPythonModule("../../../../alexeyab/darknet/darknet_video.py");
+		
 		OpenCVHandler colorHandler = new OpenCVHandler();
 		colorHandler.setPythonModule("adjustment.py");
 
 		FileController.loadDataFromFile();
-
+		
 		detector.setGameDetection(gameDetection);
 		detector.setColorGrabber(colorHandler);
 

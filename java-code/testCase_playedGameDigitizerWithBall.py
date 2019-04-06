@@ -14,7 +14,7 @@ pts = deque(maxlen=20000)
 pts.appendleft((0, 0, time.time()))
 pts.appendleft((0, 0, time.time()))
 
-cap = cv.VideoCapture('../python-code/samplevideos/testVid_ballUpperLeft.avi')
+cap = cv.VideoCapture('../../../../../Schreibtisch/testvideos/testVid_ballUpperLeft.avi')
 
 cap.set(28, 0)
 
@@ -56,7 +56,7 @@ while(True):
         previousPointX = pts[0][0]
         previousPointY = pts[0][1]
 
-    print(str(time.time()) + "|" + str(actualPointY) + "|" + str(actualPointX))
+    print("1|"+ str(time.time()) + "|" + str(actualPointX) + "|" + str(actualPointY))
 
     # uncomment to see vid through test
     # cv.imshow('frame', frame)

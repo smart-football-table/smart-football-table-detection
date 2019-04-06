@@ -22,9 +22,13 @@ public class OpenCVHandler {
 
 		String path = System.getProperty("user.dir").replace('\\', '/');
 
+		System.out.println(path + "/" + pythonModule);
+		System.out.println(pythonArguments);
+		
 		pb = new ProcessBuilder("python", "-u", path + "/" + pythonModule, pythonArguments);
 		pb.redirectOutput();
 		pb.redirectError();
+
 		try {
 			process = pb.start();
 			processAlive = true;
@@ -43,20 +47,21 @@ public class OpenCVHandler {
 		boolean itsTheSecondOne = false;
 
 		try {
-			while ((line = reader.readLine()) != null && detector.isOngoing()) {
+			while ((line = reader.readLine()) != null || detector.isOngoing() || processAlive) {
 
-				if (deleteFirstLine != 0) {
+				if (line != null) {
+					if (line.contains("|")) {
 
-					if (itsTheSecondOne) {
-						manager.createBallPosition(lineBefore, line);
-						manager.doTheLogic();
+						if (itsTheSecondOne) {
+							manager.createBallPosition(lineBefore, line);
+							manager.doTheLogic();
+						}
+						lineBefore = line;
+						itsTheSecondOne = !itsTheSecondOne;
 					}
-					lineBefore = line;
-					itsTheSecondOne = !itsTheSecondOne;
+
+					deleteFirstLine++;
 				}
-
-				deleteFirstLine++;
-
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
