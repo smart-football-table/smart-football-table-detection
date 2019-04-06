@@ -24,6 +24,7 @@ public class GameManager {
 	private MqttSystem mqtt;
 	private BallPositionHandler ballPositionHandler = new BallPositionHandler();
 	private int positionsSinceLastVelocity = 0;
+	private int positionsSinceLastFoul;
 
 	public GameManager() throws MqttSecurityException, MqttException {
 		mqtt = new MqttSystem("localhost", 1883);
@@ -33,12 +34,14 @@ public class GameManager {
 		return teamOne.getScore() + "-" + teamTwo.getScore();
 	}
 
-	public void setGoalForTeamWhenGoalHappend(String atPostion) {
+	public void setGoalForTeamWhenGoalHappend(String atPostion) throws MqttPersistenceException, MqttException {
 
 		if (atPostion.equals("on the right")) {
 			teamOne.increaseScore();
+			mqtt.sendTeamThatScored(0);
 		} else {
 			teamTwo.increaseScore();
+			mqtt.sendTeamThatScored(1);
 		}
 
 	}
@@ -50,6 +53,7 @@ public class GameManager {
 		}
 
 		positionsSinceLastVelocity++;
+		positionsSinceLastFoul++;
 
 		if (positionsSinceLastVelocity > 15) {
 			positionsSinceLastVelocity = 0;
@@ -72,8 +76,8 @@ public class GameManager {
 			}
 		}
 
-		if (ballPositions.size() > 300) {
-
+		if (positionsSinceLastFoul > 300) {
+			positionsSinceLastFoul = 0;
 			if (foulChecker.isThereAFoul(ballPositions)) {
 				mqtt.sendFoul();
 			}
@@ -84,12 +88,21 @@ public class GameManager {
 			ballPositions = new ArrayList<BallPosition>();
 			teamOne.setScore(0);
 			teamTwo.setScore(0);
+			mqtt.sendGameStart();
 		}
 		if (teamTwo.getScore() == 6) {
 			mqtt.sendGameOver("1");
 			ballPositions = new ArrayList<BallPosition>();
 			teamOne.setScore(0);
 			teamTwo.setScore(0);
+			mqtt.sendGameStart();
+		}
+		if (teamOne.getScore() == 5 && teamTwo.getScore() == 5) {
+			mqtt.sendGameOver("1");
+			ballPositions = new ArrayList<BallPosition>();
+			teamOne.setScore(0);
+			teamTwo.setScore(0);
+			mqtt.sendGameStart();
 		}
 
 	}
