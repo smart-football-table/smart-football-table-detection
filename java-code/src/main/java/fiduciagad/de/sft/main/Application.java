@@ -18,6 +18,9 @@ public class Application {
 
 		FileController.loadDataFromFile();
 		
+		ConfiguratorValues.setMillimeterPerPixel(20);
+		ConfiguratorValues.setGameFieldSize(200, 200);
+		
 		detector.setGameDetection(gameDetection);
 		detector.setColorGrabber(colorHandler);
 

@@ -1,5 +1,6 @@
 package fiduciagad.de.sft.main;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +23,7 @@ public class GameManager {
 
 	private MqttSystem mqtt;
 	private BallPositionHandler ballPositionHandler = new BallPositionHandler();
+	private int positionsSinceLastVelocity = 0;
 
 	public GameManager() throws MqttSecurityException, MqttException {
 		mqtt = new MqttSystem("localhost", 1883);
@@ -43,12 +45,20 @@ public class GameManager {
 
 	public void doTheLogic() throws MqttPersistenceException, MqttException {
 
-		mqtt.sendPostion(ballPositions.get(ballPositions.size() - 1));
+		if (ballPositions.get(ballPositions.size() - 1).getXCoordinate() != -1) {
+			mqtt.sendPostion(ballPositions.get(ballPositions.size() - 1));
+		}
 
-		if (ballPositions.size() > 2) {
+		positionsSinceLastVelocity++;
+
+		if (positionsSinceLastVelocity > 15) {
+			positionsSinceLastVelocity = 0;
 			double velocity = velocityCalculator.getVelocityOfBallInKilometerPerHour(
 					ballPositions.get(ballPositions.size() - 2), ballPositions.get(ballPositions.size() - 1));
-			mqtt.sendVelocity(velocity);
+
+			velocity = Math.round(velocity * 100.0) / 100.0;
+
+			mqtt.sendVelocity(Math.abs(velocity));
 		}
 
 		if (ballPositions.size() > 50) {
