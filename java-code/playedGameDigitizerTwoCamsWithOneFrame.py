@@ -61,6 +61,9 @@ while(True):
     frame = cv.resize(frame, (600, 800))
     frame2 = cv.resize(frame2, (600, 800))
     
+    frame = imutils.rotate(frame, 90)
+    frame2 = imutils.rotate(frame2, 90)
+    
     frame = np.concatenate((frame, frame2), axis=1)
 
     hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
