@@ -39,8 +39,7 @@ public class MqttSystem implements Closeable {
 
 	public void sendIdle(String string) throws MqttPersistenceException, MqttException {
 
-		String finalString = "{\"idle\":" + string + "}";
-		mqttClient.publish("game/idle", finalString.getBytes(), 0, false);
+		mqttClient.publish("game/idle", string.getBytes(), 0, false);
 
 	}
 
