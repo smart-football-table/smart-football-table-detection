@@ -19,6 +19,9 @@ public class BallPositionHandlerTest {
 
 		ConfiguratorValues.setxOffsetCameraTwo(0);
 		ConfiguratorValues.setyOffsetCameraTwo(0);
+		
+		ConfiguratorValues.setOffsetX(0);
+		ConfiguratorValues.setOffsetY(0);
 	}
 
 	@Test
@@ -149,6 +152,24 @@ public class BallPositionHandlerTest {
 		assertThat(ballPosition.getXCoordinate(), is(-1));
 		assertThat(ballPosition.getYCoordinate(), is(-1));
 		assertThat(String.valueOf(ballPosition.getTimepoint().getTime()), is("123523234800"));
+	}
+
+	@Test
+	public void ballPositionValuesGetSetCorrectlyWithOffset() {
+
+		ConfiguratorValues.setOffsetX(50);
+		ConfiguratorValues.setOffsetY(100);
+
+		String string = "1|1235232348.00|100|200";
+		String string2 = "2|1235232348.00|100|200";
+
+		BallPositionHandler positionHandler = new BallPositionHandler();
+
+		BallPosition ballPosition = positionHandler.createBallPositionFrom(string, string2);
+
+		assertThat(ballPosition.getXCoordinate(), is(50));
+		assertThat(ballPosition.getYCoordinate(), is(100));
+
 	}
 
 }

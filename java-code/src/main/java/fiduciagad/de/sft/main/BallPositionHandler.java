@@ -48,6 +48,13 @@ public class BallPositionHandler {
 
 		BallPosition ballPosition = new BallPosition();
 
+		if (xCoordinateFinal != -1 || yCoordinateFinal != 1) {
+
+			xCoordinateFinal = xCoordinateFinal - ConfiguratorValues.getOffsetX();
+			yCoordinateFinal = yCoordinateFinal - ConfiguratorValues.getOffsetY();
+
+		}
+
 		ballPosition.setXCoordinate(xCoordinateFinal);
 		ballPosition.setYCoordinate(yCoordinateFinal);
 
