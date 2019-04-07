@@ -48,9 +48,9 @@ pts = deque(maxlen=200)
 def YOLO():
 
     global metaMain, netMain, altNames
-    configPath = "./cfg/obj.cfg"
-    weightPath = "./backup/obj_130000.weights"
-    metaPath = "./obj.data"
+    configPath = "/home/marco/dev/alexeyab/darknet/cfg/obj.cfg"
+    weightPath = "/home/marco/dev/alexeyab/darknet/backup/fourthTry/obj_130000.weights"
+    metaPath = "/home/marco/dev/alexeyab/darknet/obj.data"
     if not os.path.exists(configPath):
         raise ValueError("Invalid config path `" +
                          os.path.abspath(configPath)+"`")
@@ -85,15 +85,20 @@ def YOLO():
                     pass
         except Exception:
             pass
-    #cap = cv2.VideoCapture(0)
-    cap = cv2.VideoCapture("/home/marco/Schreibtisch/testvideos/test_logitech1.avi")
-    cap2 = cv2.VideoCapture("/home/marco/Schreibtisch/testvideos/test_logitech1.avi")
+    cap = cv2.VideoCapture(0)
+    cap2 = cv2.VideoCapture(1)
+    #cap = cv2.VideoCapture("/home/marco/Schreibtisch/testvideos/test_logitech1.avi")
     #cap.set(3, 1280)
     #cap.set(4, 720)
     #out = cv2.VideoWriter(
     #    "output.avi", cv2.VideoWriter_fourcc(*"MJPG"), 10.0,
     #    (darknet.network_width(netMain), darknet.network_height(netMain)))
-    print("Starting the YOLO loop...")
+    #print("Starting the YOLO loop...")
+
+    width1 = int(cap.get(3))  # float
+    height1 = int(cap.get(4)) # float
+    width2 = int(cap2.get(3))  # float
+    height2 = int(cap2.get(4)) # float
 
     # Create an image we reuse for each detect
     darknet_image = darknet.make_image(darknet.network_width(netMain),
@@ -102,8 +107,30 @@ def YOLO():
     while True:
         prev_time = time.time()
         ret, frame_read = cap.read()
+        ret2, frame_read2 = cap2.read()
         frame_rgb = cv2.cvtColor(frame_read, cv2.COLOR_BGR2RGB)
-        frame_resized = cv2.resize(frame_rgb,
+        frame_rgb2 = cv2.cvtColor(frame_read2, cv2.COLOR_BGR2RGB)
+
+        #x_start = 9
+        #x_end = 440
+        #y_start = 0
+        #y_end = width
+
+
+        frame_rgb = imutils.rotate(frame_rgb, 90)
+        frame_rgb2 = imutils.rotate(frame_rgb2, 90)
+
+        #frame_rgb = frame_rgb[x_start:x_end, y_start:y_end]
+
+        #frame_rgb = cv2.resize(frame_rgb, (width, height))
+
+        #frame = imutils.rotate(frame, 90)
+        #frame2 = imutils.rotate(frame2, 90)
+
+        finalframe = np.concatenate((frame_rgb, frame_rgb2), axis=1)
+
+
+        frame_resized = cv2.resize(finalframe,
                                    (darknet.network_width(netMain),
                                     darknet.network_height(netMain)),
                                    interpolation=cv2.INTER_LINEAR)
@@ -134,53 +161,11 @@ def YOLO():
         actualPointY = position[1]
 
         print("1|" + str(time.time()) + "|" + str(actualPointX) + "|" + str(actualPointY))
+        print("2|" + str(time.time()) + "|-1|-1")
 
         image = cvDrawBall(detections, frame_resized)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         cv2.imshow('Demo', image)
-
-        #----------------------------secondCam
-
-
-        prev_time = time.time()
-        ret, frame_read = cap2.read()
-        frame_rgb = cv2.cvtColor(frame_read, cv2.COLOR_BGR2RGB)
-        frame_resized = cv2.resize(frame_rgb,
-                                   (darknet.network_width(netMain),
-                                    darknet.network_height(netMain)),
-                                   interpolation=cv2.INTER_LINEAR)
-
-        darknet.copy_image_from_bytes(darknet_image,frame_resized.tobytes())
-
-        detections = darknet.detect_image(netMain, metaMain, darknet_image, thresh=0.05)
-
-        position = (-1,-1)
-        if not (len(detections) is 0):
-            position = (int(detections[0][2][0]), int(detections[0][2][1]))
-            pts.appendleft(position)
-
-        # loop over the set of tracked points
-        for i in xrange(1, len(pts)):
-            # if either of the tracked points are None, ignore
-            # them
-            if pts[i - 1] is None or pts[i] is None:
-                continue
-
-            # otherwise, compute the thickness of the line and
-            # draw the connecting lines
-            thickness = int(np.sqrt(200 / float(i + 1)) * 2)
-            cv2.line(frame_resized, pts[i - 1], pts[i], (0, 255, 0), thickness)
-
-
-        actualPointX = position[0]
-        actualPointY = position[1]
-
-        print("2|" + str(time.time()) + "|" + str(actualPointX) + "|" + str(actualPointY))
-
-        image2 = cvDrawBall(detections, frame_resized)
-        image2 = cv2.cvtColor(image2, cv2.COLOR_BGR2RGB)
-        cv2.imshow('Demo2', image2)
-
 
         cv2.waitKey(3)
     cap.release()

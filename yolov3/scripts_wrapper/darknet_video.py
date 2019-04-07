@@ -48,9 +48,9 @@ pts = deque(maxlen=200)
 def YOLO():
 
     global metaMain, netMain, altNames
-    configPath = "./cfg/obj.cfg"
-    weightPath = "./backup/obj_130000.weights"
-    metaPath = "./obj.data"
+    configPath = "/home/marco/dev/alexeyab/darknet/cfg/obj.cfg"
+    weightPath = "/home/marco/dev/alexeyab/darknet/backup/fourthTry/obj_130000.weights"
+    metaPath = "/home/marco/dev/alexeyab/darknet/obj.data"
     if not os.path.exists(configPath):
         raise ValueError("Invalid config path `" +
                          os.path.abspath(configPath)+"`")
@@ -85,14 +85,17 @@ def YOLO():
                     pass
         except Exception:
             pass
-    #cap = cv2.VideoCapture(0)
-    cap = cv2.VideoCapture("/home/marco/Schreibtisch/testvideos/test_logitech1.avi")
+    cap = cv2.VideoCapture(0)
+    #cap = cv2.VideoCapture("/home/marco/Schreibtisch/testvideos/test_logitech1.avi")
     #cap.set(3, 1280)
     #cap.set(4, 720)
     #out = cv2.VideoWriter(
     #    "output.avi", cv2.VideoWriter_fourcc(*"MJPG"), 10.0,
     #    (darknet.network_width(netMain), darknet.network_height(netMain)))
-    print("Starting the YOLO loop...")
+    #print("Starting the YOLO loop...")
+
+    width = int(cap.get(3))  # float
+    height = int(cap.get(4)) # float
 
     # Create an image we reuse for each detect
     darknet_image = darknet.make_image(darknet.network_width(netMain),
@@ -102,6 +105,17 @@ def YOLO():
         prev_time = time.time()
         ret, frame_read = cap.read()
         frame_rgb = cv2.cvtColor(frame_read, cv2.COLOR_BGR2RGB)
+
+        x_start = 9
+        x_end = 440
+        y_start = 0
+        y_end = width
+
+        frame_rgb = frame_rgb[x_start:x_end, y_start:y_end]
+
+        frame_rgb = cv2.resize(frame_rgb, (width, height))
+
+
         frame_resized = cv2.resize(frame_rgb,
                                    (darknet.network_width(netMain),
                                     darknet.network_height(netMain)),

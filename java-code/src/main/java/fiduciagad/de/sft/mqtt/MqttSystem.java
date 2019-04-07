@@ -62,6 +62,11 @@ public class MqttSystem implements Closeable {
 
 		String finalString = "{\"winners\":[" + string + "]}";
 
+		if (string.contains(",")) {
+			String[] strings = string.split(",");
+			finalString = "{\"winners\":[" + strings[0] + "," + strings[1] + "]}";
+		}
+
 		mqttClient.publish("game/gameover", finalString.getBytes(), 0, false);
 
 	}
@@ -86,6 +91,12 @@ public class MqttSystem implements Closeable {
 		String empty = "";
 		mqttClient.publish("game/start", empty.getBytes(), 0, false);
 
+	}
+
+	public void sendTeamThatScored(int i) throws MqttPersistenceException, MqttException {
+		String empty = ""+i;
+		mqttClient.publish("team/scored", empty.getBytes(), 0, false);
+		
 	}
 
 }

@@ -11,7 +11,7 @@ public class Application {
 		Controller detector = new Controller();
 
 		OpenCVHandler gameDetection = new OpenCVHandler();
-		gameDetection.setPythonModule("../../../../alexeyab/darknet/darknet_video.py");
+		gameDetection.setPythonModule("../../../../alexeyab/darknet/darknet_video_2Cams.py");
 		
 		OpenCVHandler colorHandler = new OpenCVHandler();
 		colorHandler.setPythonModule("adjustment.py");
