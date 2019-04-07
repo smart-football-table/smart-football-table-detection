@@ -26,6 +26,7 @@ public class GameManager {
 	private int positionsSinceLastFoul;
 	private BallPosition ballPositionOne = null;
 	private BallPosition ballPositionTwo = null;
+	private boolean calculateVelocity = false;
 
 	public GameManager() throws MqttSecurityException, MqttException {
 		mqtt = new MqttSystem("localhost", 1883);
@@ -56,7 +57,6 @@ public class GameManager {
 		positionsSinceLastVelocity++;
 		positionsSinceLastFoul++;
 
-		boolean calculateVelocity = false;
 		BallPosition actualBallPOs = ballPositions.get(ballPositions.size() - 1);
 		boolean ballPositionNotSet = actualBallPOs.getXCoordinate() == -1 && actualBallPOs.getYCoordinate() == -1;
 
@@ -80,9 +80,11 @@ public class GameManager {
 			velocity = Math.round(velocity * 100.0) / 100.0;
 			mqtt.sendVelocity(Math.abs(velocity));
 
-			double velocityms = velocityCalculator.getVelocityOfBallInMeterPerSecond(ballPositionOne, ballPositionTwo);
-			velocityms = Math.round(velocityms * 100.0) / 100.0;
-			mqtt.sendVelocityMS(Math.abs(velocityms));
+			// double velocityms =
+			// velocityCalculator.getVelocityOfBallInMeterPerSecond(ballPositionOne,
+			// ballPositionTwo);
+			// velocityms = Math.round(velocityms * 100.0) / 100.0;
+			// mqtt.sendVelocityMS(Math.abs(velocityms));
 
 			// double velocityAverage = velocityCalculator.getVelocityAverage();
 			// velocityAverage = Math.round(velocityAverage * 100.0) / 100.0;
