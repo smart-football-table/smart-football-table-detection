@@ -39,7 +39,7 @@ public class Controller {
 			if (gameDetectionIsAlive) {
 
 				mqttpub.sendIdle("false");
-				mqttpub.sendPostion("0-0");
+				mqttpub.sendScore("0-0");
 				mqttpub.sendGameStart();
 
 				String pythonArgument = ConfiguratorValues.getColorHSVMinH() + ","

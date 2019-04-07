@@ -2,6 +2,8 @@ package fiduciagad.de.sft.mqtt;
 
 import java.io.Closeable;
 
+import javax.management.StringValueExp;
+
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -39,11 +41,12 @@ public class MqttSystem implements Closeable {
 
 	public void sendIdle(String string) throws MqttPersistenceException, MqttException {
 
-		mqttClient.publish("game/idle", string.getBytes(), 0, false);
+		String finalString = "{\"idle\":" + string + "}";
+		mqttClient.publish("game/idle", finalString.getBytes(), 0, false);
 
 	}
 
-	public void sendPostion(String string) throws MqttPersistenceException, MqttException {
+	public void sendScore(String string) throws MqttPersistenceException, MqttException {
 
 		String finalString = "{\"score\":[" + string.split("-")[0] + "," + string.split("-")[1] + "]}";
 
@@ -94,9 +97,15 @@ public class MqttSystem implements Closeable {
 	}
 
 	public void sendTeamThatScored(int i) throws MqttPersistenceException, MqttException {
-		String empty = ""+i;
+		String empty = "" + i;
 		mqttClient.publish("team/scored", empty.getBytes(), 0, false);
-		
+
+	}
+
+	public void sendVelocityMS(double velocityms) throws MqttPersistenceException, MqttException {
+		String finalString = "{\"velocityms\":" + velocityms + "}";
+		mqttClient.publish("ball/velocityms", finalString.getBytes(), 0, false);
+
 	}
 
 }

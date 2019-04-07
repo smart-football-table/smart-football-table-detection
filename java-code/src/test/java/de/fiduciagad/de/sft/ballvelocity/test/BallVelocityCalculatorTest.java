@@ -2,6 +2,9 @@ package de.fiduciagad.de.sft.ballvelocity.test;
 
 import static org.junit.Assert.assertThat;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -91,6 +94,28 @@ public class BallVelocityCalculatorTest {
 
 		assertThat(ballVelocityCaluclator.getVelocityOfBallInKilometerPerHour(position1, position2),
 				CoreMatchers.is(3.6));
+
+	}
+
+	@Test
+	public void calculateCorrectAverageVelocity() {
+
+		List<Double> values = new ArrayList<Double>();
+
+		values.add(10.0);
+		values.add(10.0);
+		values.add(5.0);
+		values.add(5.0);
+		values.add(5.0);
+		values.add(5.0);
+		values.add(15.0);
+		values.add(15.0);
+		values.add(15.0);
+		values.add(15.0);
+
+		ballVelocityCaluclator.setVelocityList(values);
+
+		assertThat(ballVelocityCaluclator.getVelocityAverage(), CoreMatchers.is(10.0));
 
 	}
 

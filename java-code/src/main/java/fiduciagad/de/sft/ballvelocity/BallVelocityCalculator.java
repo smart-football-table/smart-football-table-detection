@@ -1,9 +1,22 @@
 package fiduciagad.de.sft.ballvelocity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import fiduciagad.de.sft.main.BallPosition;
 import fiduciagad.de.sft.main.ConfiguratorValues;
 
 public class BallVelocityCalculator {
+
+	private List<Double> velocityValues = new ArrayList<Double>();
+
+	public List<Double> getVelocityValues() {
+		return velocityValues;
+	}
+
+	public void setVelocityValues(List<Double> velocityValues) {
+		this.velocityValues = velocityValues;
+	}
 
 	public double getVelocityOfBallInKilometerPerHour(BallPosition position1, BallPosition position2) {
 		return getVelocityOfBallInMeterPerSecond(position1, position2) * 3.6; // (m/s) --> (km/h): with 3.6
@@ -49,6 +62,21 @@ public class BallVelocityCalculator {
 		double distanceRounded = Math.floor(distance * 100) / 100;
 
 		return distanceRounded;
+	}
+
+	public void setVelocityList(List<Double> values) {
+		this.velocityValues = values;
+	}
+
+	public double getVelocityAverage() {
+		double sum = 0;
+
+		for (Double value : velocityValues) {
+			sum = sum + value;
+		}
+
+		return sum / velocityValues.size();
+
 	}
 
 }

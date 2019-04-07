@@ -24,7 +24,7 @@ public class OpenCVHandler {
 
 		System.out.println(path + "/" + pythonModule);
 		System.out.println(pythonArguments);
-		
+
 		pb = new ProcessBuilder("python", "-u", path + "/" + pythonModule, pythonArguments);
 		pb.redirectOutput();
 		pb.redirectError();
@@ -38,7 +38,7 @@ public class OpenCVHandler {
 
 	}
 
-	public void handleWithOpenCVOutput(Controller detector) throws MqttSecurityException, MqttException {
+	public void handleWithOpenCVOutput(Controller detector) throws MqttSecurityException, MqttException, IOException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		manager = new GameManager();
 		String line = null;
@@ -46,11 +46,12 @@ public class OpenCVHandler {
 		int deleteFirstLine = 0;
 		boolean itsTheSecondOne = false;
 
-		try {
-			while ((line = reader.readLine()) != null || detector.isOngoing() || processAlive) {
+		while ((line = reader.readLine()) != null || detector.isOngoing() || processAlive) {
 
-				if (line != null) {
-					if (line.contains("|")) {
+			if (line != null) {
+				if (line.contains("|")) {
+
+					try {
 
 						if (itsTheSecondOne) {
 							manager.createBallPosition(lineBefore, line);
@@ -58,13 +59,13 @@ public class OpenCVHandler {
 						}
 						lineBefore = line;
 						itsTheSecondOne = !itsTheSecondOne;
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-
-					deleteFirstLine++;
 				}
+
+				deleteFirstLine++;
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 	}
 

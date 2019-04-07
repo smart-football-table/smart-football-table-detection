@@ -12,7 +12,6 @@ import org.junit.Test;
 
 import fiduciagad.de.sft.main.BallPosition;
 import fiduciagad.de.sft.main.Controller;
-import fiduciagad.de.sft.main.GameManager;
 import fiduciagad.de.sft.main.OpenCVHandler;
 
 public class ControllerTest {
@@ -50,7 +49,8 @@ public class ControllerTest {
 
 	@Ignore
 	@Test
-	public void readRealExampleTestVideoWithNoBallAndGetBallPositions() throws MqttSecurityException, MqttException {
+	public void readRealExampleTestVideoWithNoBallAndGetBallPositions()
+			throws MqttSecurityException, MqttException, IOException {
 
 		OpenCVHandler opencv = new OpenCVHandler();
 
@@ -71,7 +71,7 @@ public class ControllerTest {
 
 	@Ignore
 	@Test
-	public void readRealExampleTestVideoWithBall() throws MqttSecurityException, MqttException {
+	public void readRealExampleTestVideoWithBall() throws MqttSecurityException, MqttException, IOException {
 
 		OpenCVHandler opencv = new OpenCVHandler();
 

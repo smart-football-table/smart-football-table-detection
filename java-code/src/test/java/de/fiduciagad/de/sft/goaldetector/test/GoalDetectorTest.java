@@ -13,6 +13,7 @@ import org.junit.Test;
 
 import fiduciagad.de.sft.goaldetector.GoalDetector;
 import fiduciagad.de.sft.main.BallPosition;
+import fiduciagad.de.sft.main.BallPositionHandler;
 import fiduciagad.de.sft.main.ConfiguratorValues;
 
 public class GoalDetectorTest {
@@ -21,10 +22,14 @@ public class GoalDetectorTest {
 	private BallPosition ballPosition_t;
 	private BallPosition ballPosition_tMinus1;
 	private BallPosition ballPosition_tMinus2;
+	private GoalDetector goalDetector;
 
 	@Before
 	public void initialize() {
 		ConfiguratorValues.setGameFieldSize(200, 50);
+
+		goalDetector = new GoalDetector();
+		goalDetector.setBallWasInMidArea(true);
 
 		for (int i = 0; i < 50; i++) {
 			BallPosition position = new BallPosition(-1, -1, new Date());
@@ -36,8 +41,6 @@ public class GoalDetectorTest {
 	@Test
 	public void gettingLessThanFiftyTimesNoPositionIsntAGoal() {
 
-		GoalDetector goalDetector = new GoalDetector();
-
 		ballPositions.add(new BallPosition(100, 100, new Date()));
 
 		assertThat(goalDetector.isThereAGoal(ballPositions), is(false));
@@ -47,7 +50,24 @@ public class GoalDetectorTest {
 	@Test
 	public void gettingFiftyTimesNoPositionIsAGoal() {
 
-		GoalDetector goalDetector = new GoalDetector();
+		ballPositions.add(0, getPositionInFrontOfGoal());
+
+		assertThat(goalDetector.isThereAGoal(ballPositions), is(true));
+
+	}
+
+	@Test
+	public void ifBallPositionIsInMiddleOfFieldBallWasInMidArea() {
+
+		goalDetector.setBallWasInMidArea(false);
+
+		String string = "1|1235232348.00|100|25";
+		String string2 = "2|1235232348.00|100|25";
+
+		BallPositionHandler positionHandler = new BallPositionHandler();
+		positionHandler.setGoalDetector(goalDetector);
+
+		BallPosition ballPosition = positionHandler.createBallPositionFrom(string, string2);
 
 		ballPositions.add(0, getPositionInFrontOfGoal());
 
@@ -56,9 +76,19 @@ public class GoalDetectorTest {
 	}
 
 	@Test
-	public void lastPositionWasntInFrontOfGoalIsntAGoal() {
+	public void ballWasNeverInMidAreaINotAGoal() {
 
-		GoalDetector goalDetector = new GoalDetector();
+		goalDetector.setBallWasInMidArea(false);
+
+		ballPositions.add(0, getPositionInFrontOfGoal());
+
+		assertThat(goalDetector.isThereAGoal(ballPositions), is(false));
+
+	}
+
+	@Ignore
+	@Test
+	public void lastPositionWasntInFrontOfGoalIsntAGoal() {
 
 		ballPositions.add(0, getPositionNotInFrontOfGoal());
 
@@ -133,6 +163,10 @@ public class GoalDetectorTest {
 
 	private BallPosition getPositionInFrontOfGoal() {
 		return new BallPosition(10, 25, new Date());
+	}
+
+	private BallPosition getPositionInMiddleOfField() {
+		return new BallPosition(100, 25, new Date());
 	}
 
 	private void initalizeBallPositionsFrom(String gameField) {

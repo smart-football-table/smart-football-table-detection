@@ -12,18 +12,16 @@ public class Application {
 
 		OpenCVHandler gameDetection = new OpenCVHandler();
 		gameDetection.setPythonModule("../../../../alexeyab/darknet/darknet_video.py");
-		
+
 		OpenCVHandler colorHandler = new OpenCVHandler();
 		colorHandler.setPythonModule("adjustment.py");
 
-		FileController.loadDataFromFile();
-		
-		ConfiguratorValues.setMillimeterPerPixel(20);
-		
-		ConfiguratorValues.setOffsetX(35);
-		ConfiguratorValues.setOffsetY(90);
-		ConfiguratorValues.setGameFieldSize(765,640);
-		
+		// FileController.loadDataFromFile();
+
+		ConfiguratorValues.setMillimeterPerPixel(200);
+
+		ConfiguratorValues.setGameFieldSize(810, 810);
+
 		detector.setGameDetection(gameDetection);
 		detector.setColorGrabber(colorHandler);
 
