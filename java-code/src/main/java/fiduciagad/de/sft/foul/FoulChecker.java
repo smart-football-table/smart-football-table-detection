@@ -1,45 +1,34 @@
 package fiduciagad.de.sft.foul;
 
-import java.util.Date;
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
+
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import fiduciagad.de.sft.main.BallPosition;
 
 public class FoulChecker {
 
 	public boolean isThereAFoul(List<BallPosition> ballPositions) {
-		boolean thereIsAFoul = false;
-		int counter = 0;
-		BallPosition lastPosition = new BallPosition(-1, -1, new Date());
-
-		for (int i = 0; i < 301; i++) {
-
-			// iterate over the last 300 positions
-			BallPosition position = ballPositions.get((ballPositions.size() - 301) + i);
-
-			if (noVerticalPositionChangeDetected(lastPosition, position)) {
-				counter++;
-			} else {
-				counter = 0;
-			}
-
-			if (counter == 300) {
-				thereIsAFoul = true;
-			}
-
-			lastPosition = position;
-
+		if (ballPositions.isEmpty()) {
+			return false;
 		}
-
-		return thereIsAFoul;
+		BallPosition lastPos = ballPositions.get(ballPositions.size() - 1);
+		return isEmpty(lastN(ballPositions, 300).filter(diffMore(lastPos.getXCoordinate(), 50)));
 	}
 
-	private boolean noVerticalPositionChangeDetected(BallPosition lastPosition, BallPosition position) {
+	private <T> Stream<T> lastN(List<T> list, int size) {
+		return list.subList(max(0, list.size() - size), list.size()).stream();
+	}
 
-		boolean xInSameRange = position.getXCoordinate() >= lastPosition.getXCoordinate() - 50
-				&& position.getXCoordinate() <= lastPosition.getXCoordinate() + 50 && position.getXCoordinate() != -1;
+	private boolean isEmpty(Stream<?> stream) {
+		return !stream.findAny().isPresent();
+	}
 
-		return xInSameRange;
+	private Predicate<BallPosition> diffMore(int lastXcoord, int max) {
+		return p -> p.getXCoordinate() == -1 || abs(p.getXCoordinate() - lastXcoord) > max;
 	}
 
 }
