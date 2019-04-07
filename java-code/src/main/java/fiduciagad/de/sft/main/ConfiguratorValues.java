@@ -3,15 +3,26 @@ package fiduciagad.de.sft.main;
 public class ConfiguratorValues {
 
 	private static int millimeterPerPixel = 0;
-	
+
 	private static int xOffsetCameraOne = 0;
 	private static int yOffsetCameraOne = 0;
-	
+
 	private static int xOffsetCameraTwo = 0;
 	private static int yOffsetCameraTwo = 0;
 
 	private static int xSizeGameField = 0;
 	private static int ySizeGameField = 0;
+
+	private static int offsetX = 0;
+	private static int offsetY = 0;
+
+	public static int getOffsetX() {
+		return offsetX;
+	}
+
+	public static int getOffsetY() {
+		return offsetY;
+	}
 
 	private static int colorHSVMinH = 0;
 	private static int colorHSVMinS = 0;
@@ -129,7 +140,13 @@ public class ConfiguratorValues {
 	public static void setyOffsetCameraTwo(int yOffsetCameraTwo) {
 		ConfiguratorValues.yOffsetCameraTwo = yOffsetCameraTwo;
 	}
-	
-	
+
+	public static void setOffsetX(int offsetX) {
+		ConfiguratorValues.offsetX = offsetX;
+	}
+
+	public static void setOffsetY(int offsetY) {
+		ConfiguratorValues.offsetY = offsetY;
+	}
 
 }

@@ -42,11 +42,11 @@ public class BallPosition {
 	}
 
 	public double normedXPosition() {
-		return (double) xCoordinate / (double) ConfiguratorValues.getXMaxOfGameField();
+		return (double) (xCoordinate+ConfiguratorValues.getOffsetX()) / (double) ConfiguratorValues.getXMaxOfGameField();
 	}
 
 	public double normedYPosition() {
-		return (double) yCoordinate / (double) ConfiguratorValues.getYMaxOfGameField();
+		return (double) (yCoordinate+ConfiguratorValues.getOffsetY()) / (double) ConfiguratorValues.getYMaxOfGameField();
 	}
 
 }
