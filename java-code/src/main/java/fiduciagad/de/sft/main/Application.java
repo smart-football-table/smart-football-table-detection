@@ -18,7 +18,7 @@ public class Application {
 
 		// FileController.loadDataFromFile();
 
-		ConfiguratorValues.setMillimeterPerPixel(200);
+		ConfiguratorValues.setMillimeterPerPixel(20);
 
 		ConfiguratorValues.setGameFieldSize(810, 810);
 
