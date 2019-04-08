@@ -40,6 +40,7 @@ public class GameManager {
 			public void messageArrived(String topic, MqttMessage message) throws Exception {
 				if (topic.equals("game/reset")) {
 					resetGame();
+					gameOver = true;
 				}
 
 			}
@@ -163,6 +164,8 @@ public class GameManager {
 
 		if (gameOver && goalDetector.isBallWasInMidArea()) {
 			resetGame();
+			mqtt.sendScore("0-0");
+			mqtt.sendGameStart();
 			gameOver = false;
 		}
 
@@ -185,7 +188,7 @@ public class GameManager {
 			if (teamOne.getScore() == 5 && teamTwo.getScore() == 5) {
 				mqtt.sendGameOver("1");
 				gameOver = true;
-			} 
+			}
 		}
 
 	}
@@ -194,8 +197,6 @@ public class GameManager {
 		ballPositions = new ArrayList<BallPosition>();
 		teamOne.setScore(0);
 		teamTwo.setScore(0);
-		mqtt.sendScore("0-0");
-		mqtt.sendGameStart();
 	}
 
 	public void createBallPosition(String lineBefore, String line) {
