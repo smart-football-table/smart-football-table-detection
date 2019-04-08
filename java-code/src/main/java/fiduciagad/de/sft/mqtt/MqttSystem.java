@@ -2,9 +2,8 @@ package fiduciagad.de.sft.mqtt;
 
 import java.io.Closeable;
 
-import javax.management.StringValueExp;
-
 import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
@@ -12,7 +11,6 @@ import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import fiduciagad.de.sft.main.BallPosition;
-import fiduciagad.de.sft.main.SimpleMqttCallBack;
 
 public class MqttSystem implements Closeable {
 
@@ -24,9 +22,9 @@ public class MqttSystem implements Closeable {
 
 	}
 
-	public MqttSystem(String host, int port, SimpleMqttCallBack simpleMqttCallBack) throws MqttException {
+	public MqttSystem(String host, int port, MqttCallback mqttCallback) throws MqttException {
 		mqttClient = new MqttClient("tcp://" + host + ":" + port, "SetupClient", new MemoryPersistence());
-		mqttClient.setCallback(simpleMqttCallBack);
+		mqttClient.setCallback(mqttCallback);
 		mqttClient.connect();
 	}
 
