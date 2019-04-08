@@ -27,6 +27,7 @@ public class GameManager {
 	private BallPosition ballPositionOne = null;
 	private BallPosition ballPositionTwo = null;
 	private boolean calculateVelocity = false;
+	private boolean gameOver;
 
 	public GameManager() throws MqttSecurityException, MqttException {
 		mqtt = new MqttSystem("localhost", 1883);
@@ -108,6 +109,11 @@ public class GameManager {
 
 			}
 		}
+		
+		if (gameOver && goalDetector.isBallWasInMidArea()) {
+			resetGame();
+			gameOver = false;
+		}
 
 		if (positionsSinceLastFoul > 300) {
 			positionsSinceLastFoul = 0;
@@ -118,15 +124,15 @@ public class GameManager {
 
 		if (teamOne.getScore() == 6) {
 			mqtt.sendGameOver("0");
-			resetGame();
+			gameOver = true;
 		}
 		if (teamTwo.getScore() == 6) {
 			mqtt.sendGameOver("1");
-			resetGame();
+			gameOver = true;
 		}
 		if (teamOne.getScore() == 5 && teamTwo.getScore() == 5) {
 			mqtt.sendGameOver("1");
-			resetGame();
+			gameOver = true;
 		}
 
 	}
