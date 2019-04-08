@@ -22,9 +22,6 @@ public class OpenCVHandler {
 
 		String path = System.getProperty("user.dir").replace('\\', '/');
 
-		System.out.println(path + "/" + pythonModule);
-		System.out.println(pythonArguments);
-
 		pb = new ProcessBuilder("python", "-u", path + "/" + pythonModule, pythonArguments);
 		pb.redirectOutput();
 		pb.redirectError();

@@ -27,6 +27,7 @@ public class GameManager {
 	private BallPosition ballPositionOne = null;
 	private BallPosition ballPositionTwo = null;
 	private boolean calculateVelocity = false;
+	private double oldVelocity;
 
 	public GameManager() throws MqttSecurityException, MqttException {
 		mqtt = new MqttSystem("localhost", 1883);
@@ -61,12 +62,12 @@ public class GameManager {
 		boolean ballPositionNotSet = actualBallPOs.getXCoordinate() == -1 && actualBallPOs.getYCoordinate() == -1;
 
 		if (!ballPositionNotSet) {
-			if (ballPositionOne == null) {
-				ballPositionOne = actualBallPOs;
-			}
-			if (ballPositionOne != null && ballPositionTwo == null) {
+			if (ballPositionOne != null && ballPositionTwo == null && positionsSinceLastVelocity > 5) {
 				ballPositionTwo = actualBallPOs;
 				calculateVelocity = true;
+			}
+			if (ballPositionOne == null) {
+				ballPositionOne = actualBallPOs;
 			}
 
 		}
@@ -78,8 +79,13 @@ public class GameManager {
 			double velocity = velocityCalculator.getVelocityOfBallInKilometerPerHour(ballPositionOne, ballPositionTwo);
 			velocityCalculator.getVelocityValues().add(Math.abs(velocity));
 			velocity = Math.round(velocity * 100.0) / 100.0;
+			if (velocity == 0.0) {
+				velocity = oldVelocity;
+			} else {
+				oldVelocity = velocity;
+			}
 			mqtt.sendVelocity(Math.abs(velocity));
-
+			//
 			// double velocityms =
 			// velocityCalculator.getVelocityOfBallInMeterPerSecond(ballPositionOne,
 			// ballPositionTwo);
@@ -96,6 +102,17 @@ public class GameManager {
 			ballPositionTwo = null;
 
 		}
+
+		// if (positionsSinceLastVelocity > 15) {
+		// positionsSinceLastVelocity = 0;
+		// double velocity = velocityCalculator.getVelocityOfBallInKilometerPerHour(
+		// ballPositions.get(ballPositions.size() - 2),
+		// ballPositions.get(ballPositions.size() - 1));
+		//
+		// velocity = Math.round(velocity * 100.0) / 100.0;
+		// System.out.println(velocity);
+		// mqtt.sendVelocity(Math.abs(velocity));
+		// }
 
 		if (ballPositions.size() > 50) {
 

@@ -46,7 +46,7 @@ public class Controller {
 						+ ConfiguratorValues.getColorHSVMinS() + "," + ConfiguratorValues.getColorHSVMinV() + ","
 						+ ConfiguratorValues.getColorHSVMaxH() + "," + ConfiguratorValues.getColorHSVMaxS() + ","
 						+ ConfiguratorValues.getColorHSVMaxV();
-				//gameDetectionOpenCV.setPythonArguments(pythonArgument);
+				gameDetectionOpenCV.setPythonArguments(pythonArgument);
 
 				do {
 					gameDetectionOpenCV.startPythonModule();

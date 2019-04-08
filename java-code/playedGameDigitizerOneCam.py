@@ -11,8 +11,8 @@ parser.add_argument("a", nargs='?', default="empty")
 args = parser.parse_args()
 
 if args.a == 'empty':
-    greenLower = (0,0,0)
-    greenUpper = (0,0,0)
+    greenLower = (0, 0, 0)
+    greenUpper = (0, 0, 0)
 else:
     x = args.a.split(",")
     hsvminh = int(x[0])
@@ -21,9 +21,8 @@ else:
     hsvmaxh = int(x[3])
     hsvmaxs = int(x[4])
     hsvmaxv = int(x[5])
-    greenLower = (hsvminh,hsvmins,hsvminv)
-    greenUpper = (hsvmaxh,hsvmaxs,hsvmaxv)
-
+    greenLower = (hsvminh, hsvmins, hsvminv)
+    greenUpper = (hsvmaxh, hsvmaxs, hsvmaxv)
 
 frameSize = 800
 
@@ -32,7 +31,7 @@ pts = deque(maxlen=20000)
 pts.appendleft((0, 0, time.time()))
 pts.appendleft((0, 0, time.time()))
 
-cap = cv.VideoCapture(0)
+cap = cv.VideoCapture('fisheye.avi')
 
 cap.set(28, 0)
 
@@ -47,7 +46,6 @@ while(True):
     mask = cv.inRange(hsv, greenLower, greenUpper)
     mask = cv.erode(mask, None, iterations=2)
     mask = cv.dilate(mask, None, iterations=2)
-
    
     cnts = cv.findContours(mask.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[-2]
     center = None
