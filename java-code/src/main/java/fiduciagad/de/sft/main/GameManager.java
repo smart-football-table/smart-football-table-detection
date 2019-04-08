@@ -154,7 +154,9 @@ public class GameManager {
 				String atPostion = goalDetector.whereHappendTheGoal(ballPositions.get(ballPositions.size() - 51),
 						ballPositions.get(ballPositions.size() - 52));
 				setGoalForTeamWhenGoalHappend(atPostion);
-				mqtt.sendScore(getScoreAsString());
+				if (!gameOver) {
+					mqtt.sendScore(getScoreAsString());
+				}
 
 			}
 		}
@@ -171,17 +173,19 @@ public class GameManager {
 			}
 		}
 
-		if (teamOne.getScore() == 6) {
-			mqtt.sendGameOver("0");
-			gameOver = true;
-		}
-		if (teamTwo.getScore() == 6) {
-			mqtt.sendGameOver("1");
-			gameOver = true;
-		}
-		if (teamOne.getScore() == 5 && teamTwo.getScore() == 5) {
-			mqtt.sendGameOver("1");
-			gameOver = true;
+		if (!gameOver) {
+			if (teamOne.getScore() == 6) {
+				mqtt.sendGameOver("0");
+				gameOver = true;
+			}
+			if (teamTwo.getScore() == 6) {
+				mqtt.sendGameOver("1");
+				gameOver = true;
+			}
+			if (teamOne.getScore() == 5 && teamTwo.getScore() == 5) {
+				mqtt.sendGameOver("1");
+				gameOver = true;
+			} 
 		}
 
 	}

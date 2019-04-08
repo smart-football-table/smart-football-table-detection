@@ -25,6 +25,7 @@ public class MqttSystem implements Closeable {
 	public MqttSystem(String host, int port, MqttCallback mqttCallback) throws MqttException {
 		mqttClient = new MqttClient("tcp://" + host + ":" + port, "SetupClient", new MemoryPersistence());
 		mqttClient.setCallback(mqttCallback);
+		mqttClient.subscribe("game/reset");
 		mqttClient.connect();
 	}
 
