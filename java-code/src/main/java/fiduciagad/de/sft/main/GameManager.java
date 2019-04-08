@@ -3,7 +3,10 @@ package fiduciagad.de.sft.main;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
@@ -30,7 +33,28 @@ public class GameManager {
 	private boolean gameOver;
 
 	public GameManager() throws MqttSecurityException, MqttException {
-		mqtt = new MqttSystem("localhost", 1883);
+		mqtt = new MqttSystem("localhost", 1883, new MqttCallback() {
+			
+			@Override
+			public void messageArrived(String topic, MqttMessage message) throws Exception {
+				if (topic.equals("game/reset")) {
+					resetGame();
+				}
+				
+			}
+			
+			@Override
+			public void deliveryComplete(IMqttDeliveryToken token) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void connectionLost(Throwable cause) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
 	}
 
 	public String getScoreAsString() {
