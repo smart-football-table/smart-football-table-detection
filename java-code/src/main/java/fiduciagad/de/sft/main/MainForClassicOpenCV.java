@@ -22,6 +22,8 @@ public class MainForClassicOpenCV {
 
 		ConfiguratorValues.setGameFieldSize(800, 600);
 
+		ConfiguratorValues.setDefaultColorRangeYellow();
+
 		detector.setGameDetection(gameDetection);
 		detector.setColorGrabber(colorHandler);
 

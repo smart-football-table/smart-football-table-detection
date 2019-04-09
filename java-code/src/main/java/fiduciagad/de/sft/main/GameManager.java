@@ -71,7 +71,6 @@ public class GameManager {
 			}
 
 		}
-
 		if (calculateVelocity) {
 			calculateVelocity = false;
 			// positionsSinceLastVelocity = 0;
@@ -79,23 +78,18 @@ public class GameManager {
 			double velocity = velocityCalculator.getVelocityOfBallInKilometerPerHour(ballPositionOne, ballPositionTwo);
 			velocityCalculator.getVelocityValues().add(Math.abs(velocity));
 			velocity = Math.round(velocity * 100.0) / 100.0;
-			if (velocity == 0.0) {
+
+			if (velocity == 0.0 || velocity > 70) {
 				velocity = oldVelocity;
 			} else {
 				oldVelocity = velocity;
 			}
+
 			mqtt.sendVelocity(Math.abs(velocity));
-			//
-			// double velocityms =
-			// velocityCalculator.getVelocityOfBallInMeterPerSecond(ballPositionOne,
-			// ballPositionTwo);
-			// velocityms = Math.round(velocityms * 100.0) / 100.0;
-			// mqtt.sendVelocityMS(Math.abs(velocityms));
 
 			// double velocityAverage = velocityCalculator.getVelocityAverage();
 			// velocityAverage = Math.round(velocityAverage * 100.0) / 100.0;
 			// // mqtt.sendVelocity(velocityAverage);
-			// // mqtt.sendVelocity(velocityms);
 			// velocityCalculator.setVelocityList(new ArrayList<Double>());
 
 			ballPositionOne = null;
@@ -103,18 +97,9 @@ public class GameManager {
 
 		}
 
-		// if (positionsSinceLastVelocity > 15) {
-		// positionsSinceLastVelocity = 0;
-		// double velocity = velocityCalculator.getVelocityOfBallInKilometerPerHour(
-		// ballPositions.get(ballPositions.size() - 2),
-		// ballPositions.get(ballPositions.size() - 1));
-		//
-		// velocity = Math.round(velocity * 100.0) / 100.0;
-		// System.out.println(velocity);
-		// mqtt.sendVelocity(Math.abs(velocity));
-		// }
+		if (ballPositions.size() > 50)
 
-		if (ballPositions.size() > 50) {
+		{
 
 			if (goalDetector.isThereAGoal(ballPositions)) {
 
