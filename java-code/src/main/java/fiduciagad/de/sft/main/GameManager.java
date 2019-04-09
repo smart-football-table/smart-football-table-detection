@@ -215,6 +215,8 @@ public class GameManager {
 		ballPositions = new ArrayList<BallPosition>();
 		teamOne.setScore(0);
 		teamTwo.setScore(0);
+		mqtt.sendScore("0-0");
+		mqtt.sendGameStart();
 	}
 
 	public void createBallPosition(String lineBefore, String line) {
