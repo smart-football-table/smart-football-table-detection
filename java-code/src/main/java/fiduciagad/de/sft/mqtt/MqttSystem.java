@@ -47,9 +47,12 @@ public class MqttSystem implements Closeable {
 
 	public void sendScore(String string) throws MqttPersistenceException, MqttException {
 
-		String finalString = "{\"score\":[" + string.split("-")[0] + "," + string.split("-")[1] + "]}";
+		String[] scores = string.split("-");
+		String finalString = "{\"score\":[" + scores[0] + "," + scores[1] + "]}";
 
 		mqttClient.publish("game/score", finalString.getBytes(), 0, false);
+		mqttClient.publish("game/score/team/0", scores[0].getBytes(), 0, false);
+		mqttClient.publish("game/score/team/1", scores[1].getBytes(), 0, false);
 
 	}
 
