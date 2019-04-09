@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
 import fiduciagad.de.sft.adjustment.AdjustmentController;
@@ -16,10 +17,11 @@ public class Controller {
 
 	private OpenCVHandler gameDetectionOpenCV = new OpenCVHandler();
 	private OpenCVHandler adjustmentOpenCV = new OpenCVHandler();
+	private MqttSystem mqttpub;
 
 	public void startTheDetection() throws MqttSecurityException, MqttException, IOException {
 
-		MqttSystem mqttpub = new MqttSystem("localhost", 1883);
+		mqttpub = new MqttSystem("localhost", 1883);
 
 		// SimpleMqttCallBack simpleMqttCallBack = new SimpleMqttCallBack(this);
 		// MqttSystem mqttsub = new MqttSystem("localhost", 1883, simpleMqttCallBack);
@@ -30,27 +32,17 @@ public class Controller {
 			if (adjustmentWanted) {
 				adjustmentOpenCV.startPythonModule();
 
-				List<String> theOutput = adjustmentOpenCV.startTheAdjustment();
-				AdjustmentController.convertOutputIntoValues(theOutput);
-				FileController.writeDataIntoFile();
+				convertAdjustmentOutputIntoConfigValuesAndFile();
 				adjustmentWanted = false;
 			}
 
 			if (gameDetectionIsAlive) {
 
-				mqttpub.sendIdle("false");
-				mqttpub.sendScore("0-0");
-				mqttpub.sendGameStart();
+				sendInitialMqttMessages();
 
-				String pythonArgument = ConfiguratorValues.getColorHSVMinH() + ","
-						+ ConfiguratorValues.getColorHSVMinS() + "," + ConfiguratorValues.getColorHSVMinV() + ","
-						+ ConfiguratorValues.getColorHSVMaxH() + "," + ConfiguratorValues.getColorHSVMaxS() + ","
-						+ ConfiguratorValues.getColorHSVMaxV();
-				gameDetectionOpenCV.setPythonArguments(pythonArgument);
+				createAndSetPythonArgumentsForGameDetection();
 
-				do {
-					gameDetectionOpenCV.startPythonModule();
-				} while (!gameDetectionOpenCV.isProcessAlive());
+				startThePythonProcess();
 
 				gameDetectionOpenCV.handleWithOpenCVOutput(this);
 
@@ -59,6 +51,36 @@ public class Controller {
 			break;
 		}
 		System.exit(0);
+	}
+
+	private void convertAdjustmentOutputIntoConfigValuesAndFile() throws IOException {
+		List<String> theOutput = adjustmentOpenCV.startTheAdjustment();
+		AdjustmentController.convertOutputIntoValues(theOutput);
+		FileController.writeDataIntoFile();
+	}
+
+	private void sendInitialMqttMessages() throws MqttPersistenceException, MqttException {
+		mqttpub.sendIdle("false");
+		mqttpub.sendScore("0-0");
+		mqttpub.sendGameStart();
+	}
+
+	private void startThePythonProcess() {
+		do {
+			gameDetectionOpenCV.startPythonModule();
+		} while (!gameDetectionOpenCV.isProcessAlive());
+	}
+
+	private void createAndSetPythonArgumentsForGameDetection() {
+		String pythonArgumentColor = buildPythonArgumentForColor();
+		gameDetectionOpenCV.setPythonArguments(pythonArgumentColor);
+	}
+
+	private String buildPythonArgumentForColor() {
+		String pythonArgument = ConfiguratorValues.getColorHSVMinH() + "," + ConfiguratorValues.getColorHSVMinS() + ","
+				+ ConfiguratorValues.getColorHSVMinV() + "," + ConfiguratorValues.getColorHSVMaxH() + ","
+				+ ConfiguratorValues.getColorHSVMaxS() + "," + ConfiguratorValues.getColorHSVMaxV();
+		return pythonArgument;
 	}
 
 	public void setGameDetection(OpenCVHandler gameDetection) {

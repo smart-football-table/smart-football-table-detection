@@ -156,9 +156,9 @@ public class GameManager {
 		mqtt.sendGameStart();
 	}
 
-	public void createBallPosition(String lineBefore, String line) {
+	public void createBallPosition(String line) {
 		ballPositionHandler.setGoalDetector(goalDetector);
-		BallPosition ballposition = ballPositionHandler.createBallPositionFrom(lineBefore, line);
+		BallPosition ballposition = ballPositionHandler.createBallPositionFrom(line);
 		ballPositions.add(ballposition);
 
 	}

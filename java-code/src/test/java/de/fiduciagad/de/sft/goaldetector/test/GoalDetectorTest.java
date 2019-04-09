@@ -62,12 +62,11 @@ public class GoalDetectorTest {
 		goalDetector.setBallWasInMidArea(false);
 
 		String string = "1|1235232348.00|100|25";
-		String string2 = "2|1235232348.00|100|25";
 
 		BallPositionHandler positionHandler = new BallPositionHandler();
 		positionHandler.setGoalDetector(goalDetector);
 
-		BallPosition ballPosition = positionHandler.createBallPositionFrom(string, string2);
+		BallPosition ballPosition = positionHandler.createBallPositionFrom(string);
 
 		ballPositions.add(0, getPositionInFrontOfGoal());
 

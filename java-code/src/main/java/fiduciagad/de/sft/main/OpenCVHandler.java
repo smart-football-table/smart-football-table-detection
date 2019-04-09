@@ -39,29 +39,22 @@ public class OpenCVHandler {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		manager = new GameManager();
 		String line = null;
-		String lineBefore = "";
-		int deleteFirstLine = 0;
 		boolean itsTheSecondOne = false;
 
 		while ((line = reader.readLine()) != null || detector.isOngoing() || processAlive) {
 
-			if (line != null) {
-				if (line.contains("|")) {
+			if (line != null && line.contains("|")) {
 
-					try {
+				try {
 
-						if (itsTheSecondOne) {
-							manager.createBallPosition(lineBefore, line);
-							manager.doTheLogic();
-						}
-						lineBefore = line;
-						itsTheSecondOne = !itsTheSecondOne;
-					} catch (Exception e) {
-						e.printStackTrace();
+					if (itsTheSecondOne) {
+						manager.createBallPosition(line);
+						manager.doTheLogic();
 					}
+					itsTheSecondOne = !itsTheSecondOne;
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-
-				deleteFirstLine++;
 			}
 		}
 	}
