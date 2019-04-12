@@ -11,6 +11,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import fiduciagad.de.sft.main.BallPosition;
+import fiduciagad.de.sft.main.ConfiguratorValues;
 import fiduciagad.de.sft.main.Controller;
 import fiduciagad.de.sft.main.OpenCVHandler;
 
@@ -30,7 +31,6 @@ public class ControllerTest {
 		assertThat(game.isOngoing(), is(false));
 	}
 
-	@Ignore
 	@Test
 	public void gameStopsWhenDetectionEnds() throws MqttSecurityException, MqttException, IOException {
 
@@ -38,7 +38,9 @@ public class ControllerTest {
 
 		OpenCVHandler cv = new OpenCVHandler();
 
-		cv.setPythonModule("testCase_playedGameDigitizerWithoutBall.py");
+		ConfiguratorValues.setDefaultColorRangeYellow();
+
+		cv.setPythonModule("src/main/resources/testCase_playedGameDigitizerWithoutBall.py");
 
 		game.setGameDetection(cv);
 		game.startTheDetection();
