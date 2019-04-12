@@ -51,29 +51,26 @@ public class GameManager {
 
 	public void doTheLogic() throws MqttPersistenceException, MqttException {
 
-		// if (ballPositions.get(ballPositions.size() - 1).getXCoordinate() != -1) {
-		// mqtt.sendPostion(ballPositions.get(ballPositions.size() - 1));
-		// }
+		sendPositionIfThereIsOne();
 
 		positionsSinceLastVelocity++;
 		positionsSinceLastFoul++;
 
-		BallPosition actualBallPOs = ballPositions.get(ballPositions.size() - 1);
-		boolean ballPositionNotSet = actualBallPOs.getXCoordinate() == -1 && actualBallPOs.getYCoordinate() == -1;
+		BallPosition actualBallPos = ballPositions.get(ballPositions.size() - 1);
+		boolean ballPositionNotSet = actualBallPos.getXCoordinate() == -1 && actualBallPos.getYCoordinate() == -1;
 
 		if (!ballPositionNotSet) {
 			if (ballPositionOne != null && ballPositionTwo == null && positionsSinceLastVelocity > 5) {
-				ballPositionTwo = actualBallPOs;
+				ballPositionTwo = actualBallPos;
 				calculateVelocity = true;
 			}
 			if (ballPositionOne == null) {
-				ballPositionOne = actualBallPOs;
+				ballPositionOne = actualBallPos;
 			}
 
 		}
 		if (calculateVelocity) {
 			calculateVelocity = false;
-			// positionsSinceLastVelocity = 0;
 
 			double velocity = velocityCalculator.getVelocityOfBallInKilometerPerHour(ballPositionOne, ballPositionTwo);
 			velocityCalculator.getVelocityValues().add(Math.abs(velocity));
@@ -86,11 +83,6 @@ public class GameManager {
 			}
 
 			mqtt.sendVelocity(Math.abs(velocity));
-
-			// double velocityAverage = velocityCalculator.getVelocityAverage();
-			// velocityAverage = Math.round(velocityAverage * 100.0) / 100.0;
-			// // mqtt.sendVelocity(velocityAverage);
-			// velocityCalculator.setVelocityList(new ArrayList<Double>());
 
 			ballPositionOne = null;
 			ballPositionTwo = null;
@@ -127,10 +119,16 @@ public class GameManager {
 			resetGame();
 		}
 		if (teamOne.getScore() == 5 && teamTwo.getScore() == 5) {
-			mqtt.sendGameOver("1");
+			mqtt.sendGameOver("0,1");
 			resetGame();
 		}
 
+	}
+
+	private void sendPositionIfThereIsOne() throws MqttPersistenceException, MqttException {
+		if (ballPositions.get(ballPositions.size() - 1).getXCoordinate() != -1) {
+			mqtt.sendPostion(ballPositions.get(ballPositions.size() - 1));
+		}
 	}
 
 	private void resetGame() throws MqttPersistenceException, MqttException {

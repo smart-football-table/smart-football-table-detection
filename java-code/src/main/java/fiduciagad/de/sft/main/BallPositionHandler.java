@@ -18,17 +18,9 @@ public class BallPositionHandler {
 
 		String[] valuesPositionOne = output.split("\\|"); // regex in java <3
 
-		int outputNumberOne = getValueFromString(valuesPositionOne[0]);
-		int xCoordinateOne = getValueFromString(valuesPositionOne[2]);
-		int yCoordinateOne = getValueFromString(valuesPositionOne[3]);
-		String timepointOne = valuesPositionOne[1];
-
-		int xCoordinateFinal = 0;
-		int yCoordinateFinal = 0;
-		String timepointFinal = timepointOne;
-
-		xCoordinateFinal = xCoordinateOne;
-		yCoordinateFinal = yCoordinateOne;
+		int xCoordinateFinal = getValueFromString(valuesPositionOne[1]);
+		int yCoordinateFinal = getValueFromString(valuesPositionOne[2]);
+		String timepointFinal = valuesPositionOne[0];
 
 		BallPosition ballPosition = new BallPosition();
 
@@ -43,11 +35,10 @@ public class BallPositionHandler {
 		ballPosition.setYCoordinate(yCoordinateFinal);
 
 		String completeTimepoint = timepointFinal.replaceAll("\\.", "");
-
 		ballPosition.setTimepoint(Long.parseLong(completeTimepoint));
 
-		boolean ballWasNotInMidArea = !goalDetector.isBallWasInMidArea();
-		if (ballWasNotInMidArea) {
+		boolean ballWasNotInMidAreaYet = !goalDetector.isBallWasInMidArea();
+		if (ballWasNotInMidAreaYet) {
 			checkIfBallWasInMidAreaForGoalDetector(ballPosition);
 		}
 

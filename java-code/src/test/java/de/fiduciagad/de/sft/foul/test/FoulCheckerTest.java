@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import fiduciagad.de.sft.foul.FoulChecker;
 import fiduciagad.de.sft.main.BallPosition;
+import fiduciagad.de.sft.main.ConfiguratorValues;
 
 public class FoulCheckerTest {
 
@@ -20,10 +21,9 @@ public class FoulCheckerTest {
 	@Before
 	public void initialize() {
 
-		for (int i = 0; i < 301; i++) {
-			BallPosition position = new BallPosition(10, 10, new Date());
-			ballPositions.add(position);
-		}
+		ConfiguratorValues.setFramesPerSecond(30);
+
+		createRealBallPositionsForLastTenSeconds();
 
 	}
 
@@ -41,7 +41,7 @@ public class FoulCheckerTest {
 
 		FoulChecker checker = new FoulChecker();
 
-		ballPositions.add(150, new BallPosition(1000, 1000, new Date()));
+		addAnotherBallPositionAfterFiveSecondsOnAnOtherPlace();
 
 		assertThat(checker.isThereAFoul(ballPositions), is(false));
 
@@ -52,13 +52,33 @@ public class FoulCheckerTest {
 
 		FoulChecker checker = new FoulChecker();
 
-		for (int i = 0; i < 301; i++) {
-			BallPosition position = new BallPosition(-1, -1, new Date());
-			ballPositions.add(position);
-		}
+		createEmptyBallPositionsForTheLastTenSeconds();
 
 		assertThat(checker.isThereAFoul(ballPositions), is(false));
 
+	}
+
+	private void createRealBallPositionsForLastTenSeconds() {
+
+		int countBallPositionsToBeCreated = ConfiguratorValues.getFramesPerSecond() * 10;
+
+		for (int i = 0; i <= countBallPositionsToBeCreated; i++) {
+			BallPosition position = new BallPosition(10, 10, new Date());
+			ballPositions.add(position);
+		}
+	}
+
+	private void createEmptyBallPositionsForTheLastTenSeconds() {
+		int countBallPositionsToBeCreated = ConfiguratorValues.getFramesPerSecond() * 10;
+
+		for (int i = 0; i <= countBallPositionsToBeCreated; i++) {
+			BallPosition position = new BallPosition(-1, -1, new Date());
+			ballPositions.add(position);
+		}
+	}
+
+	private void addAnotherBallPositionAfterFiveSecondsOnAnOtherPlace() {
+		ballPositions.add(150, new BallPosition(1000, 1000, new Date()));
 	}
 
 }

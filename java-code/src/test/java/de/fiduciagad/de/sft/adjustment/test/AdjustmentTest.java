@@ -60,12 +60,6 @@ public class AdjustmentTest {
 		assertThat(ConfiguratorValues.getXMaxOfGameField(), is(1000));
 		assertThat(ConfiguratorValues.getYMaxOfGameField(), is(500));
 
-		assertThat(ConfiguratorValues.getxOffsetCameraOne(), is(-10));
-		assertThat(ConfiguratorValues.getyOffsetCameraOne(), is(-40));
-
-		assertThat(ConfiguratorValues.getxOffsetCameraTwo(), is(450));
-		assertThat(ConfiguratorValues.getyOffsetCameraTwo(), is(-50));
-
 		assertThat(ConfiguratorValues.getMillimeterPerPixel(), is(1));
 
 	}

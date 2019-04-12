@@ -39,14 +39,14 @@ public class FileController {
 			ConfiguratorValues.setGameFieldSize(Integer.parseInt(gameFieldSize[0]), Integer.parseInt(gameFieldSize[1]));
 
 			String[] offsetCameraOne = data.get(7).split(",");
-
-			ConfiguratorValues.setxOffsetCameraOne(Integer.parseInt(offsetCameraOne[0]));
-			ConfiguratorValues.setyOffsetCameraOne(Integer.parseInt(offsetCameraOne[1]));
+//
+//			ConfiguratorValues.setxOffsetCameraOne(Integer.parseInt(offsetCameraOne[0]));
+//			ConfiguratorValues.setyOffsetCameraOne(Integer.parseInt(offsetCameraOne[1]));
 
 			String[] offsetCameraTwo = data.get(9).split(",");
 
-			ConfiguratorValues.setxOffsetCameraTwo(Integer.parseInt(offsetCameraTwo[0]));
-			ConfiguratorValues.setyOffsetCameraTwo(Integer.parseInt(offsetCameraTwo[1]));
+			// ConfiguratorValues.setxOffsetCameraTwo(Integer.parseInt(offsetCameraTwo[0]));
+			// ConfiguratorValues.setyOffsetCameraTwo(Integer.parseInt(offsetCameraTwo[1]));
 
 			ConfiguratorValues.setMillimeterPerPixel(Integer.parseInt(data.get(11)));
 
@@ -78,13 +78,6 @@ public class FileController {
 		bw.newLine();
 		bw.write("//OffsetCameraOne");
 		bw.newLine();
-		bw.write("" + ConfiguratorValues.getxOffsetCameraOne() + "," + ConfiguratorValues.getyOffsetCameraOne());
-		bw.newLine();
-		bw.write("//OffsetCameraTwo");
-		bw.newLine();
-		bw.write("" + ConfiguratorValues.getxOffsetCameraTwo() + "," + ConfiguratorValues.getyOffsetCameraTwo());
-		bw.newLine();
-		bw.write("//MillimeterPerPixel");
 		bw.newLine();
 		bw.write("" + ConfiguratorValues.getMillimeterPerPixel());
 		bw.newLine();

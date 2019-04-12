@@ -4,25 +4,13 @@ public class ConfiguratorValues {
 
 	private static int millimeterPerPixel = 0;
 
-	private static int xOffsetCameraOne = 0;
-	private static int yOffsetCameraOne = 0;
-
-	private static int xOffsetCameraTwo = 0;
-	private static int yOffsetCameraTwo = 0;
+	private static int framesPerSecond = 0;
 
 	private static int xSizeGameField = 0;
 	private static int ySizeGameField = 0;
 
 	private static int offsetX = 0;
 	private static int offsetY = 0;
-
-	public static int getOffsetX() {
-		return offsetX;
-	}
-
-	public static int getOffsetY() {
-		return offsetY;
-	}
 
 	private static int colorHSVMinH = 0;
 	private static int colorHSVMinS = 0;
@@ -37,6 +25,22 @@ public class ConfiguratorValues {
 
 	public static void setColorHSVMinH(int colorHSVMinH) {
 		ConfiguratorValues.colorHSVMinH = colorHSVMinH;
+	}
+
+	public static int getFramesPerSecond() {
+		return framesPerSecond;
+	}
+
+	public static void setFramesPerSecond(int framesPerSecond) {
+		ConfiguratorValues.framesPerSecond = framesPerSecond;
+	}
+
+	public static int getOffsetX() {
+		return offsetX;
+	}
+
+	public static int getOffsetY() {
+		return offsetY;
 	}
 
 	public static int getColorHSVMinS() {
@@ -107,38 +111,6 @@ public class ConfiguratorValues {
 		colorHSVMaxH = 30;
 		colorHSVMaxS = 255;
 		colorHSVMaxV = 255;
-	}
-
-	public static int getxOffsetCameraOne() {
-		return xOffsetCameraOne;
-	}
-
-	public static void setxOffsetCameraOne(int xOffsetCameraOne) {
-		ConfiguratorValues.xOffsetCameraOne = xOffsetCameraOne;
-	}
-
-	public static int getyOffsetCameraOne() {
-		return yOffsetCameraOne;
-	}
-
-	public static void setyOffsetCameraOne(int yOffsetCameraOne) {
-		ConfiguratorValues.yOffsetCameraOne = yOffsetCameraOne;
-	}
-
-	public static int getxOffsetCameraTwo() {
-		return xOffsetCameraTwo;
-	}
-
-	public static void setxOffsetCameraTwo(int xOffsetCameraTwo) {
-		ConfiguratorValues.xOffsetCameraTwo = xOffsetCameraTwo;
-	}
-
-	public static int getyOffsetCameraTwo() {
-		return yOffsetCameraTwo;
-	}
-
-	public static void setyOffsetCameraTwo(int yOffsetCameraTwo) {
-		ConfiguratorValues.yOffsetCameraTwo = yOffsetCameraTwo;
 	}
 
 	public static void setOffsetX(int offsetX) {

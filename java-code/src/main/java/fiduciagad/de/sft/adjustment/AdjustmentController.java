@@ -46,11 +46,12 @@ public class AdjustmentController {
 
 		ConfiguratorValues.setGameFieldSize(xSizeGameField, ySizeGameField);
 
-		ConfiguratorValues.setxOffsetCameraOne(0 - xPointOneCamOne);
-		ConfiguratorValues.setyOffsetCameraOne(0 - yPointOneCamOne);
-
-		ConfiguratorValues.setxOffsetCameraTwo((xSizeGameField / 2) - xPointTwoCamTwo);
-		ConfiguratorValues.setyOffsetCameraTwo(0 - yPointTwoCamTwo);
+		// ConfiguratorValues.setxOffsetCameraOne(0 - xPointOneCamOne);
+		// ConfiguratorValues.setyOffsetCameraOne(0 - yPointOneCamOne);
+		//
+		// ConfiguratorValues.setxOffsetCameraTwo((xSizeGameField / 2) -
+		// xPointTwoCamTwo);
+		// ConfiguratorValues.setyOffsetCameraTwo(0 - yPointTwoCamTwo);
 
 		calculateMillimeterPerPixel(theOutput);
 

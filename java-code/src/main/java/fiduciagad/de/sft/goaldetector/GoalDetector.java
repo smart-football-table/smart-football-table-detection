@@ -50,11 +50,12 @@ public class GoalDetector {
 
 		boolean thereIsAGoal = false;
 		int counter = 0;
+		int countForLastTwoSeconds = ConfiguratorValues.getFramesPerSecond() * 2;
 
-		for (int i = 0; i < 50; i++) {
+		for (int i = 0; i < countForLastTwoSeconds; i++) {
 
-			// iterate over the last 50 positions
-			BallPosition position = ballPositions.get((ballPositions.size() - 50) + i);
+			// iterate over the last two seconds
+			BallPosition position = ballPositions.get((ballPositions.size() - countForLastTwoSeconds) + i);
 
 			if (noPositionDetected(position)) {
 				counter++;
@@ -62,9 +63,10 @@ public class GoalDetector {
 				counter = 0;
 			}
 
-			if (counter == 50) {
+			if (counter == countForLastTwoSeconds) {
 
-				BallPosition lastBallPositionOnField = ballPositions.get(ballPositions.size() - 51);
+				BallPosition lastBallPositionOnField = ballPositions
+						.get(ballPositions.size() - (countForLastTwoSeconds + 1));
 				if (!ballWasNotInFrontOfAGoal(lastBallPositionOnField) && ballWasInMidArea) {
 					thereIsAGoal = true;
 					setBallWasInMidArea(false);
