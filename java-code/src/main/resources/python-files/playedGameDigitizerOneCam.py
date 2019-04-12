@@ -43,8 +43,7 @@ colorUpper = (hsvmaxh, hsvmaxs, hsvmaxv)
     
 if args["video"] is not 'empty':
     pathToFile = args["video"]
-    
-if args["camindex"] is not 'empty':
+elif args["camindex"] is not 'empty':
     pathToFile = args["camindex"]
     
 if args["buffer"] is not 'empty':
