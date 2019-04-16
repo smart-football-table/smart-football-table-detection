@@ -47,9 +47,13 @@ public class GameManager {
 	private double oldVelocity;
 	private boolean gameOver;
 	private Queue<Message> receivedMessages = new ConcurrentLinkedQueue<>();
-
+	
 	public GameManager() throws MqttSecurityException, MqttException {
-		mqtt = new MqttSystem("localhost", 1883, new MqttCallback() {
+		this("localhost", 1883);
+	}
+
+	public GameManager(String host, int port) throws MqttSecurityException, MqttException {
+		mqtt = new MqttSystem(host, port, new MqttCallback() {
 
 			@Override
 			public void messageArrived(String topic, MqttMessage message) throws Exception {
