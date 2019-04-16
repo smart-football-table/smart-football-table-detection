@@ -19,7 +19,7 @@ public class FileController {
 
 		List<String> data = null;
 
-		Path p = Paths.get(path + "/confFile.txt");
+		Path p = Paths.get(path + "src/main/resources/confFile.txt");
 
 		try {
 			data = Files.readAllLines(p, Charset.defaultCharset());

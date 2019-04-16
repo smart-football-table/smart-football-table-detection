@@ -7,6 +7,7 @@ import java.io.IOException;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -16,6 +17,17 @@ import fiduciagad.de.sft.main.Controller;
 import fiduciagad.de.sft.main.OpenCVHandler;
 
 public class ControllerTest {
+
+	private Controller game;
+	private OpenCVHandler cv;
+
+	@Before
+	public void init() {
+
+		game = new Controller();
+		cv = new OpenCVHandler();
+		cv.setPythonModule("src/main/resources/python-files/playedGameDigitizerOneCam.py");
+	}
 
 	@Test
 	public void startAndStopAGame() {
@@ -32,39 +44,18 @@ public class ControllerTest {
 	}
 
 	@Test
-	public void gameStopsWhenDetectionEnds() throws MqttSecurityException, MqttException, IOException {
-
-		Controller game = new Controller();
-
-		OpenCVHandler cv = new OpenCVHandler();
+	public void readRealExampleTestVideoWithNoBallAndGetBallPositions()
+			throws MqttSecurityException, MqttException, IOException {
 
 		ConfiguratorValues.setDefaultColorRangeYellow();
 
-		cv.setPythonModule("src/main/resources/testCase_playedGameDigitizerWithoutBall.py");
+		String videoArgument = "src/main/resources/videos/testVid_noBall.avi";
+		cv.setPythonArgumentVideoPath(videoArgument);
 
 		game.setGameDetection(cv);
 		game.startTheDetection();
 
-		assertThat(game.isOngoing(), is(false));
-
-	}
-
-	@Ignore
-	@Test
-	public void readRealExampleTestVideoWithNoBallAndGetBallPositions()
-			throws MqttSecurityException, MqttException, IOException {
-
-		OpenCVHandler opencv = new OpenCVHandler();
-
-		Controller controller = new Controller();
-		controller.startGameDetection();
-
-		opencv.setPythonModule("testCase_playedGameDigitizerWithoutBall.py");
-		opencv.startPythonModule();
-
-		opencv.handleWithOpenCVOutput(controller);
-
-		BallPosition positionOne = opencv.getManager().getBallPositions().get(0);
+		BallPosition positionOne = game.getGameDetection().getManager().getBallPositions().get(0);
 
 		assertThat(positionOne.getXCoordinate(), is(-1));
 		assertThat(positionOne.getYCoordinate(), is(-1));
@@ -108,6 +99,13 @@ public class ControllerTest {
 		cv.handleWithOpenCVOutput(controller);
 
 		assertThat(cv.getManager().getScoreAsString(), is("1-0"));
+	}
+
+	private static String buildPythonArgumentForColor() {
+		String pythonArgumentColor = ConfiguratorValues.getColorHSVMinH() + "," + ConfiguratorValues.getColorHSVMinS()
+				+ "," + ConfiguratorValues.getColorHSVMinV() + "," + ConfiguratorValues.getColorHSVMaxH() + ","
+				+ ConfiguratorValues.getColorHSVMaxS() + "," + ConfiguratorValues.getColorHSVMaxV();
+		return pythonArgumentColor;
 	}
 
 }

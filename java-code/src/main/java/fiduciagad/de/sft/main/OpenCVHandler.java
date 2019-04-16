@@ -13,7 +13,10 @@ public class OpenCVHandler {
 
 	private Process process;
 	private String pythonModule = "";
-	private String pythonArguments = "";
+	private String pythonArgumentVideoPath = "empty";
+	private String pythonArgumentColor = "0,0,0,0,0,0";
+	private String pythonArgumentCamIndex = "0";
+	private String pythonArgumentBufferSize = "64";
 	private ProcessBuilder pb;
 	private GameManager manager;
 	private boolean processAlive = false;
@@ -22,7 +25,8 @@ public class OpenCVHandler {
 
 		String path = System.getProperty("user.dir").replace('\\', '/');
 
-		pb = new ProcessBuilder("python", "-u", path + "/" + pythonModule, pythonArguments);
+		pb = new ProcessBuilder("python", "-u", path + "/" + pythonModule, "-v", pythonArgumentVideoPath, "-c",
+				pythonArgumentColor, "-i", pythonArgumentCamIndex, "-b", pythonArgumentBufferSize);
 		pb.redirectOutput();
 		pb.redirectError();
 
@@ -57,6 +61,7 @@ public class OpenCVHandler {
 				}
 			}
 		}
+
 	}
 
 	public void setPythonModule(String string) {
@@ -78,8 +83,36 @@ public class OpenCVHandler {
 		return result;
 	}
 
-	public void setPythonArguments(String pythonArguments) {
-		this.pythonArguments = pythonArguments;
+	public String getPythonArgumentVideoPath() {
+		return pythonArgumentVideoPath;
+	}
+
+	public void setPythonArgumentVideoPath(String pythonArgumentVideoPath) {
+		this.pythonArgumentVideoPath = pythonArgumentVideoPath;
+	}
+
+	public String getPythonArgumentColor() {
+		return pythonArgumentColor;
+	}
+
+	public void setPythonArgumentColor(String pythonArgumentColor) {
+		this.pythonArgumentColor = pythonArgumentColor;
+	}
+
+	public String getPythonArgumentCamIndex() {
+		return pythonArgumentCamIndex;
+	}
+
+	public void setPythonArgumentCamIndex(String pythonArgumentCamIndex) {
+		this.pythonArgumentCamIndex = pythonArgumentCamIndex;
+	}
+
+	public String getPythonArgumentBufferSize() {
+		return pythonArgumentBufferSize;
+	}
+
+	public void setPythonArgumentBufferSize(String pythonArgumentBufferSize) {
+		this.pythonArgumentBufferSize = pythonArgumentBufferSize;
 	}
 
 	public GameManager getManager() {

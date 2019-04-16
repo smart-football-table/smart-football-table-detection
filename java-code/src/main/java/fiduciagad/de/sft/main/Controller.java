@@ -40,8 +40,6 @@ public class Controller {
 
 				sendInitialMqttMessages();
 
-				createAndSetPythonArgumentsForGameDetection();
-
 				startThePythonProcess();
 
 				gameDetectionOpenCV.handleWithOpenCVOutput(this);
@@ -51,6 +49,10 @@ public class Controller {
 			break;
 		}
 		System.exit(0);
+	}
+
+	public OpenCVHandler getGameDetection() {
+		return gameDetectionOpenCV;
 	}
 
 	private void convertAdjustmentOutputIntoConfigValuesAndFile() throws IOException {
@@ -69,18 +71,6 @@ public class Controller {
 		do {
 			gameDetectionOpenCV.startPythonModule();
 		} while (!gameDetectionOpenCV.isProcessAlive());
-	}
-
-	private void createAndSetPythonArgumentsForGameDetection() {
-		String pythonArgumentColor = buildPythonArgumentForColor();
-		gameDetectionOpenCV.setPythonArguments(pythonArgumentColor);
-	}
-
-	private String buildPythonArgumentForColor() {
-		String pythonArgument = ConfiguratorValues.getColorHSVMinH() + "," + ConfiguratorValues.getColorHSVMinS() + ","
-				+ ConfiguratorValues.getColorHSVMinV() + "," + ConfiguratorValues.getColorHSVMaxH() + ","
-				+ ConfiguratorValues.getColorHSVMaxS() + "," + ConfiguratorValues.getColorHSVMaxV();
-		return pythonArgument;
 	}
 
 	public void setGameDetection(OpenCVHandler gameDetection) {
