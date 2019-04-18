@@ -25,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
 import java.util.stream.Stream;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class SFTDetectionTest {
@@ -332,7 +331,6 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	@Ignore
 	public void canDetectGoalOnLeftHandSide() throws IOException {
 		givenATableOfSize(100, 80);
 		givenStdInContains(line(anyTimestamp(), "0.01", "0.5"), anyTimestamp() + "," + noBallOnTable());
@@ -379,7 +377,7 @@ public class SFTDetectionTest {
 				if (relPos != null) {
 					if (relPos.isNull()) {
 						if (prevAbsPos != null) {
-							publisher.send(new Message("team/scored", "0"));
+							sendGoal(prevAbsPos);
 						}
 					} else {
 						AbsolutePosition absPos = table.toAbsolute(relPos);
@@ -456,6 +454,11 @@ public class SFTDetectionTest {
 		publisher.send(new Message("ball/distance/cm", String.valueOf(movement.distance(CENTIMETER))));
 		publisher.send(new Message("ball/velocity/mps", String.valueOf(movement.velocity(MPS))));
 		publisher.send(new Message("ball/velocity/kmh", String.valueOf(movement.velocity(KMH))));
+	}
+
+	private void sendGoal(AbsolutePosition prevAbsPos) {
+		String team = prevAbsPos.getRelativePosition().getX() >= 0.5 ? "0" : "1";
+		publisher.send(new Message("team/scored", team));
 	}
 
 	private void thenTheRelativePositionOnTheTableIsPublished(double x, double y) {
