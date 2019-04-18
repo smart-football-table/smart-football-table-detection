@@ -332,7 +332,7 @@ public class SFTDetectionTest {
 	@Test
 	public void canDetectGoalOnRightHandSide() throws IOException {
 		givenATableOfSize(100, 80);
-		givenStdInContains(line(anyTimestamp(), "0.99", "0.5"), anyTimestamp() + "," + noBallOnTable());
+		givenStdInContains(line(anyTimestamp(), "0.80", centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(0);
 	}
@@ -340,7 +340,7 @@ public class SFTDetectionTest {
 	@Test
 	public void canDetectGoalOnLeftHandSide() throws IOException {
 		givenATableOfSize(100, 80);
-		givenStdInContains(line(anyTimestamp(), "0.01", "0.5"), anyTimestamp() + "," + noBallOnTable());
+		givenStdInContains(line(anyTimestamp(), "0.19", centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(1);
 	}
@@ -348,7 +348,7 @@ public class SFTDetectionTest {
 	@Test
 	public void noGoalIfBallWasNotInFrontOfGoalRightHandSide() throws IOException {
 		givenATableOfSize(100, 80);
-		givenStdInContains(line(anyTimestamp(), "0.79", "0.5"), anyTimestamp() + "," + noBallOnTable());
+		givenStdInContains(line(anyTimestamp(), "0.79", centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
 	}
@@ -356,7 +356,7 @@ public class SFTDetectionTest {
 	@Test
 	public void noGoalIfBallWasNotInFrontOfGoalLeftHandSide() throws IOException {
 		givenATableOfSize(100, 80);
-		givenStdInContains(line(anyTimestamp(), "0.20", "0.5"), anyTimestamp() + "," + noBallOnTable());
+		givenStdInContains(line(anyTimestamp(), "0.20", centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
 	}
@@ -380,7 +380,15 @@ public class SFTDetectionTest {
 	}
 
 	private double[] kickoffPosition() {
-		return new double[] { 0.5, 0.5 };
+		return new double[] { centerX(), centerY() };
+	}
+
+	private double centerX() {
+		return 0.5;
+	}
+
+	private double centerY() {
+		return 0.5;
 	}
 
 	private void givenATableOfSize(int width, int height) {
@@ -482,7 +490,7 @@ public class SFTDetectionTest {
 	private void sendGoal(AbsolutePosition prevAbsPos) {
 		RelativePosition relativePosition = prevAbsPos.getRelativePosition();
 		if (relativePosition.getX() >= 0.8 || relativePosition.getX() < 0.2) {
-			String team = relativePosition.getX() >= 0.5 ? "0" : "1";
+			String team = relativePosition.getX() >= centerX() ? "0" : "1";
 			publisher.send(new Message("team/scored", team));
 		}
 	}
