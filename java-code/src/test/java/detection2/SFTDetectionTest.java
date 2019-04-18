@@ -1,8 +1,12 @@
 package detection2;
 
+import static detection2.SFTDetectionTest.DistanceUnit.CENTIMETER;
+import static detection2.SFTDetectionTest.SpeedUnit.KMH;
+import static detection2.SFTDetectionTest.SpeedUnit.MPS;
 import static java.lang.Math.abs;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.joining;
 import static org.hamcrest.CoreMatchers.is;
@@ -17,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
 import java.util.stream.Stream;
 
@@ -24,11 +29,118 @@ import org.junit.Test;
 
 public class SFTDetectionTest {
 
-	private static class Position {
+	static enum DistanceUnit {
+		CENTIMETER {
+			@Override
+			public double toCentimeter(double value) {
+				return value;
+			}
 
-		private long timestamp;
-		private double x;
-		private double y;
+			@Override
+			protected double convert(double value, DistanceUnit target) {
+				return toCentimeter(value);
+			}
+		};
+
+		public abstract double toCentimeter(double value);
+
+		protected abstract double convert(double value, DistanceUnit target);
+	}
+
+	private static class Distance {
+
+		private final double value;
+		private final DistanceUnit distanceUnit;
+
+		public Distance(double value, DistanceUnit distanceUnit) {
+			this.value = value;
+			this.distanceUnit = distanceUnit;
+		}
+
+		public double value(DistanceUnit target) {
+			return distanceUnit.convert(value, target);
+		}
+
+	}
+
+	enum SpeedUnit {
+		MPS {
+			@Override
+			public double toMps(double value) {
+				return value;
+			}
+		},
+		KMH {
+			@Override
+			public double toMps(double value) {
+				return value * 3.6;
+			}
+		};
+
+		public abstract double toMps(double metersPerSecond);
+	}
+
+	public static class Velocity {
+
+		private final double metersPerSecond;
+
+		public Velocity(Distance distance, long millis) {
+			this.metersPerSecond = mps(distance.value(CENTIMETER), millis);
+		}
+
+		private double mps(double cm, long millis) {
+			return 10 * cm / millis;
+		}
+
+		private double value(SpeedUnit speedUnit) {
+			return speedUnit.toMps(metersPerSecond);
+		}
+
+	}
+
+	public static class Movement {
+
+		private final long durationInMillis;
+		private final Velocity velocity;
+		private Distance distance;
+
+		public Movement(Position pos1, Position pos2) {
+			this.distance = new Distance(sqrt(pow2(absDiffX(pos1, pos2)) + pow2(absDiffY(pos1, pos2))), CENTIMETER);
+			this.durationInMillis = pos2.timestamp - pos1.timestamp;
+			this.velocity = new Velocity(distance, this.durationInMillis);
+		}
+
+		public double distance(DistanceUnit target) {
+			return distance.value(target);
+		}
+
+		public long duration(TimeUnit target) {
+			return target.convert(durationInMillis, MILLISECONDS);
+		}
+
+		public double velocity(SpeedUnit speedUnit) {
+			return velocity.value(speedUnit);
+		}
+
+		private double absDiffX(Position p1, Position p2) {
+			return abs(p1.x - p2.x);
+		}
+
+		private double absDiffY(Position p1, Position p2) {
+			return abs(p1.y - p2.y);
+		}
+
+		private double pow2(double d) {
+			return pow(d, 2);
+		}
+
+	}
+
+	static class Position {
+
+		private final long timestamp;
+		private final double x;
+		private final double y;
 
 		public Position(long timestamp, double x, double y) {
 			this.timestamp = timestamp;
@@ -134,7 +246,7 @@ public class SFTDetectionTest {
 		void send(Message message);
 	}
 
-	private MessagePublisherForTest publisher = new MessagePublisherForTest();
+	private final MessagePublisherForTest publisher = new MessagePublisherForTest();
 	private Table table;
 	private InputStream is;
 
@@ -221,18 +333,10 @@ public class SFTDetectionTest {
 			while ((line = reader.readLine()) != null) {
 				Position relPos = Position.parse(line);
 				if (relPos != null) {
-					String baseTopic = "ball/position/";
 					Position absPos = table.toAbsolute(relPos);
-					sendPosition(baseTopic + "abs", absPos);
-					sendPosition(baseTopic + "rel", relPos);
-
-					// calculate distance and velocity
+					sendPositions(relPos, absPos);
 					if (prevRelPos != null) {
-						double cm = sqrt(pow2(absDiffX(prevAbsPos, absPos)) + pow2(absDiffY(prevAbsPos, absPos)));
-						publisher.send(new Message("ball/distance/cm", String.valueOf(cm)));
-						double mps = 10 * cm / (relPos.timestamp - prevRelPos.timestamp);
-						publisher.send(new Message("ball/velocity/mps", String.valueOf(mps)));
-						publisher.send(new Message("ball/velocity/kmh", String.valueOf(mps * 3.6)));
+						sendMovement(new Movement(prevAbsPos, absPos));
 					}
 					prevRelPos = relPos;
 					prevAbsPos = absPos;
@@ -242,20 +346,19 @@ public class SFTDetectionTest {
 		}
 	}
 
-	private double absDiffX(Position p1, Position p2) {
-		return abs(p1.x - p2.x);
-	}
-
-	private double absDiffY(Position p1, Position p2) {
-		return abs(p1.y - p2.y);
-	}
-
-	private double pow2(double d) {
-		return pow(d, 2);
+	private void sendPositions(Position relPos, Position absPos) {
+		sendPosition("ball/position/abs", absPos);
+		sendPosition("ball/position/rel", relPos);
 	}
 
 	private void sendPosition(String topic, Position position) {
 		publisher.send(new Message(topic, "{ \"x\":" + position.x + ", \"y\":" + position.y + " }"));
+	}
+
+	private void sendMovement(Movement movement) {
+		publisher.send(new Message("ball/distance/cm", String.valueOf(movement.distance(CENTIMETER))));
+		publisher.send(new Message("ball/velocity/mps", String.valueOf(movement.velocity(MPS))));
+		publisher.send(new Message("ball/velocity/kmh", String.valueOf(movement.velocity(KMH))));
 	}
 
 	private void thenTheRelativePositionOnTheTableIsPublished(double x, double y) {
