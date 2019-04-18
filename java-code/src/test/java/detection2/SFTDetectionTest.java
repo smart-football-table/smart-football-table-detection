@@ -1,6 +1,8 @@
 package detection2;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.pow;
+import static java.lang.Math.sqrt;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.joining;
 import static org.hamcrest.CoreMatchers.is;
@@ -22,31 +24,54 @@ import org.junit.Test;
 
 public class SFTDetectionTest {
 
-	private static class RelativePosition {
+	private static class Position {
 
 		private long timestamp;
 		private double x;
 		private double y;
 
-		public RelativePosition(long timestamp, double x, double y) {
+		public Position(long timestamp, double x, double y) {
 			this.timestamp = timestamp;
 			this.x = x;
 			this.y = y;
 		}
 
-		public static RelativePosition parse(String line) {
+		public static Position parse(String line) {
 			String[] values = line.split("\\,");
-
 			if (values.length == 3) {
 				Long timestamp = toLong(values[0]);
 				Double x = toDouble(values[1]);
 				Double y = toDouble(values[2]);
-				if (timestamp != null && isValidPosition(x, y)) {
-					return new RelativePosition(timestamp, x, y);
+				if (isValidTimestamp(timestamp) && isValidPosition(x, y)) {
+					return new Position(timestamp, x, y);
 				}
 			}
 			return null;
+		}
 
+		private static boolean isValidTimestamp(Long timestamp) {
+			return timestamp != null && timestamp >= 0;
+		}
+
+		private static boolean isValidPosition(Double x, Double y) {
+			// TODO test x/y > 1.0?
+			return x != null && y != null && x >= 0.0 && y >= 0.0;
+		}
+
+		private static Double toDouble(String val) {
+			try {
+				return Double.valueOf(val);
+			} catch (NumberFormatException e) {
+				return null;
+			}
+		}
+
+		private static Long toLong(String val) {
+			try {
+				return Long.valueOf(val);
+			} catch (NumberFormatException e) {
+				return null;
+			}
 		}
 
 	}
@@ -81,13 +106,18 @@ public class SFTDetectionTest {
 			this.height = height;
 		}
 
-		public double convertY(double y) {
+		public Position toAbsolute(Position pos) {
+			return new Position(pos.timestamp, convertX(pos.x), convertY(pos.y));
+		}
+
+		private double convertY(double y) {
 			return height * y;
 		}
 
-		public double convertX(double x) {
+		private double convertX(double x) {
 			return width * x;
 		}
+
 	}
 
 	private final class MessagePublisherForTest implements MessagePublisher {
@@ -148,12 +178,14 @@ public class SFTDetectionTest {
 		givenATableOfSize(100, 80);
 		givenStdInContains("0,0.0,0.0", SECONDS.toMillis(1) + ",1.0,1.0");
 		whenStdInInputWasProcessed();
-		thenDistanceInCentimetersAndVelocityInMetersPerSecondArePublished(128.06248474865697, 1.2806248474865697);
+		thenDistanceInCentimetersAndVelocityArePublished(128.06248474865697, 1.2806248474865697);
 	}
 
-	private void thenDistanceInCentimetersAndVelocityInMetersPerSecondArePublished(double meters, double mps) {
+	private void thenDistanceInCentimetersAndVelocityArePublished(double meters, double mps) {
 		assertThat(onlyElement(messagesWithTopic("game/ball/distance/cm")).getPayload(), is(String.valueOf(meters)));
 		assertThat(onlyElement(messagesWithTopic("game/ball/velocity/mps")).getPayload(), is(String.valueOf(mps)));
+		assertThat(onlyElement(messagesWithTopic("game/ball/velocity/kmh")).getPayload(),
+				is(String.valueOf(mps * 3.6)));
 	}
 
 	private void thenNoMessageIsSent() {
@@ -181,40 +213,49 @@ public class SFTDetectionTest {
 	}
 
 	private void whenStdInInputWasProcessed() throws IOException {
-		RelativePosition prevPos = null;
+		Position prevRelPos = null;
+		Position prevAbsPos = null;
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
-				RelativePosition pos = RelativePosition.parse(line);
-				if (pos != null) {
-					long timestamp = pos.timestamp;
+				Position relPos = Position.parse(line);
+				if (relPos != null) {
+					long timestamp = relPos.timestamp;
 					String baseTopic = "game/ball/position/";
-					sendXY(baseTopic + "abs", table.convertX(pos.x), table.convertY(pos.y));
-					sendXY(baseTopic + "rel", pos.x, pos.y);
+					Position absPos = table.toAbsolute(relPos);
+					sendXY(baseTopic + "abs", absPos.x, absPos.y);
+					sendXY(baseTopic + "rel", relPos.x, relPos.y);
 
 					// calculate distance and velocity
-					if (prevPos != null) {
-						double diffX = abs((table.convertX(prevPos.x) - table.convertX(pos.x)));
-						double diffY = abs((table.convertY(prevPos.y) - table.convertY(pos.y)));
-						double cm = Math.sqrt(diffX * diffX + diffY * diffY);
-						double mps = 10 * cm / (timestamp - prevPos.timestamp);
+					if (prevRelPos != null) {
+						double cm = sqrt(pow2(absDiffX(prevAbsPos, absPos)) + pow2(absDiffY(prevAbsPos, absPos)));
 						publisher.send(new Message("game/ball/distance/cm", String.valueOf(cm)));
+						double mps = 10 * cm / (timestamp - prevRelPos.timestamp);
 						publisher.send(new Message("game/ball/velocity/mps", String.valueOf(mps)));
+						publisher.send(new Message("game/ball/velocity/kmh", String.valueOf(mps * 3.6)));
 					}
-					prevPos = pos;
+					prevRelPos = relPos;
+					prevAbsPos = absPos;
 				}
 			}
 
 		}
 	}
 
-	private void sendXY(String topic, Double x, Double y) {
-		publisher.send(new Message(topic, "{ \"x\":" + x + ", \"y\":" + y + " }"));
+	private double absDiffX(Position p1, Position p2) {
+		return abs(p1.x - p2.x);
 	}
 
-	private static boolean isValidPosition(Double x, Double y) {
-		// TODO test x/y > 1.0?
-		return x != null && y != null && x >= 0.0 && y >= 0.0;
+	private double absDiffY(Position p1, Position p2) {
+		return abs(p1.y - p2.y);
+	}
+
+	private double pow2(double d) {
+		return pow(d, 2);
+	}
+
+	private void sendXY(String topic, Double x, Double y) {
+		publisher.send(new Message(topic, "{ \"x\":" + x + ", \"y\":" + y + " }"));
 	}
 
 	private void thenTheRelativePositionOnTheTableIsPublished(double x, double y) {
@@ -231,22 +272,6 @@ public class SFTDetectionTest {
 
 	private Stream<Message> messagesWithTopic(String topic) {
 		return publisher.messages.stream().filter(m -> m.getTopic().equals(topic));
-	}
-
-	private static Double toDouble(String val) {
-		try {
-			return Double.valueOf(val);
-		} catch (NumberFormatException e) {
-			return null;
-		}
-	}
-
-	private static Long toLong(String val) {
-		try {
-			return Long.valueOf(val);
-		} catch (NumberFormatException e) {
-			return null;
-		}
 	}
 
 	private static <T> T onlyElement(Stream<T> stream) {
