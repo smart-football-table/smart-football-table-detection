@@ -9,6 +9,7 @@ import static java.lang.Math.sqrt;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.junit.Test;
@@ -233,6 +235,11 @@ public class SFTDetectionTest {
 			return topic;
 		}
 
+		@Override
+		public String toString() {
+			return "Message [topic=" + topic + ", payload=" + payload + "]";
+		}
+
 	}
 
 	public static class Table {
@@ -327,7 +334,7 @@ public class SFTDetectionTest {
 		givenATableOfSize(100, 80);
 		givenStdInContains(line(anyTimestamp(), "0.99", "0.5"), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
-		assertThat(onlyElement(messagesWithTopic("team/scored")).getPayload(), is("0"));
+		thenGoalForTeamIsPublished(0);
 	}
 
 	@Test
@@ -335,7 +342,23 @@ public class SFTDetectionTest {
 		givenATableOfSize(100, 80);
 		givenStdInContains(line(anyTimestamp(), "0.01", "0.5"), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
-		assertThat(onlyElement(messagesWithTopic("team/scored")).getPayload(), is("1"));
+		thenGoalForTeamIsPublished(1);
+	}
+
+	@Test
+	public void noGoalIfBallWasNotInFrontOfGoalRightHandSide() throws IOException {
+		givenATableOfSize(100, 80);
+		givenStdInContains(line(anyTimestamp(), "0.79", "0.5"), anyTimestamp() + "," + noBallOnTable());
+		whenStdInInputWasProcessed();
+		thenNoMessageWithTopicIsSent("team/scored");
+	}
+
+	@Test
+	public void noGoalIfBallWasNotInFrontOfGoalLeftHandSide() throws IOException {
+		givenATableOfSize(100, 80);
+		givenStdInContains(line(anyTimestamp(), "0.20", "0.5"), anyTimestamp() + "," + noBallOnTable());
+		whenStdInInputWasProcessed();
+		thenNoMessageWithTopicIsSent("team/scored");
 	}
 
 	private String noBallOnTable() {
@@ -381,7 +404,7 @@ public class SFTDetectionTest {
 						}
 					} else {
 						AbsolutePosition absPos = table.toAbsolute(relPos);
-						sendPositions(relPos, absPos);
+						sendPositions(absPos);
 						if (prevAbsPos != null) {
 							sendMovement(new Movement(prevAbsPos, absPos));
 						}
@@ -441,9 +464,9 @@ public class SFTDetectionTest {
 		}
 	}
 
-	private void sendPositions(Position relPos, Position absPos) {
-		sendPosition("ball/position/abs", absPos);
-		sendPosition("ball/position/rel", relPos);
+	private void sendPositions(AbsolutePosition position) {
+		sendPosition("ball/position/abs", position);
+		sendPosition("ball/position/rel", position.getRelativePosition());
 	}
 
 	private void sendPosition(String topic, Position position) {
@@ -457,8 +480,11 @@ public class SFTDetectionTest {
 	}
 
 	private void sendGoal(AbsolutePosition prevAbsPos) {
-		String team = prevAbsPos.getRelativePosition().getX() >= 0.5 ? "0" : "1";
-		publisher.send(new Message("team/scored", team));
+		RelativePosition relativePosition = prevAbsPos.getRelativePosition();
+		if (relativePosition.getX() >= 0.8 || relativePosition.getX() < 0.2) {
+			String team = relativePosition.getX() >= 0.5 ? "0" : "1";
+			publisher.send(new Message("team/scored", team));
+		}
 	}
 
 	private void thenTheRelativePositionOnTheTableIsPublished(double x, double y) {
@@ -469,8 +495,21 @@ public class SFTDetectionTest {
 		assertThat(onlyElement(messagesWithTopic("ball/position/abs")).getPayload(), is(makePayload(x, y)));
 	}
 
+	private void thenGoalForTeamIsPublished(int teamid) {
+		assertThat(onlyElement(messagesWithTopic("team/scored")).getPayload(), is(String.valueOf(teamid)));
+	}
+
 	private void thenNoMessageIsSent() {
-		assertThat(publisher.messages.isEmpty(), is(true));
+		assertThat(String.valueOf(publisher.messages), publisher.messages.isEmpty(), is(true));
+	}
+
+	private void thenNoMessageWithTopicIsSent(String topic) {
+		thenNoMessageIsSent(m -> m.getTopic().equals(topic));
+	}
+
+	private void thenNoMessageIsSent(Predicate<Message> predicate) {
+		List<Message> mWithTopic = publisher.messages.stream().filter(predicate).collect(toList());
+		assertThat(String.valueOf(mWithTopic), mWithTopic.isEmpty(), is(true));
 	}
 
 	private String makePayload(double x, double y) {
