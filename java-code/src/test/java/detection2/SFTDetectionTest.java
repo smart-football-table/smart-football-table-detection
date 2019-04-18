@@ -216,7 +216,7 @@ public class SFTDetectionTest {
 	public void relativeValuesGetsConvertedToAbsolutesAtKickoff() throws IOException {
 		givenATableOfSize(100, 80);
 		double[] xy = kickoffPosition();
-		givenStdInContains(anyTimestamp() + "," + xy[0] + "," + xy[1]);
+		givenStdInContains(line(anyTimestamp(), xy[0], xy[1]));
 		whenStdInInputWasProcessed();
 		thenTheRelativePositionOnTheTableIsPublished(xy[0], xy[1]);
 		thenTheAbsolutePositionOnTheTableIsPublished(100 / 2, 80 / 2);
@@ -225,7 +225,7 @@ public class SFTDetectionTest {
 	@Test
 	public void relativeValuesGetsConvertedToAbsolutes() throws IOException {
 		givenATableOfSize(100, 80);
-		givenStdInContains(anyTimestamp() + "," + "0.0,1.0");
+		givenStdInContains(line(anyTimestamp(), "0.0", "1.0"));
 		whenStdInInputWasProcessed();
 		thenTheRelativePositionOnTheTableIsPublished(0.0, 1.0);
 		thenTheAbsolutePositionOnTheTableIsPublished(0, 80);
@@ -234,7 +234,7 @@ public class SFTDetectionTest {
 	@Test
 	public void malformedMessageIsRead() throws IOException {
 		givenATableOfSize(100, 80);
-		givenStdInContains(anyTimestamp() + "," + malformedMessage());
+		givenStdInContains(line(anyTimestamp(), "A", "B"));
 		whenStdInInputWasProcessed();
 		thenNoMessageIsSent();
 	}
@@ -242,7 +242,7 @@ public class SFTDetectionTest {
 	@Test
 	public void onReadingTheNoPositionMessage_noMessageIsSent() throws IOException {
 		givenATableOfSize(100, 80);
-		givenStdInContains(anyTimestamp() + "," + "-1.0,-1.0");
+		givenStdInContains(line(anyTimestamp(), "-1.0", "-1.0"));
 		whenStdInInputWasProcessed();
 		thenNoMessageIsSent();
 	}
@@ -252,23 +252,19 @@ public class SFTDetectionTest {
 		givenATableOfSize(100, 80);
 		int startTimestamp = anyTimestamp();
 		long endTimestamp = startTimestamp + SECONDS.toMillis(1);
-		givenStdInContains(startTimestamp + ",0.0,0.0", endTimestamp + ",1.0,1.0");
+		givenStdInContains(line(startTimestamp, "0.0", "0.0"), line(endTimestamp, "1.0", "1.0"));
 		whenStdInInputWasProcessed();
-		thenDistanceInCentimetersAndVelocityArePublished(128.06248474865697, 1.2806248474865697);
+		thenDistanceInCentimetersAndVelocityArePublished(128.06248474865697, 1.2806248474865697, 4.610249450951652);
 	}
 
-	private void thenDistanceInCentimetersAndVelocityArePublished(double meters, double mps) {
-		assertThat(onlyElement(messagesWithTopic("ball/distance/cm")).getPayload(), is(String.valueOf(meters)));
+	private void thenDistanceInCentimetersAndVelocityArePublished(double centimeters, double mps, double kmh) {
+		assertThat(onlyElement(messagesWithTopic("ball/distance/cm")).getPayload(), is(String.valueOf(centimeters)));
 		assertThat(onlyElement(messagesWithTopic("ball/velocity/mps")).getPayload(), is(String.valueOf(mps)));
-		assertThat(onlyElement(messagesWithTopic("ball/velocity/kmh")).getPayload(), is(String.valueOf(mps * 3.6)));
+		assertThat(onlyElement(messagesWithTopic("ball/velocity/kmh")).getPayload(), is(String.valueOf(kmh)));
 	}
 
-	private void thenNoMessageIsSent() {
-		assertThat(publisher.messages.isEmpty(), is(true));
-	}
-
-	private String malformedMessage() {
-		return "A,B";
+	private String line(Object... objects) {
+		return Arrays.stream(objects).map(String::valueOf).collect(joining(","));
 	}
 
 	private int anyTimestamp() {
@@ -365,6 +361,10 @@ public class SFTDetectionTest {
 
 	private void thenTheAbsolutePositionOnTheTableIsPublished(double x, double y) {
 		assertThat(onlyElement(messagesWithTopic("ball/position/abs")).getPayload(), is(makePayload(x, y)));
+	}
+
+	private void thenNoMessageIsSent() {
+		assertThat(publisher.messages.isEmpty(), is(true));
 	}
 
 	private String makePayload(double x, double y) {
