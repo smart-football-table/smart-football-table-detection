@@ -332,7 +332,7 @@ public class SFTDetectionTest {
 	@Test
 	public void canDetectGoalOnRightHandSide() throws IOException {
 		givenATableOfAnySize();
-		givenStdInContains(line(anyTimestamp(), "0.80", centerY()), anyTimestamp() + "," + noBallOnTable());
+		givenStdInContains(line(anyTimestamp(), 1.0 - 0.2, centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(0);
 	}
@@ -340,7 +340,7 @@ public class SFTDetectionTest {
 	@Test
 	public void canDetectGoalOnLeftHandSide() throws IOException {
 		givenATableOfAnySize();
-		givenStdInContains(line(anyTimestamp(), "0.19", centerY()), anyTimestamp() + "," + noBallOnTable());
+		givenStdInContains(line(anyTimestamp(), 0.0 + 0.2, centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(1);
 	}
@@ -348,7 +348,7 @@ public class SFTDetectionTest {
 	@Test
 	public void noGoalIfBallWasNotInFrontOfGoalRightHandSide() throws IOException {
 		givenATableOfAnySize();
-		givenStdInContains(line(anyTimestamp(), "0.79", centerY()), anyTimestamp() + "," + noBallOnTable());
+		givenStdInContains(line(anyTimestamp(), 1.0 - 0.21, centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
 	}
@@ -356,7 +356,7 @@ public class SFTDetectionTest {
 	@Test
 	public void noGoalIfBallWasNotInFrontOfGoalLeftHandSide() throws IOException {
 		givenATableOfSize(100, 80);
-		givenStdInContains(line(anyTimestamp(), "0.20", centerY()), anyTimestamp() + "," + noBallOnTable());
+		givenStdInContains(line(anyTimestamp(), 0.0 + 0.21, centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
 	}
@@ -492,10 +492,11 @@ public class SFTDetectionTest {
 	}
 
 	private void sendGoal(AbsolutePosition prevAbsPos) {
-		RelativePosition relativePosition = prevAbsPos.getRelativePosition();
-		if (relativePosition.getX() >= 0.8 || relativePosition.getX() < 0.2) {
-			String team = relativePosition.getX() >= centerX() ? "0" : "1";
-			publisher.send(new Message("team/scored", team));
+		double prevX = prevAbsPos.getRelativePosition().getX();
+		double valBetween00And50 = abs(centerX() - prevX);
+		if (valBetween00And50 >= 0.3) {
+			int teamId = prevX >= centerX() ? 0 : 1;
+			publisher.send(new Message("team/scored", String.valueOf(teamId)));
 		}
 	}
 
