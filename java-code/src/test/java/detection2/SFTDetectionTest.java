@@ -176,16 +176,17 @@ public class SFTDetectionTest {
 	@Test
 	public void whenTwoPositionsAreRead_VelocityGetsPublished() throws IOException {
 		givenATableOfSize(100, 80);
-		givenStdInContains("0,0.0,0.0", SECONDS.toMillis(1) + ",1.0,1.0");
+		int startTimestamp = anyTimestamp();
+		long endTimestamp = startTimestamp + SECONDS.toMillis(1);
+		givenStdInContains(startTimestamp + ",0.0,0.0", endTimestamp + ",1.0,1.0");
 		whenStdInInputWasProcessed();
 		thenDistanceInCentimetersAndVelocityArePublished(128.06248474865697, 1.2806248474865697);
 	}
 
 	private void thenDistanceInCentimetersAndVelocityArePublished(double meters, double mps) {
-		assertThat(onlyElement(messagesWithTopic("game/ball/distance/cm")).getPayload(), is(String.valueOf(meters)));
-		assertThat(onlyElement(messagesWithTopic("game/ball/velocity/mps")).getPayload(), is(String.valueOf(mps)));
-		assertThat(onlyElement(messagesWithTopic("game/ball/velocity/kmh")).getPayload(),
-				is(String.valueOf(mps * 3.6)));
+		assertThat(onlyElement(messagesWithTopic("ball/distance/cm")).getPayload(), is(String.valueOf(meters)));
+		assertThat(onlyElement(messagesWithTopic("ball/velocity/mps")).getPayload(), is(String.valueOf(mps)));
+		assertThat(onlyElement(messagesWithTopic("ball/velocity/kmh")).getPayload(), is(String.valueOf(mps * 3.6)));
 	}
 
 	private void thenNoMessageIsSent() {
@@ -196,8 +197,8 @@ public class SFTDetectionTest {
 		return "A,B";
 	}
 
-	private String anyTimestamp() {
-		return "0";
+	private int anyTimestamp() {
+		return 1234;
 	}
 
 	private double[] kickoffPosition() {
@@ -220,19 +221,18 @@ public class SFTDetectionTest {
 			while ((line = reader.readLine()) != null) {
 				Position relPos = Position.parse(line);
 				if (relPos != null) {
-					long timestamp = relPos.timestamp;
-					String baseTopic = "game/ball/position/";
+					String baseTopic = "ball/position/";
 					Position absPos = table.toAbsolute(relPos);
-					sendXY(baseTopic + "abs", absPos.x, absPos.y);
-					sendXY(baseTopic + "rel", relPos.x, relPos.y);
+					sendPosition(baseTopic + "abs", absPos);
+					sendPosition(baseTopic + "rel", relPos);
 
 					// calculate distance and velocity
 					if (prevRelPos != null) {
 						double cm = sqrt(pow2(absDiffX(prevAbsPos, absPos)) + pow2(absDiffY(prevAbsPos, absPos)));
-						publisher.send(new Message("game/ball/distance/cm", String.valueOf(cm)));
-						double mps = 10 * cm / (timestamp - prevRelPos.timestamp);
-						publisher.send(new Message("game/ball/velocity/mps", String.valueOf(mps)));
-						publisher.send(new Message("game/ball/velocity/kmh", String.valueOf(mps * 3.6)));
+						publisher.send(new Message("ball/distance/cm", String.valueOf(cm)));
+						double mps = 10 * cm / (relPos.timestamp - prevRelPos.timestamp);
+						publisher.send(new Message("ball/velocity/mps", String.valueOf(mps)));
+						publisher.send(new Message("ball/velocity/kmh", String.valueOf(mps * 3.6)));
 					}
 					prevRelPos = relPos;
 					prevAbsPos = absPos;
@@ -254,16 +254,16 @@ public class SFTDetectionTest {
 		return pow(d, 2);
 	}
 
-	private void sendXY(String topic, Double x, Double y) {
-		publisher.send(new Message(topic, "{ \"x\":" + x + ", \"y\":" + y + " }"));
+	private void sendPosition(String topic, Position position) {
+		publisher.send(new Message(topic, "{ \"x\":" + position.x + ", \"y\":" + position.y + " }"));
 	}
 
 	private void thenTheRelativePositionOnTheTableIsPublished(double x, double y) {
-		assertThat(onlyElement(messagesWithTopic("game/ball/position/rel")).getPayload(), is(makePayload(x, y)));
+		assertThat(onlyElement(messagesWithTopic("ball/position/rel")).getPayload(), is(makePayload(x, y)));
 	}
 
 	private void thenTheAbsolutePositionOnTheTableIsPublished(double x, double y) {
-		assertThat(onlyElement(messagesWithTopic("game/ball/position/abs")).getPayload(), is(makePayload(x, y)));
+		assertThat(onlyElement(messagesWithTopic("ball/position/abs")).getPayload(), is(makePayload(x, y)));
 	}
 
 	private String makePayload(double x, double y) {
