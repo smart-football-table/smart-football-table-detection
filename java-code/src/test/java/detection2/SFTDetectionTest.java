@@ -305,7 +305,7 @@ public class SFTDetectionTest {
 
 	@Test
 	public void malformedMessageIsRead() throws IOException {
-		givenATableOfSize(100, 80);
+		givenATableOfAnySize();
 		givenStdInContains(line(anyTimestamp(), "A", "B"));
 		whenStdInInputWasProcessed();
 		thenNoMessageIsSent();
@@ -313,7 +313,7 @@ public class SFTDetectionTest {
 
 	@Test
 	public void onReadingTheNoPositionMessage_noMessageIsSent() throws IOException {
-		givenATableOfSize(100, 80);
+		givenATableOfAnySize();
 		givenStdInContains(anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenNoMessageIsSent();
@@ -331,7 +331,7 @@ public class SFTDetectionTest {
 
 	@Test
 	public void canDetectGoalOnRightHandSide() throws IOException {
-		givenATableOfSize(100, 80);
+		givenATableOfAnySize();
 		givenStdInContains(line(anyTimestamp(), "0.80", centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(0);
@@ -339,7 +339,7 @@ public class SFTDetectionTest {
 
 	@Test
 	public void canDetectGoalOnLeftHandSide() throws IOException {
-		givenATableOfSize(100, 80);
+		givenATableOfAnySize();
 		givenStdInContains(line(anyTimestamp(), "0.19", centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(1);
@@ -347,7 +347,7 @@ public class SFTDetectionTest {
 
 	@Test
 	public void noGoalIfBallWasNotInFrontOfGoalRightHandSide() throws IOException {
-		givenATableOfSize(100, 80);
+		givenATableOfAnySize();
 		givenStdInContains(line(anyTimestamp(), "0.79", centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
@@ -393,6 +393,10 @@ public class SFTDetectionTest {
 
 	private void givenATableOfSize(int width, int height) {
 		this.table = new Table(width, height);
+	}
+
+	private void givenATableOfAnySize() {
+		givenATableOfSize(123, 45);
 	}
 
 	private void givenStdInContains(String... messages) {
