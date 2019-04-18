@@ -107,7 +107,7 @@ public class SFTDetectionTest {
 
 		public Movement(Position pos1, Position pos2) {
 			this.distance = new Distance(sqrt(pow2(absDiffX(pos1, pos2)) + pow2(absDiffY(pos1, pos2))), CENTIMETER);
-			this.durationInMillis = pos2.timestamp - pos1.timestamp;
+			this.durationInMillis = pos2.getTimestamp() - pos1.getTimestamp();
 			this.velocity = new Velocity(distance, this.durationInMillis);
 		}
 
@@ -124,11 +124,11 @@ public class SFTDetectionTest {
 		}
 
 		private double absDiffX(Position p1, Position p2) {
-			return abs(p1.x - p2.x);
+			return abs(p1.getX() - p2.getX());
 		}
 
 		private double absDiffY(Position p1, Position p2) {
-			return abs(p1.y - p2.y);
+			return abs(p1.getY() - p2.getY());
 		}
 
 		private double pow2(double d) {
@@ -137,9 +137,9 @@ public class SFTDetectionTest {
 
 	}
 
-	static class Position {
+	static class RelativePosition implements Position {
 
-		public static final Position NULL = new Position(-1, -1, -1) {
+		public static final RelativePosition NULL = new RelativePosition(-1, -1, -1) {
 			@Override
 			public boolean isNull() {
 				return true;
@@ -150,14 +150,68 @@ public class SFTDetectionTest {
 		private final double x;
 		private final double y;
 
-		public Position(long timestamp, double x, double y) {
+		public RelativePosition(long timestamp, double x, double y) {
 			this.timestamp = timestamp;
 			this.x = x;
 			this.y = y;
 		}
 
+		@Override
 		public boolean isNull() {
 			return false;
+		}
+
+		@Override
+		public long getTimestamp() {
+			return timestamp;
+		}
+
+		@Override
+		public double getX() {
+			return x;
+		}
+
+		@Override
+		public double getY() {
+			return y;
+		}
+
+	}
+
+	private static class AbsolutePosition implements Position {
+
+		private final RelativePosition relativePosition;
+		private final double x;
+		private final double y;
+
+		public AbsolutePosition(RelativePosition relativePosition, double x, double y) {
+			this.relativePosition = relativePosition;
+			this.x = x;
+			this.y = y;
+		}
+
+		@Override
+		public boolean isNull() {
+			return relativePosition.isNull();
+		}
+
+		public RelativePosition getRelativePosition() {
+			return relativePosition;
+		}
+
+		@Override
+		public long getTimestamp() {
+			return relativePosition.getTimestamp();
+		}
+
+		@Override
+		public double getX() {
+			return x;
+		}
+
+		@Override
+		public double getY() {
+			return y;
 		}
 
 	}
@@ -192,8 +246,8 @@ public class SFTDetectionTest {
 			this.height = height;
 		}
 
-		public Position toAbsolute(Position pos) {
-			return new Position(pos.timestamp, convertX(pos.x), convertY(pos.y));
+		public AbsolutePosition toAbsolute(RelativePosition pos) {
+			return new AbsolutePosition(pos, convertX(pos.getX()), convertY(pos.getY()));
 		}
 
 		private double convertY(double y) {
@@ -317,18 +371,18 @@ public class SFTDetectionTest {
 	}
 
 	private void whenStdInInputWasProcessed() throws IOException {
-		Position prevAbsPos = null;
+		AbsolutePosition prevAbsPos = null;
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
-				Position relPos = parse(line);
+				RelativePosition relPos = parse(line);
 				if (relPos != null) {
 					if (relPos.isNull()) {
 						if (prevAbsPos != null) {
 							publisher.send(new Message("team/scored", "0"));
 						}
 					} else {
-						Position absPos = table.toAbsolute(relPos);
+						AbsolutePosition absPos = table.toAbsolute(relPos);
 						sendPositions(relPos, absPos);
 						if (prevAbsPos != null) {
 							sendMovement(new Movement(prevAbsPos, absPos));
@@ -341,7 +395,7 @@ public class SFTDetectionTest {
 		}
 	}
 
-	private static Position parse(String line) {
+	private static RelativePosition parse(String line) {
 		String[] values = line.split("\\,");
 		if (values.length == 3) {
 			Long timestamp = toLong(values[0]);
@@ -351,9 +405,9 @@ public class SFTDetectionTest {
 			// TODO test x/y > 1.0?
 			if (isValidTimestamp(timestamp) && !isNull(x, y)) {
 				if (x == -1 && y == -1) {
-					return Position.NULL;
+					return RelativePosition.NULL;
 				} else if (isValidPosition(x, y)) {
-					return new Position(timestamp, x, y);
+					return new RelativePosition(timestamp, x, y);
 				}
 			}
 		}
@@ -395,7 +449,7 @@ public class SFTDetectionTest {
 	}
 
 	private void sendPosition(String topic, Position position) {
-		publisher.send(new Message(topic, "{ \"x\":" + position.x + ", \"y\":" + position.y + " }"));
+		publisher.send(new Message(topic, "{ \"x\":" + position.getX() + ", \"y\":" + position.getY() + " }"));
 	}
 
 	private void sendMovement(Movement movement) {
