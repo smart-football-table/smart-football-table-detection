@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
 import java.util.stream.Stream;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class SFTDetectionTest {
@@ -269,11 +270,20 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void canDetectGoal() throws IOException {
+	public void canDetectGoalOnRightHandSide() throws IOException {
 		givenATableOfSize(100, 80);
 		givenStdInContains(line(anyTimestamp(), "0.99", "0.5"), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		assertThat(onlyElement(messagesWithTopic("team/scored")).getPayload(), is("0"));
+	}
+
+	@Test
+	@Ignore
+	public void canDetectGoalOnLeftHandSide() throws IOException {
+		givenATableOfSize(100, 80);
+		givenStdInContains(line(anyTimestamp(), "0.01", "0.5"), anyTimestamp() + "," + noBallOnTable());
+		whenStdInInputWasProcessed();
+		assertThat(onlyElement(messagesWithTopic("team/scored")).getPayload(), is("1"));
 	}
 
 	private String noBallOnTable() {
