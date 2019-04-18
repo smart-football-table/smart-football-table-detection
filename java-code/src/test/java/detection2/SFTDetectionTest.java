@@ -1,7 +1,6 @@
 package detection2;
 
 import static java.lang.Math.abs;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.joining;
 import static org.hamcrest.CoreMatchers.is;
@@ -16,13 +15,41 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
 import java.util.stream.Stream;
 
 import org.junit.Test;
 
 public class SFTDetectionTest {
+
+	private static class RelativePosition {
+
+		private long timestamp;
+		private double x;
+		private double y;
+
+		public RelativePosition(long timestamp, double x, double y) {
+			this.timestamp = timestamp;
+			this.x = x;
+			this.y = y;
+		}
+
+		public static RelativePosition parse(String line) {
+			String[] values = line.split("\\,");
+
+			if (values.length == 3) {
+				Long timestamp = toLong(values[0]);
+				Double x = toDouble(values[1]);
+				Double y = toDouble(values[2]);
+				if (timestamp != null && isValidPosition(x, y)) {
+					return new RelativePosition(timestamp, x, y);
+				}
+			}
+			return null;
+
+		}
+
+	}
 
 	private static class Message {
 
@@ -154,36 +181,27 @@ public class SFTDetectionTest {
 	}
 
 	private void whenStdInInputWasProcessed() throws IOException {
-		Double prevX = null;
-		Double prevY = null;
-		Long prevTimestamp = null;
+		RelativePosition prevPos = null;
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
-				String[] values = line.split("\\,");
-				if (values.length == 3) {
-					Long timestamp = toLong(values[0]);
-					Double x = toDouble(values[1]);
-					Double y = toDouble(values[2]);
+				RelativePosition pos = RelativePosition.parse(line);
+				if (pos != null) {
+					long timestamp = pos.timestamp;
+					String baseTopic = "game/ball/position/";
+					sendXY(baseTopic + "abs", table.convertX(pos.x), table.convertY(pos.y));
+					sendXY(baseTopic + "rel", pos.x, pos.y);
 
-					if (isValidPosition(x, y)) {
-						String baseTopic = "game/ball/position/";
-						sendXY(baseTopic + "abs", table.convertX(x), table.convertY(y));
-						sendXY(baseTopic + "rel", x, y);
-
-						// calculate distance and velocity
-						if (prevX != null && prevY != null) {
-							double diffX = abs((table.convertX(prevX) - table.convertX(x)));
-							double diffY = abs((table.convertY(prevY) - table.convertY(y)));
-							double cm = Math.sqrt(diffX * diffX + diffY * diffY);
-							double mps = 10 * cm / (timestamp - prevTimestamp);
-							publisher.send(new Message("game/ball/distance/cm", String.valueOf(cm)));
-							publisher.send(new Message("game/ball/velocity/mps", String.valueOf(mps)));
-						}
-						prevTimestamp = timestamp;
-						prevX = x;
-						prevY = y;
+					// calculate distance and velocity
+					if (prevPos != null) {
+						double diffX = abs((table.convertX(prevPos.x) - table.convertX(pos.x)));
+						double diffY = abs((table.convertY(prevPos.y) - table.convertY(pos.y)));
+						double cm = Math.sqrt(diffX * diffX + diffY * diffY);
+						double mps = 10 * cm / (timestamp - prevPos.timestamp);
+						publisher.send(new Message("game/ball/distance/cm", String.valueOf(cm)));
+						publisher.send(new Message("game/ball/velocity/mps", String.valueOf(mps)));
 					}
+					prevPos = pos;
 				}
 			}
 
@@ -194,7 +212,7 @@ public class SFTDetectionTest {
 		publisher.send(new Message(topic, "{ \"x\":" + x + ", \"y\":" + y + " }"));
 	}
 
-	private boolean isValidPosition(Double x, Double y) {
+	private static boolean isValidPosition(Double x, Double y) {
 		// TODO test x/y > 1.0?
 		return x != null && y != null && x >= 0.0 && y >= 0.0;
 	}
