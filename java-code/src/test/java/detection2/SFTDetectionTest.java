@@ -138,6 +138,13 @@ public class SFTDetectionTest {
 
 	static class Position {
 
+		public static final Position NULL = new Position(-1, -1, -1) {
+			@Override
+			public boolean isNull() {
+				return true;
+			}
+		};
+
 		private final long timestamp;
 		private final double x;
 		private final double y;
@@ -146,6 +153,10 @@ public class SFTDetectionTest {
 			this.timestamp = timestamp;
 			this.x = x;
 			this.y = y;
+		}
+
+		public boolean isNull() {
+			return false;
 		}
 
 	}
@@ -242,7 +253,7 @@ public class SFTDetectionTest {
 	@Test
 	public void onReadingTheNoPositionMessage_noMessageIsSent() throws IOException {
 		givenATableOfSize(100, 80);
-		givenStdInContains(line(anyTimestamp(), "-1.0", "-1.0"));
+		givenStdInContains(anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenNoMessageIsSent();
 	}
@@ -255,6 +266,18 @@ public class SFTDetectionTest {
 		givenStdInContains(line(startTimestamp, "0.0", "0.0"), line(endTimestamp, "1.0", "1.0"));
 		whenStdInInputWasProcessed();
 		thenDistanceInCentimetersAndVelocityArePublished(128.06248474865697, 1.2806248474865697, 4.610249450951652);
+	}
+
+	@Test
+	public void canDetectGoal() throws IOException {
+		givenATableOfSize(100, 80);
+		givenStdInContains(line(anyTimestamp(), "0.99", "0.5"), anyTimestamp() + "," + noBallOnTable());
+		whenStdInInputWasProcessed();
+		assertThat(onlyElement(messagesWithTopic("team/scored")).getPayload(), is("0"));
+	}
+
+	private String noBallOnTable() {
+		return "-1,-1";
 	}
 
 	private void thenDistanceInCentimetersAndVelocityArePublished(double centimeters, double mps, double kmh) {
@@ -290,12 +313,18 @@ public class SFTDetectionTest {
 			while ((line = reader.readLine()) != null) {
 				Position relPos = parse(line);
 				if (relPos != null) {
-					Position absPos = table.toAbsolute(relPos);
-					sendPositions(relPos, absPos);
-					if (prevAbsPos != null) {
-						sendMovement(new Movement(prevAbsPos, absPos));
+					if (relPos.isNull()) {
+						if (prevAbsPos != null) {
+							publisher.send(new Message("team/scored", "0"));
+						}
+					} else {
+						Position absPos = table.toAbsolute(relPos);
+						sendPositions(relPos, absPos);
+						if (prevAbsPos != null) {
+							sendMovement(new Movement(prevAbsPos, absPos));
+						}
+						prevAbsPos = absPos;
 					}
-					prevAbsPos = absPos;
 				}
 			}
 
@@ -308,8 +337,14 @@ public class SFTDetectionTest {
 			Long timestamp = toLong(values[0]);
 			Double x = toDouble(values[1]);
 			Double y = toDouble(values[2]);
-			if (isValidTimestamp(timestamp) && isValidPosition(x, y)) {
-				return new Position(timestamp, x, y);
+
+			// TODO test x/y > 1.0?
+			if (isValidTimestamp(timestamp) && !isNull(x, y)) {
+				if (x == -1 && y == -1) {
+					return Position.NULL;
+				} else if (isValidPosition(x, y)) {
+					return new Position(timestamp, x, y);
+				}
 			}
 		}
 		return null;
@@ -320,8 +355,12 @@ public class SFTDetectionTest {
 	}
 
 	private static boolean isValidPosition(Double x, Double y) {
-		// TODO test x/y > 1.0?
-		return x != null && y != null && x >= 0.0 && y >= 0.0;
+		return x >= 0.0 && y >= 0.0;
+	}
+
+	private static boolean isNull(Double x, Double y) {
+		return x == null || y == null;
+
 	}
 
 	private static Double toDouble(String val) {
