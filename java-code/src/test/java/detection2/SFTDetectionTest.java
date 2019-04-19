@@ -31,6 +31,35 @@ import org.junit.Test;
 
 public class SFTDetectionTest {
 
+	private static class GoalDetector {
+
+		private AbsolutePosition prevAbsPos;
+		private MessagePublisher publisher;
+
+		public GoalDetector(MessagePublisher publisher) {
+			this.publisher = publisher;
+		}
+
+		public void update(AbsolutePosition absPos) {
+			RelativePosition relPos = absPos.getRelativePosition();
+			if (relPos.isNull()) {
+				if (prevAbsPos != null) {
+					sendGoal(prevAbsPos);
+				}
+			}
+			prevAbsPos = absPos;
+		}
+
+		private void sendGoal(AbsolutePosition prevAbsPos) {
+			RelativePosition prevRelPos = prevAbsPos.getRelativePosition();
+			if (prevRelPos.normalizeX().getX() >= 0.8) {
+				int teamId = prevRelPos.isRightHandSide() ? 0 : 1;
+				publisher.send(new Message("team/scored", String.valueOf(teamId)));
+			}
+		}
+
+	}
+
 	static enum DistanceUnit {
 		CENTIMETER {
 			@Override
@@ -363,18 +392,18 @@ public class SFTDetectionTest {
 	}
 
 	private void whenStdInInputWasProcessed() throws IOException {
+		GoalDetector goalDetector = new GoalDetector(publisher);
 		AbsolutePosition prevAbsPos = null;
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
 				RelativePosition relPos = parse(line);
-				if (relPos != null) {
-					if (relPos.isNull()) {
-						if (prevAbsPos != null) {
-							sendGoal(prevAbsPos);
-						}
-					} else {
-						AbsolutePosition absPos = table.toAbsolute(relPos);
+				if (relPos == null) {
+					// TODO log invalid line
+				} else {
+					AbsolutePosition absPos = table.toAbsolute(relPos);
+					goalDetector.update(absPos);
+					if (!relPos.isNull()) {
 						sendPositions(absPos);
 						if (prevAbsPos != null) {
 							sendMovement(new Movement(prevAbsPos, absPos));
@@ -448,14 +477,6 @@ public class SFTDetectionTest {
 		publisher.send(new Message("ball/distance/cm", String.valueOf(movement.distance(CENTIMETER))));
 		publisher.send(new Message("ball/velocity/mps", String.valueOf(movement.velocity(MPS))));
 		publisher.send(new Message("ball/velocity/kmh", String.valueOf(movement.velocity(KMH))));
-	}
-
-	private void sendGoal(AbsolutePosition prevAbsPos) {
-		RelativePosition prevRelPos = prevAbsPos.getRelativePosition();
-		if (prevRelPos.normalizeX().getX() >= 0.8) {
-			int teamId = prevRelPos.isRightHandSide() ? 0 : 1;
-			publisher.send(new Message("team/scored", String.valueOf(teamId)));
-		}
 	}
 
 	private void thenTheRelativePositionOnTheTableIsPublished(double x, double y) {
