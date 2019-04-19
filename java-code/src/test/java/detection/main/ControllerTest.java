@@ -43,6 +43,7 @@ public class ControllerTest {
 		assertThat(game.isOngoing(), is(false));
 	}
 
+	@Ignore
 	@Test
 	public void readRealExampleTestVideoWithNoBallAndGetBallPositions()
 			throws MqttSecurityException, MqttException, IOException {
