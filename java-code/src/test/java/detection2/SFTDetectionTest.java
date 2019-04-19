@@ -193,31 +193,67 @@ public class SFTDetectionTest {
 
 	private static class GoalMessageGenerator implements MessageGenerator {
 
+		private static interface State {
+			State update(AbsolutePosition absPos);
+		}
+
+		private class BallOnTable implements State {
+
+			@Override
+			public State update(AbsolutePosition absPos) {
+				return isFrontOfGoal(absPos.getRelativePosition()) ? new FrontOfGoal(absPos) : this;
+			}
+
+			private boolean isFrontOfGoal(RelativePosition relPos) {
+				return relPos.normalizeX().getX() >= 1 - ((double) frontOfGoalPercentage) / 100;
+			}
+		}
+
+		private class FrontOfGoal implements State {
+			private final AbsolutePosition frontOfGoal;
+
+			public FrontOfGoal(AbsolutePosition frontOfGoal) {
+				this.frontOfGoal = frontOfGoal;
+			}
+
+			@Override
+			public State update(AbsolutePosition absPos) {
+				return absPos.isNull() ? new PossibleGoal(frontOfGoal) : new BallOnTable().update(absPos);
+			}
+		}
+
+		private static class PossibleGoal implements State {
+			private final AbsolutePosition frontOfGoal;
+
+			public PossibleGoal(AbsolutePosition frontOfGoal) {
+				this.frontOfGoal = frontOfGoal;
+			}
+
+			@Override
+			public State update(AbsolutePosition absPos) {
+				return this;
+			}
+
+			public AbsolutePosition getFrontOfGoal() {
+				return frontOfGoal;
+			}
+
+		}
+
 		private final Map<Integer, Integer> scores = new HashMap<>();
 		private int frontOfGoalPercentage = 40;
 
-		private AbsolutePosition prevPos;
+		private State state = new BallOnTable();
 
 		@Override
 		public Collection<Message> update(AbsolutePosition absPos) {
-			RelativePosition relPos = absPos.getRelativePosition();
+			state = state.update(absPos);
 			List<Message> messages = Collections.emptyList();
-			if (!ballOnTable(relPos)) {
-				boolean wasFrontOfGoal = prevPos != null && isFrontOfGoal(prevPos.getRelativePosition());
-				if (wasFrontOfGoal) {
-					messages = goalMessage(prevPos);
-				}
+			if (state instanceof PossibleGoal) {
+				messages = goalMessage(((PossibleGoal) state).getFrontOfGoal());
+				state = new BallOnTable();
 			}
-			prevPos = absPos;
 			return messages;
-		}
-
-		private boolean isFrontOfGoal(RelativePosition relPos) {
-			return relPos.normalizeX().getX() >= 1 - ((double) frontOfGoalPercentage) / 100;
-		}
-
-		private boolean ballOnTable(RelativePosition relPos) {
-			return !relPos.isNull();
 		}
 
 		private List<Message> goalMessage(AbsolutePosition frontOfGoalPos) {
