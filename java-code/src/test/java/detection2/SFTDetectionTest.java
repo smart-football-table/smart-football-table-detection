@@ -402,7 +402,7 @@ public class SFTDetectionTest {
 	@Test
 	public void canDetectGoalOnRightHandSide() throws IOException {
 		givenATableOfAnySize();
-		goalMessageGenerator.setFrontOfGoalPercentage(20);
+		givenFrontOfGoalPercentage(20);
 		givenStdInContains(line(anyTimestamp(), 1.0 - 0.20, centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(0);
@@ -412,7 +412,7 @@ public class SFTDetectionTest {
 	@Test
 	public void canDetectGoalOnLeftHandSide() throws IOException {
 		givenATableOfAnySize();
-		goalMessageGenerator.setFrontOfGoalPercentage(20);
+		givenFrontOfGoalPercentage(20);
 		givenStdInContains(line(anyTimestamp(), 0.0 + 0.20, centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(1);
@@ -421,7 +421,7 @@ public class SFTDetectionTest {
 	@Test
 	public void noGoalIfBallWasNotInFrontOfGoalRightHandSide() throws IOException {
 		givenATableOfAnySize();
-		goalMessageGenerator.setFrontOfGoalPercentage(20);
+		givenFrontOfGoalPercentage(20);
 		givenStdInContains(line(anyTimestamp(), 1.0 - 0.21, centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
@@ -429,8 +429,8 @@ public class SFTDetectionTest {
 
 	@Test
 	public void noGoalIfBallWasNotInFrontOfGoalLeftHandSide() throws IOException {
-		givenATableOfSize(100, 80);
-		goalMessageGenerator.setFrontOfGoalPercentage(20);
+		givenATableOfAnySize();
+		givenFrontOfGoalPercentage(20);
 		givenStdInContains(line(anyTimestamp(), 0.0 + 0.21, centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
@@ -491,6 +491,10 @@ public class SFTDetectionTest {
 
 	private void givenStdInContains(String... messages) {
 		is = new ByteArrayInputStream(Arrays.stream(messages).collect(joining("\n")).getBytes());
+	}
+
+	private void givenFrontOfGoalPercentage(int percentage) {
+		goalMessageGenerator.setFrontOfGoalPercentage(percentage);
 	}
 
 	private void whenStdInInputWasProcessed() throws IOException {
