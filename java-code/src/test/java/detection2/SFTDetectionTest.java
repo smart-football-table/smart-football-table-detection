@@ -11,6 +11,7 @@ import static java.lang.Math.abs;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.joining;
@@ -27,7 +28,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -155,7 +155,7 @@ public class SFTDetectionTest {
 		@Override
 		public Collection<Message> update(AbsolutePosition absPos) {
 			RelativePosition relPos = absPos.getRelativePosition();
-			List<Message> messages = Collections.emptyList();
+			List<Message> messages = emptyList();
 			if (!relPos.isNull()) {
 				if (prevAbsPos != null) {
 					messages = messages(new Movement(prevAbsPos, absPos));
@@ -179,7 +179,7 @@ public class SFTDetectionTest {
 
 		@Override
 		public Collection<Message> update(AbsolutePosition absPos) {
-			return absPos.getRelativePosition().isNull() ? Collections.emptyList() : messages(absPos);
+			return absPos.getRelativePosition().isNull() ? emptyList() : messages(absPos);
 		}
 
 		private List<Message> messages(AbsolutePosition position) {
@@ -262,6 +262,7 @@ public class SFTDetectionTest {
 
 		private class Goal implements State {
 
+			private final BallOnTable ballOnTable = new BallOnTable();
 			private final boolean rightHandSide;
 
 			public Goal(boolean rightHandSide) {
@@ -271,7 +272,7 @@ public class SFTDetectionTest {
 			@Override
 			public State update(AbsolutePosition absPos) {
 				// TODO return new WaitForBallOnMiddleLine();
-				return new BallOnTable();
+				return ballOnTable.update(absPos);
 			}
 
 			public boolean isRightHandSide() {
@@ -289,12 +290,7 @@ public class SFTDetectionTest {
 		@Override
 		public Collection<Message> update(AbsolutePosition absPos) {
 			state = state.update(absPos);
-			List<Message> messages = Collections.emptyList();
-			if (state instanceof Goal) {
-				messages = goalMessage(((Goal) state).isRightHandSide());
-				state = new BallOnTable();
-			}
-			return messages;
+			return state instanceof Goal ? goalMessage(((Goal) state).isRightHandSide()) : emptyList();
 		}
 
 		private List<Message> goalMessage(boolean isRightHandSide) {
