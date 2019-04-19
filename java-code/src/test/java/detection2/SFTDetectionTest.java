@@ -6,6 +6,7 @@ import static detection2.SFTDetectionTest.SpeedUnit.MPS;
 import static java.lang.Math.abs;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.joining;
@@ -55,7 +56,7 @@ public class SFTDetectionTest {
 		}
 
 		private List<Message> messages(Movement movement) {
-			return Arrays.asList( //
+			return asList( //
 					new Message("ball/distance/cm", String.valueOf(movement.distance(CENTIMETER))), //
 					new Message("ball/velocity/mps", String.valueOf(movement.velocity(MPS))), //
 					new Message("ball/velocity/kmh", String.valueOf(movement.velocity(KMH)) //
@@ -72,7 +73,7 @@ public class SFTDetectionTest {
 		}
 
 		private List<Message> messages(AbsolutePosition position) {
-			return Arrays.asList( //
+			return asList( //
 					positionMessage("ball/position/abs", position), //
 					positionMessage("ball/position/rel", position.getRelativePosition()) //
 			);
@@ -110,7 +111,7 @@ public class SFTDetectionTest {
 		private List<Message> goalMessage(AbsolutePosition prevAbsPos) {
 			RelativePosition prevRelPos = prevAbsPos.getRelativePosition();
 			int teamId = prevRelPos.isRightHandSide() ? 0 : 1;
-			return Arrays.asList(new Message("team/scored", String.valueOf(teamId)));
+			return asList(new Message("team/scored", String.valueOf(teamId)));
 		}
 
 	}
@@ -447,12 +448,11 @@ public class SFTDetectionTest {
 	}
 
 	private void whenStdInInputWasProcessed() throws IOException {
-		EventGenerator goalDetector = new GoalDetector();
-		EventGenerator positionPublisher = new PositionPublisher();
-		EventGenerator movementPublisher = new MovementPublisher();
-
-		List<EventGenerator> generators = Arrays.asList(goalDetector, positionPublisher, movementPublisher);
-
+		List<EventGenerator> generators = asList( //
+				new GoalDetector(), //
+				new PositionPublisher(), //
+				new MovementPublisher() //
+		);
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
