@@ -3,8 +3,10 @@ package detection2;
 import static detection2.SFTDetectionTest.DistanceUnit.CENTIMETER;
 import static detection2.SFTDetectionTest.SpeedUnit.KMH;
 import static detection2.SFTDetectionTest.SpeedUnit.MPS;
-import static detection2.SFTDetectionTest.StdInBuilder.posSeries;
+import static detection2.SFTDetectionTest.StdInBuilder.ball;
 import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.kickoff;
+import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.offTable;
+import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.pos;
 import static java.lang.Math.abs;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
@@ -37,6 +39,8 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 
+import detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder;
+
 public class SFTDetectionTest {
 
 	public static class StdInBuilder {
@@ -52,7 +56,11 @@ public class SFTDetectionTest {
 			}
 
 			public static BallPosBuilder kickoff() {
-				return new BallPosBuilder(centerX(), centerY());
+				return pos(centerX(), centerY());
+			}
+
+			public static BallPosBuilder pos(double x, double y) {
+				return new BallPosBuilder(x, y);
 			}
 
 			private static double centerX() {
@@ -73,6 +81,11 @@ public class SFTDetectionTest {
 				return this;
 			}
 
+			public static BallPosBuilder offTable() {
+				RelativePosition noBall = RelativePosition.noPosition(0L);
+				return pos(noBall.getX(), noBall.getY());
+			}
+
 		}
 
 		private long timestamp;
@@ -82,7 +95,7 @@ public class SFTDetectionTest {
 			this.timestamp = timestamp;
 		}
 
-		public static StdInBuilder posSeries() {
+		public static StdInBuilder ball() {
 			return messagesStartingAt(anyTimestamp());
 		}
 
@@ -94,28 +107,21 @@ public class SFTDetectionTest {
 			return 1234;
 		}
 
-		private StdInBuilder atPos(BallPosBuilder ballPosBuilder) {
-			lines.add(line(timestamp++, 0.0 + ballPosBuilder.x, ballPosBuilder.y));
+		public StdInBuilder then() {
 			return this;
 		}
 
-		public StdInBuilder pos(RelativePosition pos) {
-			return atPos(pos.getX(), pos.getY());
+		public StdInBuilder then(BallPosBuilder ballPosBuilder) {
+			return at(ballPosBuilder);
 		}
 
-		private StdInBuilder atPos(double x, double y) {
-			lines.add(line(timestamp, x, y));
+		private StdInBuilder at(BallPosBuilder ballPosBuilder) {
+			lines.add(line(timestamp, 0.0 + ballPosBuilder.x, ballPosBuilder.y));
 			return this;
 		}
 
-		private StdInBuilder thenLater(long adjustment, TimeUnit timeUnit) {
+		private StdInBuilder thenAfter(long adjustment, TimeUnit timeUnit) {
 			timestamp += timeUnit.toMillis(1);
-			return this;
-		}
-
-		public StdInBuilder thenGone() {
-			RelativePosition noBall = RelativePosition.noPosition(timestamp++);
-			lines.add(line(noBall.getTimestamp(), noBall.getX(), noBall.getY()));
 			return this;
 		}
 
@@ -458,7 +464,7 @@ public class SFTDetectionTest {
 	@Test
 	public void relativeValuesGetsConvertedToAbsolutesAtKickoff() throws IOException {
 		givenATableOfSize(100, 80);
-		givenStdInContains(posSeries().atPos(kickoff()));
+		givenStdInContains(ball().at(kickoff()));
 		whenStdInInputWasProcessed();
 		thenTheRelativePositionOnTheTableIsPublished(centerX(), centerY());
 		thenTheAbsolutePositionOnTheTableIsPublished(100 / 2, 80 / 2);
@@ -467,7 +473,7 @@ public class SFTDetectionTest {
 	@Test
 	public void relativeValuesGetsConvertedToAbsolutes() throws IOException {
 		givenATableOfSize(100, 80);
-		givenStdInContains(posSeries().atPos(0.0, 1.0));
+		givenStdInContains(ball().at(pos(0.0, 1.0)));
 		whenStdInInputWasProcessed();
 		thenTheRelativePositionOnTheTableIsPublished(0.0, 1.0);
 		thenTheAbsolutePositionOnTheTableIsPublished(0, 80);
@@ -476,7 +482,7 @@ public class SFTDetectionTest {
 	@Test
 	public void malformedMessageIsRead() throws IOException {
 		givenATableOfAnySize();
-		givenStdInContains(posSeries().invalidData());
+		givenStdInContains(ball().invalidData());
 		whenStdInInputWasProcessed();
 		thenNoMessageIsSent();
 	}
@@ -484,7 +490,7 @@ public class SFTDetectionTest {
 	@Test
 	public void onReadingTheNoPositionMessage_noMessageIsSent() throws IOException {
 		givenATableOfAnySize();
-		givenStdInContains(posSeries().thenGone());
+		givenStdInContains(ball().at(offTable()));
 		whenStdInInputWasProcessed();
 		thenNoMessageIsSent();
 	}
@@ -492,7 +498,7 @@ public class SFTDetectionTest {
 	@Test
 	public void whenTwoPositionsAreRead_VelocityGetsPublished() throws IOException {
 		givenATableOfSize(100, 80);
-		givenStdInContains(posSeries().atPos(0.0, 0.0).thenLater(1, SECONDS).atPos(1.0, 1.0));
+		givenStdInContains(ball().at(pos(0.0, 0.0)).thenAfter(1, SECONDS).at(pos(1.0, 1.0)));
 		whenStdInInputWasProcessed();
 		thenDistanceInCentimetersAndVelocityArePublished(128.06248474865697, 1.2806248474865697, 4.610249450951652);
 	}
@@ -501,7 +507,7 @@ public class SFTDetectionTest {
 	public void canDetectGoalOnRightHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(posSeries().atPos(kickoff().right(0.3)).thenGone());
+		givenStdInContains(ball().at(kickoff().right(0.3)).then(offTable()));
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(0);
 		thenGameScoreForTeamIsPublished(0, 1);
@@ -511,7 +517,7 @@ public class SFTDetectionTest {
 	public void canDetectGoalOnLeftHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(posSeries().atPos(kickoff().left(0.3)).thenGone());
+		givenStdInContains(ball().at(kickoff().left(0.3)).then(offTable()));
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(1);
 	}
@@ -520,7 +526,7 @@ public class SFTDetectionTest {
 	public void noGoalIfBallWasNotInFrontOfGoalRightHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(posSeries().atPos(kickoff().right(0.29)).thenGone());
+		givenStdInContains(ball().at(kickoff().right(0.29)).then(offTable()));
 		whenStdInInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
 	}
@@ -529,7 +535,7 @@ public class SFTDetectionTest {
 	public void noGoalIfBallWasNotInFrontOfGoalLeftHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(posSeries().atPos(kickoff().left(0.29)).thenGone());
+		givenStdInContains(ball().at(kickoff().left(0.29)).then(offTable()));
 		whenStdInInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
 	}
@@ -537,10 +543,11 @@ public class SFTDetectionTest {
 	@Test
 	public void leftHandSideScoresThreeTimes() throws IOException {
 		givenATableOfAnySize();
-		givenStdInContains(posSeries() //
-				.atPos(kickoff().left(0.3)).thenGone() //
-				.atPos(kickoff().left(0.3)).thenGone() //
-				.atPos(kickoff().left(0.3)).thenGone() //
+		BallPosBuilder frontOfLeftGoal = kickoff().left(0.3);
+		givenStdInContains(ball() //
+				.at(frontOfLeftGoal).then(offTable()) //
+				.at(frontOfLeftGoal).then(offTable()) //
+				.at(frontOfLeftGoal).then(offTable()) //
 		);
 		whenStdInInputWasProcessed();
 		thenPayloadsWithTopicAre("team/scored", times("1", 3));
