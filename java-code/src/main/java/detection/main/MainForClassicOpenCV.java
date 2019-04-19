@@ -21,7 +21,7 @@ public class MainForClassicOpenCV {
 
 		buildAndSetPythonArguments(gameDetection);
 
-		gameDetection.setPythonModule("src/main/resources/python-files/playedGameDigitizerOneCam.py");
+		gameDetection.setPythonModule("src/main/resources/python-files/playedGameDigitizer.py");
 
 		OpenCVHandler colorHandler = new OpenCVHandler();
 		colorHandler.setPythonModule("adjustment.py");
@@ -33,10 +33,11 @@ public class MainForClassicOpenCV {
 	}
 
 	private static void buildAndSetPythonArguments(OpenCVHandler gameDetection) {
-		String videoArgument = "fisheye.avi";
+		String videoArgument = "../../../../../Schreibtisch/testvideos/fullField_COM19/com19.avi";
 		gameDetection.setPythonArgumentVideoPath(videoArgument);
 		String pythonArgumentColor = buildPythonArgumentForColor();
 		gameDetection.setPythonArgumentColor(pythonArgumentColor);
+		
 	}
 
 	private static String buildPythonArgumentForColor() {

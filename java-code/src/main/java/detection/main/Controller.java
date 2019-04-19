@@ -48,7 +48,6 @@ public class Controller {
 			}
 			break;
 		}
-		System.exit(0);
 	}
 
 	public OpenCVHandler getGameDetection() {

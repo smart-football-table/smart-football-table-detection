@@ -14,6 +14,7 @@ public class OpenCVHandler {
 	private Process process;
 	private String pythonModule = "";
 	private String pythonArgumentVideoPath = "empty";
+	private String pythonArgumentRecordPath = "empty";
 	private String pythonArgumentColor = "0,0,0,0,0,0";
 	private String pythonArgumentCamIndex = "0";
 	private String pythonArgumentBufferSize = "64";
@@ -26,7 +27,8 @@ public class OpenCVHandler {
 		String path = System.getProperty("user.dir").replace('\\', '/');
 
 		pb = new ProcessBuilder("python", "-u", path + "/" + pythonModule, "-v", pythonArgumentVideoPath, "-c",
-				pythonArgumentColor, "-i", pythonArgumentCamIndex, "-b", pythonArgumentBufferSize);
+				pythonArgumentColor, "-i", pythonArgumentCamIndex, "-b", pythonArgumentBufferSize, "-r",
+				pythonArgumentRecordPath);
 		pb.redirectOutput();
 		pb.redirectError();
 
@@ -39,23 +41,17 @@ public class OpenCVHandler {
 
 	}
 
-	public void handleWithOpenCVOutput(Controller detector) throws MqttSecurityException, MqttException, IOException {
+	public void handleWithOpenCVOutput(Controller controller) throws MqttSecurityException, MqttException, IOException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		manager = new GameManager();
 		String line = null;
-		boolean itsTheSecondOne = false;
 
-		while ((line = reader.readLine()) != null || detector.isOngoing() || processAlive) {
+		while ((line = reader.readLine()) != null && controller.isOngoing() && processAlive) {
 
 			if (line != null && line.contains("|")) {
-
 				try {
-
-					if (itsTheSecondOne) {
-						manager.createBallPosition(line);
-						manager.doTheLogic();
-					}
-					itsTheSecondOne = !itsTheSecondOne;
+					manager.createBallPosition(line);
+					manager.doTheLogic();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -113,6 +109,14 @@ public class OpenCVHandler {
 
 	public void setPythonArgumentBufferSize(String pythonArgumentBufferSize) {
 		this.pythonArgumentBufferSize = pythonArgumentBufferSize;
+	}
+
+	public String getPythonArgumentRecordPath() {
+		return pythonArgumentRecordPath;
+	}
+
+	public void setPythonArgumentRecordPath(String pythonArgumentRecordPath) {
+		this.pythonArgumentRecordPath = pythonArgumentRecordPath;
 	}
 
 	public GameManager getManager() {

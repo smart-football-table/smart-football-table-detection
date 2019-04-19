@@ -137,14 +137,14 @@ public class GameManager {
 
 		}
 
-		if (ballPositions.size() > 50)
+		if (ballPositions.size() > ConfiguratorValues.getFramesPerSecond()*2)
 
 		{
 
 			if (goalDetector.isThereAGoal(ballPositions)) {
 
-				String atPostion = goalDetector.whereHappendTheGoal(ballPositions.get(ballPositions.size() - 51),
-						ballPositions.get(ballPositions.size() - 52));
+				String atPostion = goalDetector.whereHappendTheGoal(ballPositions.get(ballPositions.size() - (ConfiguratorValues.getFramesPerSecond()*2+1)),
+						ballPositions.get(ballPositions.size() - (ConfiguratorValues.getFramesPerSecond()*2+2)));
 				setGoalForTeamWhenGoalHappend(atPostion);
 				mqtt.sendScore(getScoreAsString());
 

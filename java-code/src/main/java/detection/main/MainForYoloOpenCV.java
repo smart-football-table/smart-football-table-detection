@@ -11,22 +11,23 @@ public class MainForYoloOpenCV {
 		Controller detector = new Controller();
 
 		OpenCVHandler gameDetection = new OpenCVHandler();
+		buildAndSetPythonArguments(gameDetection);
 		gameDetection.setPythonModule("../../../../alexeyab/darknet/darknet_video.py");
-
-		OpenCVHandler colorHandler = new OpenCVHandler();
-		colorHandler.setPythonModule("adjustment.py");
-
-		// FileController.loadDataFromFile();
-		ConfiguratorValues.setDefaultColorRangeYellow();
 
 		ConfiguratorValues.setMillimeterPerPixel(20);
 
 		ConfiguratorValues.setGameFieldSize(810, 810);
 
+		ConfiguratorValues.setFramesPerSecond(25);
+
 		detector.setGameDetection(gameDetection);
-		detector.setColorGrabber(colorHandler);
 
 		detector.startTheDetection();
+	}
+
+	private static void buildAndSetPythonArguments(OpenCVHandler gameDetection) {
+		String videoArgument = "../../../../../Schreibtisch/testvideos/fullField_COM19/com19.avi";
+		gameDetection.setPythonArgumentVideoPath(videoArgument);
 	}
 
 }
