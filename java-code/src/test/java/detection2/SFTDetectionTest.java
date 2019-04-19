@@ -23,7 +23,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
@@ -87,6 +89,7 @@ public class SFTDetectionTest {
 
 	private static class GoalMessageGenerator implements MessageGenerator {
 
+		private final Map<Integer, Integer> scores = new HashMap<>();
 		private AbsolutePosition frontOfGoalPos;
 
 		@Override
@@ -94,7 +97,7 @@ public class SFTDetectionTest {
 			RelativePosition relPos = absPos.getRelativePosition();
 			List<Message> messages = Collections.emptyList();
 			if (!ballOnTable(relPos) && frontOfGoalPos != null) {
-				messages = goalMessage(frontOfGoalPos);
+				messages = goalMessage();
 			}
 			frontOfGoalPos = isFrontOfGoal(relPos) ? absPos : null;
 			return messages;
@@ -108,10 +111,19 @@ public class SFTDetectionTest {
 			return !relPos.isNull();
 		}
 
-		private List<Message> goalMessage(AbsolutePosition prevAbsPos) {
-			RelativePosition prevRelPos = prevAbsPos.getRelativePosition();
-			int teamId = prevRelPos.isRightHandSide() ? 0 : 1;
-			return asList(new Message("team/scored", String.valueOf(teamId)));
+		private List<Message> goalMessage() {
+			RelativePosition prevRelPos = frontOfGoalPos.getRelativePosition();
+			int teamid = prevRelPos.isRightHandSide() ? 0 : 1;
+			return asList( //
+					new Message("team/scored", String.valueOf(teamid)), //
+					new Message("game/score/" + teamid, String.valueOf(increaseScore(teamid))) //
+			);
+		}
+
+		private int increaseScore(int teamid) {
+			Integer newScore = scores.getOrDefault(teamid, 0) + 1;
+			scores.put(teamid, newScore);
+			return newScore;
 		}
 
 	}
@@ -379,6 +391,7 @@ public class SFTDetectionTest {
 		givenStdInContains(line(anyTimestamp(), 1.0 - 0.20, centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(0);
+		thenGameScoreForTeamIsPublished(0, 1);
 	}
 
 	@Test
@@ -403,6 +416,24 @@ public class SFTDetectionTest {
 		givenStdInContains(line(anyTimestamp(), 0.0 + 0.21, centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
+	}
+
+	@Test
+	public void leftHandSideScoresThreeTimes() throws IOException {
+		givenATableOfAnySize();
+		givenStdInContains( //
+				line(anyTimestamp(), 0.0 + 0.20, centerY()), anyTimestamp() + "," + noBallOnTable(), //
+				line(anyTimestamp(), 0.0 + 0.20, centerY()), anyTimestamp() + "," + noBallOnTable(), //
+				line(anyTimestamp(), 0.0 + 0.20, centerY()), anyTimestamp() + "," + noBallOnTable() //
+		);
+		whenStdInInputWasProcessed();
+		String teamid = "1";
+		thenPayloadsWithTopicAre("team/scored", teamid, teamid, teamid);
+		thenPayloadsWithTopicAre("game/score/1", "1", "2", "3");
+	}
+
+	private List<String> payloads(Stream<Message> messages) {
+		return messages.map(Message::getPayload).collect(toList());
 	}
 
 	private String noBallOnTable() {
@@ -532,6 +563,10 @@ public class SFTDetectionTest {
 		assertThat(onlyElement(messagesWithTopic("team/scored")).getPayload(), is(String.valueOf(teamid)));
 	}
 
+	private void thenGameScoreForTeamIsPublished(int teamid, int score) {
+		assertThat(onlyElement(messagesWithTopic("game/score/" + teamid)).getPayload(), is(String.valueOf(score)));
+	}
+
 	private void thenNoMessageIsSent() {
 		assertThat(String.valueOf(publisher.messages), publisher.messages.isEmpty(), is(true));
 	}
@@ -543,6 +578,10 @@ public class SFTDetectionTest {
 	private void thenNoMessageIsSent(Predicate<Message> predicate) {
 		List<Message> mWithTopic = publisher.messages.stream().filter(predicate).collect(toList());
 		assertThat(String.valueOf(mWithTopic), mWithTopic.isEmpty(), is(true));
+	}
+
+	private void thenPayloadsWithTopicAre(String topic, String... payloads) {
+		assertThat(payloads(messagesWithTopic(topic)), is(asList(payloads)));
 	}
 
 	private String makePayload(double x, double y) {
