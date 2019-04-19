@@ -92,16 +92,20 @@ public class SFTDetectionTest {
 
 		private final Map<Integer, Integer> scores = new HashMap<>();
 		private int frontOfGoalPercentage = 40;
-		private AbsolutePosition frontOfGoalPos;
+
+		private AbsolutePosition prevPos;
 
 		@Override
 		public Collection<Message> update(AbsolutePosition absPos) {
 			RelativePosition relPos = absPos.getRelativePosition();
 			List<Message> messages = Collections.emptyList();
-			if (!ballOnTable(relPos) && frontOfGoalPos != null) {
-				messages = goalMessage();
+			if (!ballOnTable(relPos)) {
+				boolean wasFrontOfGoal = prevPos != null && isFrontOfGoal(prevPos.getRelativePosition());
+				if (wasFrontOfGoal) {
+					messages = goalMessage(prevPos);
+				}
 			}
-			frontOfGoalPos = isFrontOfGoal(relPos) ? absPos : null;
+			prevPos = absPos;
 			return messages;
 		}
 
@@ -113,7 +117,7 @@ public class SFTDetectionTest {
 			return !relPos.isNull();
 		}
 
-		private List<Message> goalMessage() {
+		private List<Message> goalMessage(AbsolutePosition frontOfGoalPos) {
 			RelativePosition prevRelPos = frontOfGoalPos.getRelativePosition();
 			int teamid = prevRelPos.isRightHandSide() ? 0 : 1;
 			return asList( //
