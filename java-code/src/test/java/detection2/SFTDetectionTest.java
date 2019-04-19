@@ -11,6 +11,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.IntStream.range;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -421,19 +422,16 @@ public class SFTDetectionTest {
 	@Test
 	public void leftHandSideScoresThreeTimes() throws IOException {
 		givenATableOfAnySize();
+		String frontOfLeftGoal = line(anyTimestamp(), 0.0 + 0.20, centerY());
+		String ballGone = anyTimestamp() + "," + noBallOnTable();
 		givenStdInContains( //
-				line(anyTimestamp(), 0.0 + 0.20, centerY()), anyTimestamp() + "," + noBallOnTable(), //
-				line(anyTimestamp(), 0.0 + 0.20, centerY()), anyTimestamp() + "," + noBallOnTable(), //
-				line(anyTimestamp(), 0.0 + 0.20, centerY()), anyTimestamp() + "," + noBallOnTable() //
+				frontOfLeftGoal, ballGone, //
+				frontOfLeftGoal, ballGone, //
+				frontOfLeftGoal, ballGone //
 		);
 		whenStdInInputWasProcessed();
-		String teamid = "1";
-		thenPayloadsWithTopicAre("team/scored", teamid, teamid, teamid);
+		thenPayloadsWithTopicAre("team/scored", times("1", 3));
 		thenPayloadsWithTopicAre("game/score/1", "1", "2", "3");
-	}
-
-	private List<String> payloads(Stream<Message> messages) {
-		return messages.map(Message::getPayload).collect(toList());
 	}
 
 	private String noBallOnTable() {
@@ -582,6 +580,14 @@ public class SFTDetectionTest {
 
 	private void thenPayloadsWithTopicAre(String topic, String... payloads) {
 		assertThat(payloads(messagesWithTopic(topic)), is(asList(payloads)));
+	}
+
+	private List<String> payloads(Stream<Message> messages) {
+		return messages.map(Message::getPayload).collect(toList());
+	}
+
+	private static String[] times(String value, int times) {
+		return range(0, times).mapToObj(i -> value).toArray(String[]::new);
 	}
 
 	private String makePayload(double x, double y) {
