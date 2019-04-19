@@ -299,16 +299,30 @@ public class SFTDetectionTest {
 
 		private List<Message> goalMessage(boolean isRightHandSide) {
 			int teamid = isRightHandSide ? 0 : 1;
-			return asList( //
-					new Message("team/scored", String.valueOf(teamid)), //
-					new Message("game/score/" + teamid, String.valueOf(increaseScore(teamid))) //
-			);
+			List<Message> messages = new ArrayList<>();
+			messages.add(new Message("team/scored", String.valueOf(teamid)));
+			messages.add(new Message("game/score/" + teamid, String.valueOf(increaseScore(teamid))));
+			if (scores.get(teamid) == 6) {
+				messages.add(new Message("game/gameover", String.valueOf(teamid)));
+			} else if (scoresSum() == 10) {
+				messages.add(new Message("game/gameover", teamids()));
+			}
+
+			return messages;
 		}
 
 		private int increaseScore(int teamid) {
 			Integer newScore = scores.getOrDefault(teamid, 0) + 1;
 			scores.put(teamid, newScore);
 			return newScore;
+		}
+
+		private int scoresSum() {
+			return scores.values().stream().mapToInt(Integer::intValue).sum();
+		}
+
+		private String teamids() {
+			return scores.keySet().stream().sorted().map(String::valueOf).collect(joining(","));
 		}
 
 		/**
@@ -662,6 +676,44 @@ public class SFTDetectionTest {
 		givenStdInContains(ball().at(frontOfLeftGoal()).then(offTable()));
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(1);
+	}
+
+	@Test
+	public void doesSendWinner() throws IOException {
+		givenATableOfAnySize();
+		givenFrontOfGoalPercentage(20);
+		givenStdInContains(ball() //
+				.at(frontOfLeftGoal()).makeGoal().then() //
+				.at(frontOfLeftGoal()).makeGoal().then() //
+				.at(frontOfLeftGoal()).makeGoal().then() //
+				.at(frontOfLeftGoal()).makeGoal().then() //
+				.at(frontOfLeftGoal()).makeGoal().then() //
+				.at(frontOfLeftGoal()).makeGoal() //
+		);
+		whenStdInInputWasProcessed();
+		thenPayloadsWithTopicAre("game/gameover", "1");
+
+	}
+
+	@Test
+	public void doesSendDrawWinners() throws IOException {
+		givenATableOfAnySize();
+		givenFrontOfGoalPercentage(20);
+		givenStdInContains(ball() //
+				.at(frontOfLeftGoal()).makeGoal().then() //
+				.at(frontOfRightGoal()).makeGoal().then() //
+				.at(frontOfLeftGoal()).makeGoal().then() //
+				.at(frontOfRightGoal()).makeGoal().then() //
+				.at(frontOfLeftGoal()).makeGoal().then() //
+				.at(frontOfRightGoal()).makeGoal().then() //
+				.at(frontOfLeftGoal()).makeGoal().then() //
+				.at(frontOfRightGoal()).makeGoal().then() //
+				.at(frontOfLeftGoal()).makeGoal().then() //
+				.at(frontOfRightGoal()).makeGoal() //
+		);
+		whenStdInInputWasProcessed();
+		thenPayloadsWithTopicAre("game/gameover", "0,1");
+
 	}
 
 	private BallPosBuilder frontOfLeftGoal() {
