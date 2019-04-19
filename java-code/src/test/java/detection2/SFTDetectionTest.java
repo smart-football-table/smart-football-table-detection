@@ -120,8 +120,8 @@ public class SFTDetectionTest {
 			return this;
 		}
 
-		private StdInBuilder thenAfter(long adjustment, TimeUnit timeUnit) {
-			timestamp += timeUnit.toMillis(1);
+		StdInBuilder thenAfter(long adjustment, TimeUnit timeUnit) {
+			timestamp += timeUnit.toMillis(adjustment);
 			return this;
 		}
 
@@ -136,6 +136,10 @@ public class SFTDetectionTest {
 
 		public String[] build() {
 			return lines.toArray(new String[lines.size()]);
+		}
+
+		StdInBuilder makeGoal() {
+			return then(offTable()).thenAfter(2, SECONDS).then(offTable());
 		}
 
 	}
@@ -221,24 +225,51 @@ public class SFTDetectionTest {
 
 			@Override
 			public State update(AbsolutePosition absPos) {
-				return absPos.isNull() ? new PossibleGoal(rightHandSide) : ballOnTable.update(absPos);
+				return absPos.isNull() ? new PossibleGoal(absPos.getTimestamp(), rightHandSide)
+						: ballOnTable.update(absPos);
 			}
 		}
 
-		private static class PossibleGoal implements State {
+		private class PossibleGoal implements State {
 
+			private final BallOnTable ballOnTable = new BallOnTable();
+			private final long timestamp;
 			private final boolean rightHandSide;
 
-			public PossibleGoal(boolean rightHandSide) {
+			public PossibleGoal(long timestamp, boolean rightHandSide) {
+				this.timestamp = timestamp;
 				this.rightHandSide = rightHandSide;
 			}
 
 			@Override
 			public State update(AbsolutePosition absPos) {
-				return this;
+				if (absPos.isNull()) {
+					if (absPos.getTimestamp() - timestamp >= SECONDS.toMillis(2)) {
+						return new Goal(rightHandSide);
+					}
+					return this;
+				} else {
+					return ballOnTable.update(absPos);
+				}
 			}
 
-			private boolean isRightHandSide() {
+		}
+
+		private class Goal implements State {
+
+			private final boolean rightHandSide;
+
+			public Goal(boolean rightHandSide) {
+				this.rightHandSide = rightHandSide;
+			}
+
+			@Override
+			public State update(AbsolutePosition absPos) {
+				// TODO return new WaitForBallOnMiddleLine();
+				return new BallOnTable();
+			}
+
+			public boolean isRightHandSide() {
 				return rightHandSide;
 			}
 
@@ -247,14 +278,15 @@ public class SFTDetectionTest {
 		private final Map<Integer, Integer> scores = new HashMap<>();
 		private int frontOfGoalPercentage = 40;
 
+		// TODO new WaitForBallOnMiddleLine();
 		private State state = new BallOnTable();
 
 		@Override
 		public Collection<Message> update(AbsolutePosition absPos) {
 			state = state.update(absPos);
 			List<Message> messages = Collections.emptyList();
-			if (state instanceof PossibleGoal) {
-				messages = goalMessage(((PossibleGoal) state).isRightHandSide());
+			if (state instanceof Goal) {
+				messages = goalMessage(((Goal) state).isRightHandSide());
 				state = new BallOnTable();
 			}
 			return messages;
@@ -546,7 +578,7 @@ public class SFTDetectionTest {
 	public void canDetectGoalOnRightHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(ball().at(frontOfRightGoal()).then(offTable()));
+		givenStdInContains(ball().at(frontOfRightGoal()).makeGoal());
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(0);
 		thenGameScoreForTeamIsPublished(0, 1);
@@ -556,7 +588,7 @@ public class SFTDetectionTest {
 	public void canDetectGoalOnLeftHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(ball().at(frontOfLeftGoal()).then(offTable()));
+		givenStdInContains(ball().at(frontOfLeftGoal()).makeGoal());
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(1);
 	}
@@ -565,7 +597,7 @@ public class SFTDetectionTest {
 	public void noGoalIfBallWasNotInFrontOfGoalRightHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(ball().at(frontOfRightGoal().left(0.01)).then(offTable()));
+		givenStdInContains(ball().at(frontOfRightGoal().left(0.01)).makeGoal());
 		whenStdInInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
 	}
@@ -574,7 +606,7 @@ public class SFTDetectionTest {
 	public void noGoalIfBallWasNotInFrontOfGoalLeftHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(ball().at(frontOfLeftGoal().right(0.01)).then(offTable()));
+		givenStdInContains(ball().at(frontOfLeftGoal().right(0.01)).makeGoal());
 		whenStdInInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
 	}
@@ -583,13 +615,29 @@ public class SFTDetectionTest {
 	public void leftHandSideScoresThreeTimes() throws IOException {
 		givenATableOfAnySize();
 		givenStdInContains(ball() //
-				.at(frontOfLeftGoal()).then(offTable()) //
-				.at(frontOfLeftGoal()).then(offTable()) //
-				.at(frontOfLeftGoal()).then(offTable()) //
+				.at(frontOfLeftGoal()).makeGoal().then() //
+				.at(frontOfLeftGoal()).makeGoal().then() //
+				.at(frontOfLeftGoal()).makeGoal() //
 		);
 		whenStdInInputWasProcessed();
 		thenPayloadsWithTopicAre("team/scored", times("1", 3));
 		thenPayloadsWithTopicAre("game/score/1", "1", "2", "3");
+	}
+
+	@Test
+	public void noGoalsIfThereAreNotTwoSecondsWithoutPositions() throws IOException {
+		givenATableOfAnySize();
+		givenFrontOfGoalPercentage(20);
+		long ms = SECONDS.toMillis(2) - 1;
+		givenStdInContains(ball().at(frontOfLeftGoal()).then(offTable()).thenAfter(ms, MILLISECONDS).then(offTable()));
+		whenStdInInputWasProcessed();
+		givenStdInContains(ball().at(frontOfRightGoal()).then(offTable()).thenAfter(ms, MILLISECONDS).then(offTable()));
+		whenStdInInputWasProcessed();
+		givenStdInContains(ball().at(frontOfLeftGoal()).then(offTable()).thenAfter(ms, MILLISECONDS).then(kickoff()));
+		whenStdInInputWasProcessed();
+		givenStdInContains(ball().at(frontOfRightGoal()).then(offTable()).thenAfter(ms, MILLISECONDS).then(kickoff()));
+		whenStdInInputWasProcessed();
+		thenNoMessageWithTopicIsSent("team/scored");
 	}
 
 	private BallPosBuilder frontOfLeftGoal() {
