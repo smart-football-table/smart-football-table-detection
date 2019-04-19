@@ -33,7 +33,7 @@ public class SFTDetectionTest {
 
 	private static class GoalDetector {
 
-		private AbsolutePosition prevAbsPos;
+		private AbsolutePosition frontOfGoalPos;
 		private MessagePublisher publisher;
 
 		public GoalDetector(MessagePublisher publisher) {
@@ -42,20 +42,24 @@ public class SFTDetectionTest {
 
 		public void update(AbsolutePosition absPos) {
 			RelativePosition relPos = absPos.getRelativePosition();
-			if (relPos.isNull()) {
-				if (prevAbsPos != null) {
-					sendGoal(prevAbsPos);
-				}
+			if (!ballOnTable(relPos) && frontOfGoalPos != null) {
+				sendGoal(frontOfGoalPos);
 			}
-			prevAbsPos = absPos;
+			frontOfGoalPos = isFrontOfGoal(relPos) ? absPos : null;
+		}
+
+		private boolean isFrontOfGoal(RelativePosition relPos) {
+			return relPos.normalizeX().getX() >= 0.8;
+		}
+
+		private boolean ballOnTable(RelativePosition relPos) {
+			return !relPos.isNull();
 		}
 
 		private void sendGoal(AbsolutePosition prevAbsPos) {
 			RelativePosition prevRelPos = prevAbsPos.getRelativePosition();
-			if (prevRelPos.normalizeX().getX() >= 0.8) {
-				int teamId = prevRelPos.isRightHandSide() ? 0 : 1;
-				publisher.send(new Message("team/scored", String.valueOf(teamId)));
-			}
+			int teamId = prevRelPos.isRightHandSide() ? 0 : 1;
+			publisher.send(new Message("team/scored", String.valueOf(teamId)));
 		}
 
 	}
