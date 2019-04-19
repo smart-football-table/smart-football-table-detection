@@ -31,10 +31,36 @@ import org.junit.Test;
 
 public class SFTDetectionTest {
 
+	private static class PositionPublisher {
+
+		private final MessagePublisherForTest publisher;
+
+		public PositionPublisher(MessagePublisherForTest publisher) {
+			this.publisher = publisher;
+		}
+
+		public void update(AbsolutePosition absPos) {
+			RelativePosition relPos = absPos.getRelativePosition();
+			if (!relPos.isNull()) {
+				sendPositions(absPos);
+			}
+		}
+
+		private void sendPositions(AbsolutePosition position) {
+			sendPosition("ball/position/abs", position);
+			sendPosition("ball/position/rel", position.getRelativePosition());
+		}
+
+		private void sendPosition(String topic, Position position) {
+			publisher.send(new Message(topic, "{ \"x\":" + position.getX() + ", \"y\":" + position.getY() + " }"));
+		}
+
+	}
+
 	private static class GoalDetector {
 
+		private final MessagePublisher publisher;
 		private AbsolutePosition frontOfGoalPos;
-		private MessagePublisher publisher;
 
 		public GoalDetector(MessagePublisher publisher) {
 			this.publisher = publisher;
@@ -397,6 +423,7 @@ public class SFTDetectionTest {
 
 	private void whenStdInInputWasProcessed() throws IOException {
 		GoalDetector goalDetector = new GoalDetector(publisher);
+		PositionPublisher positionPublisher = new PositionPublisher(publisher);
 		AbsolutePosition prevAbsPos = null;
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 			String line;
@@ -407,8 +434,8 @@ public class SFTDetectionTest {
 				} else {
 					AbsolutePosition absPos = table.toAbsolute(relPos);
 					goalDetector.update(absPos);
+					positionPublisher.update(absPos);
 					if (!relPos.isNull()) {
-						sendPositions(absPos);
 						if (prevAbsPos != null) {
 							sendMovement(new Movement(prevAbsPos, absPos));
 						}
@@ -466,15 +493,6 @@ public class SFTDetectionTest {
 		} catch (NumberFormatException e) {
 			return null;
 		}
-	}
-
-	private void sendPositions(AbsolutePosition position) {
-		sendPosition("ball/position/abs", position);
-		sendPosition("ball/position/rel", position.getRelativePosition());
-	}
-
-	private void sendPosition(String topic, Position position) {
-		publisher.send(new Message(topic, "{ \"x\":" + position.getX() + ", \"y\":" + position.getY() + " }"));
 	}
 
 	private void sendMovement(Movement movement) {
