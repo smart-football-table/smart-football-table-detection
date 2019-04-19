@@ -34,11 +34,11 @@ import org.junit.Test;
 
 public class SFTDetectionTest {
 
-	private static interface EventGenerator {
+	private static interface MessageGenerator {
 		Collection<Message> update(AbsolutePosition absPos);
 	}
 
-	private static class MovementPublisher implements EventGenerator {
+	private static class MovementPublisher implements MessageGenerator {
 
 		private AbsolutePosition prevAbsPos;
 
@@ -65,7 +65,7 @@ public class SFTDetectionTest {
 
 	}
 
-	private static class PositionPublisher implements EventGenerator {
+	private static class PositionPublisher implements MessageGenerator {
 
 		@Override
 		public Collection<Message> update(AbsolutePosition absPos) {
@@ -85,7 +85,7 @@ public class SFTDetectionTest {
 
 	}
 
-	private static class GoalDetector implements EventGenerator {
+	private static class GoalDetector implements MessageGenerator {
 
 		private AbsolutePosition frontOfGoalPos;
 
@@ -448,7 +448,7 @@ public class SFTDetectionTest {
 	}
 
 	private void whenStdInInputWasProcessed() throws IOException {
-		List<EventGenerator> generators = asList( //
+		List<MessageGenerator> generators = asList( //
 				new GoalDetector(), //
 				new PositionPublisher(), //
 				new MovementPublisher() //
@@ -461,8 +461,8 @@ public class SFTDetectionTest {
 					// TODO log invalid line
 				} else {
 					AbsolutePosition absPos = table.toAbsolute(relPos);
-					for (EventGenerator eventGenerator : generators) {
-						for (Message message : eventGenerator.update(absPos)) {
+					for (MessageGenerator messageGenerator : generators) {
+						for (Message message : messageGenerator.update(absPos)) {
 							publisher.send(message);
 						}
 					}
