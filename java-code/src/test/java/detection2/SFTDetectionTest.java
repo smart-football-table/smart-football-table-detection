@@ -201,7 +201,8 @@ public class SFTDetectionTest {
 
 			@Override
 			public State update(AbsolutePosition absPos) {
-				return isFrontOfGoal(absPos.getRelativePosition()) ? new FrontOfGoal(absPos) : this;
+				RelativePosition relPos = absPos.getRelativePosition();
+				return isFrontOfGoal(relPos) ? new FrontOfGoal(relPos.isRightHandSide()) : this;
 			}
 
 			private boolean isFrontOfGoal(RelativePosition relPos) {
@@ -210,23 +211,23 @@ public class SFTDetectionTest {
 		}
 
 		private class FrontOfGoal implements State {
-			private final AbsolutePosition frontOfGoal;
+			private final boolean rightHandSide;
 
-			public FrontOfGoal(AbsolutePosition frontOfGoal) {
-				this.frontOfGoal = frontOfGoal;
+			public FrontOfGoal(boolean rightHandSide) {
+				this.rightHandSide = rightHandSide;
 			}
 
 			@Override
 			public State update(AbsolutePosition absPos) {
-				return absPos.isNull() ? new PossibleGoal(frontOfGoal) : new BallOnTable().update(absPos);
+				return absPos.isNull() ? new PossibleGoal(rightHandSide) : new BallOnTable().update(absPos);
 			}
 		}
 
 		private static class PossibleGoal implements State {
-			private final AbsolutePosition frontOfGoal;
+			private final boolean rightHandSide;
 
-			public PossibleGoal(AbsolutePosition frontOfGoal) {
-				this.frontOfGoal = frontOfGoal;
+			public PossibleGoal(boolean rightHandSide) {
+				this.rightHandSide = rightHandSide;
 			}
 
 			@Override
@@ -234,8 +235,8 @@ public class SFTDetectionTest {
 				return this;
 			}
 
-			public AbsolutePosition getFrontOfGoal() {
-				return frontOfGoal;
+			private boolean isRightHandSide() {
+				return rightHandSide;
 			}
 
 		}
@@ -250,15 +251,14 @@ public class SFTDetectionTest {
 			state = state.update(absPos);
 			List<Message> messages = Collections.emptyList();
 			if (state instanceof PossibleGoal) {
-				messages = goalMessage(((PossibleGoal) state).getFrontOfGoal());
+				messages = goalMessage(((PossibleGoal) state).isRightHandSide());
 				state = new BallOnTable();
 			}
 			return messages;
 		}
 
-		private List<Message> goalMessage(AbsolutePosition frontOfGoalPos) {
-			RelativePosition prevRelPos = frontOfGoalPos.getRelativePosition();
-			int teamid = prevRelPos.isRightHandSide() ? 0 : 1;
+		private List<Message> goalMessage(boolean isRightHandSide) {
+			int teamid = isRightHandSide ? 0 : 1;
 			return asList( //
 					new Message("team/scored", String.valueOf(teamid)), //
 					new Message("game/score/" + teamid, String.valueOf(increaseScore(teamid))) //
