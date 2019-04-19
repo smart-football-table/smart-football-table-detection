@@ -86,21 +86,17 @@ public class SFTDetectionTest {
 
 	private static class GoalDetector implements EventGenerator {
 
-		private final MessagePublisher publisher;
 		private AbsolutePosition frontOfGoalPos;
-
-		public GoalDetector(MessagePublisher publisher) {
-			this.publisher = publisher;
-		}
 
 		@Override
 		public Collection<Message> update(AbsolutePosition absPos) {
 			RelativePosition relPos = absPos.getRelativePosition();
+			List<Message> messages = Collections.emptyList();
 			if (!ballOnTable(relPos) && frontOfGoalPos != null) {
-				sendGoal(frontOfGoalPos);
+				messages = goalMessage(frontOfGoalPos);
 			}
 			frontOfGoalPos = isFrontOfGoal(relPos) ? absPos : null;
-			return Collections.emptyList();
+			return messages;
 		}
 
 		private boolean isFrontOfGoal(RelativePosition relPos) {
@@ -111,10 +107,10 @@ public class SFTDetectionTest {
 			return !relPos.isNull();
 		}
 
-		private void sendGoal(AbsolutePosition prevAbsPos) {
+		private List<Message> goalMessage(AbsolutePosition prevAbsPos) {
 			RelativePosition prevRelPos = prevAbsPos.getRelativePosition();
 			int teamId = prevRelPos.isRightHandSide() ? 0 : 1;
-			publisher.send(new Message("team/scored", String.valueOf(teamId)));
+			return Arrays.asList(new Message("team/scored", String.valueOf(teamId)));
 		}
 
 	}
@@ -451,7 +447,7 @@ public class SFTDetectionTest {
 	}
 
 	private void whenStdInInputWasProcessed() throws IOException {
-		EventGenerator goalDetector = new GoalDetector(publisher);
+		EventGenerator goalDetector = new GoalDetector();
 		EventGenerator positionPublisher = new PositionPublisher();
 		EventGenerator movementPublisher = new MovementPublisher();
 
