@@ -2,8 +2,13 @@ package detection.main;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
@@ -13,6 +18,18 @@ import detection.goaldetector.GoalDetector;
 import detection.mqtt.MqttSystem;
 
 public class GameManager {
+
+	private static class Message {
+		private String topic;
+		private String payload;
+
+		private Message(String topic, String payload) {
+			this.topic = topic;
+			this.payload = payload;
+		}
+
+	}
+
 	private Team teamOne = new Team();
 	private Team teamTwo = new Team();
 	private List<BallPosition> ballPositions = new ArrayList<BallPosition>();
@@ -28,9 +45,33 @@ public class GameManager {
 	private BallPosition ballPositionTwo = null;
 	private boolean calculateVelocity = false;
 	private double oldVelocity;
+	private boolean gameOver;
+	private Queue<Message> receivedMessages = new ConcurrentLinkedQueue<>();
 
 	public GameManager() throws MqttSecurityException, MqttException {
 		mqtt = new MqttSystem("localhost", 1883);
+	}
+
+	public GameManager(String host, int port) throws MqttSecurityException, MqttException {
+		mqtt = new MqttSystem(host, port, new MqttCallback() {
+
+			@Override
+			public void messageArrived(String topic, MqttMessage message) throws Exception {
+				receivedMessages.add(new Message(topic, new String(message.getPayload())));
+			}
+
+			@Override
+			public void deliveryComplete(IMqttDeliveryToken token) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void connectionLost(Throwable cause) {
+				// TODO Auto-generated method stub
+
+			}
+		});
 	}
 
 	public String getScoreAsString() {
@@ -50,6 +91,13 @@ public class GameManager {
 	}
 
 	public void doTheLogic() throws MqttPersistenceException, MqttException {
+
+		Message receivedMessage = receivedMessages.poll();
+		if (receivedMessage != null) {
+			if (receivedMessage.topic.equals("game/reset")) {
+				resetGame();
+			}
+		}
 
 		sendPositionIfThereIsOne();
 
@@ -101,6 +149,13 @@ public class GameManager {
 				mqtt.sendScore(getScoreAsString());
 
 			}
+		}
+
+		if (gameOver && goalDetector.isBallWasInMidArea()) {
+			resetGame();
+			mqtt.sendScore("0-0");
+			mqtt.sendGameStart();
+			gameOver = false;
 		}
 
 		if (positionsSinceLastFoul > 300) {
