@@ -91,6 +91,7 @@ public class SFTDetectionTest {
 	private static class GoalMessageGenerator implements MessageGenerator {
 
 		private final Map<Integer, Integer> scores = new HashMap<>();
+		private int frontOfGoalPercentage = 40;
 		private AbsolutePosition frontOfGoalPos;
 
 		@Override
@@ -105,7 +106,7 @@ public class SFTDetectionTest {
 		}
 
 		private boolean isFrontOfGoal(RelativePosition relPos) {
-			return relPos.normalizeX().getX() >= 0.8;
+			return relPos.normalizeX().getX() >= 1 - ((double) frontOfGoalPercentage) / 100;
 		}
 
 		private boolean ballOnTable(RelativePosition relPos) {
@@ -125,6 +126,17 @@ public class SFTDetectionTest {
 			Integer newScore = scores.getOrDefault(teamid, 0) + 1;
 			scores.put(teamid, newScore);
 			return newScore;
+		}
+
+		/**
+		 * Sets where the ball has to been detected before the ball has been gone.
+		 * 
+		 * @param i 100% the whole playfield, 50% one side.
+		 * @return
+		 */
+		public GoalMessageGenerator setFrontOfGoalPercentage(int frontOfGoalPercentage) {
+			this.frontOfGoalPercentage = frontOfGoalPercentage;
+			return this;
 		}
 
 	}
@@ -337,6 +349,7 @@ public class SFTDetectionTest {
 		void send(Message message);
 	}
 
+	private final GoalMessageGenerator goalMessageGenerator = new GoalMessageGenerator();
 	private final MessagePublisherForTest publisher = new MessagePublisherForTest();
 	private Table table;
 	private InputStream is;
@@ -389,6 +402,7 @@ public class SFTDetectionTest {
 	@Test
 	public void canDetectGoalOnRightHandSide() throws IOException {
 		givenATableOfAnySize();
+		goalMessageGenerator.setFrontOfGoalPercentage(20);
 		givenStdInContains(line(anyTimestamp(), 1.0 - 0.20, centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(0);
@@ -398,6 +412,7 @@ public class SFTDetectionTest {
 	@Test
 	public void canDetectGoalOnLeftHandSide() throws IOException {
 		givenATableOfAnySize();
+		goalMessageGenerator.setFrontOfGoalPercentage(20);
 		givenStdInContains(line(anyTimestamp(), 0.0 + 0.20, centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(1);
@@ -406,6 +421,7 @@ public class SFTDetectionTest {
 	@Test
 	public void noGoalIfBallWasNotInFrontOfGoalRightHandSide() throws IOException {
 		givenATableOfAnySize();
+		goalMessageGenerator.setFrontOfGoalPercentage(20);
 		givenStdInContains(line(anyTimestamp(), 1.0 - 0.21, centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
@@ -414,6 +430,7 @@ public class SFTDetectionTest {
 	@Test
 	public void noGoalIfBallWasNotInFrontOfGoalLeftHandSide() throws IOException {
 		givenATableOfSize(100, 80);
+		goalMessageGenerator.setFrontOfGoalPercentage(20);
 		givenStdInContains(line(anyTimestamp(), 0.0 + 0.21, centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
@@ -478,7 +495,7 @@ public class SFTDetectionTest {
 
 	private void whenStdInInputWasProcessed() throws IOException {
 		List<MessageGenerator> generators = asList( //
-				new GoalMessageGenerator(), //
+				goalMessageGenerator, //
 				new PositionMessageGenerator(), //
 				new MovementMessageGenerator() //
 		);
