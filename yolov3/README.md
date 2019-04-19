@@ -53,6 +53,12 @@ Contains a really short step-by-step list. Check the article section for some re
     * classes = 1
 * roughly 12 hours of training, 130,000 iterations
 
+We trained and used this model for a conference, the COM19. You can find everything related to this model in the repository. We know about the following issues:
+
+* bad base training data. Because of missing images of empty hands and the gamefield we detect players and hands as a ball sometimes.
+* no player detection
+* with specific light conditions, the amout of false-positive balls is extremly high
+
 ## Links & Articles
 
 * [YOLO Paper](https://arxiv.org/pdf/1506.02640.pdf)
