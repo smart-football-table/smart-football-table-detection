@@ -31,6 +31,33 @@ import org.junit.Test;
 
 public class SFTDetectionTest {
 
+	private static class MovementPublisher {
+
+		private MessagePublisherForTest publisher;
+		private AbsolutePosition prevAbsPos;
+
+		public MovementPublisher(MessagePublisherForTest publisher) {
+			this.publisher = publisher;
+		}
+
+		public void update(AbsolutePosition absPos) {
+			RelativePosition relPos = absPos.getRelativePosition();
+			if (!relPos.isNull()) {
+				if (prevAbsPos != null) {
+					sendMovement(new Movement(prevAbsPos, absPos));
+				}
+				prevAbsPos = absPos;
+			}
+		}
+
+		private void sendMovement(Movement movement) {
+			publisher.send(new Message("ball/distance/cm", String.valueOf(movement.distance(CENTIMETER))));
+			publisher.send(new Message("ball/velocity/mps", String.valueOf(movement.velocity(MPS))));
+			publisher.send(new Message("ball/velocity/kmh", String.valueOf(movement.velocity(KMH))));
+		}
+
+	}
+
 	private static class PositionPublisher {
 
 		private final MessagePublisherForTest publisher;
@@ -424,7 +451,7 @@ public class SFTDetectionTest {
 	private void whenStdInInputWasProcessed() throws IOException {
 		GoalDetector goalDetector = new GoalDetector(publisher);
 		PositionPublisher positionPublisher = new PositionPublisher(publisher);
-		AbsolutePosition prevAbsPos = null;
+		MovementPublisher movementPublisher = new MovementPublisher(publisher);
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
@@ -435,12 +462,7 @@ public class SFTDetectionTest {
 					AbsolutePosition absPos = table.toAbsolute(relPos);
 					goalDetector.update(absPos);
 					positionPublisher.update(absPos);
-					if (!relPos.isNull()) {
-						if (prevAbsPos != null) {
-							sendMovement(new Movement(prevAbsPos, absPos));
-						}
-						prevAbsPos = absPos;
-					}
+					movementPublisher.update(absPos);
 				}
 			}
 
@@ -493,12 +515,6 @@ public class SFTDetectionTest {
 		} catch (NumberFormatException e) {
 			return null;
 		}
-	}
-
-	private void sendMovement(Movement movement) {
-		publisher.send(new Message("ball/distance/cm", String.valueOf(movement.distance(CENTIMETER))));
-		publisher.send(new Message("ball/velocity/mps", String.valueOf(movement.velocity(MPS))));
-		publisher.send(new Message("ball/velocity/kmh", String.valueOf(movement.velocity(KMH))));
 	}
 
 	private void thenTheRelativePositionOnTheTableIsPublished(double x, double y) {
