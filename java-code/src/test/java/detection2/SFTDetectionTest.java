@@ -507,7 +507,7 @@ public class SFTDetectionTest {
 	public void canDetectGoalOnRightHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(ball().at(kickoff().right(0.3)).then(offTable()));
+		givenStdInContains(ball().at(frontOfRightGoal()).then(offTable()));
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(0);
 		thenGameScoreForTeamIsPublished(0, 1);
@@ -517,7 +517,7 @@ public class SFTDetectionTest {
 	public void canDetectGoalOnLeftHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(ball().at(kickoff().left(0.3)).then(offTable()));
+		givenStdInContains(ball().at(frontOfLeftGoal()).then(offTable()));
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(1);
 	}
@@ -526,7 +526,7 @@ public class SFTDetectionTest {
 	public void noGoalIfBallWasNotInFrontOfGoalRightHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(ball().at(kickoff().right(0.29)).then(offTable()));
+		givenStdInContains(ball().at(frontOfRightGoal().left(0.01)).then(offTable()));
 		whenStdInInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
 	}
@@ -535,7 +535,7 @@ public class SFTDetectionTest {
 	public void noGoalIfBallWasNotInFrontOfGoalLeftHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(ball().at(kickoff().left(0.29)).then(offTable()));
+		givenStdInContains(ball().at(frontOfLeftGoal().right(0.01)).then(offTable()));
 		whenStdInInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
 	}
@@ -543,15 +543,22 @@ public class SFTDetectionTest {
 	@Test
 	public void leftHandSideScoresThreeTimes() throws IOException {
 		givenATableOfAnySize();
-		BallPosBuilder frontOfLeftGoal = kickoff().left(0.3);
 		givenStdInContains(ball() //
-				.at(frontOfLeftGoal).then(offTable()) //
-				.at(frontOfLeftGoal).then(offTable()) //
-				.at(frontOfLeftGoal).then(offTable()) //
+				.at(frontOfLeftGoal()).then(offTable()) //
+				.at(frontOfLeftGoal()).then(offTable()) //
+				.at(frontOfLeftGoal()).then(offTable()) //
 		);
 		whenStdInInputWasProcessed();
 		thenPayloadsWithTopicAre("team/scored", times("1", 3));
 		thenPayloadsWithTopicAre("game/score/1", "1", "2", "3");
+	}
+
+	private BallPosBuilder frontOfLeftGoal() {
+		return kickoff().left(0.3);
+	}
+
+	private BallPosBuilder frontOfRightGoal() {
+		return kickoff().right(0.3);
 	}
 
 	private void thenDistanceInCentimetersAndVelocityArePublished(double centimeters, double mps, double kmh) {
