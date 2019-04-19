@@ -211,7 +211,9 @@ public class SFTDetectionTest {
 		}
 
 		private class FrontOfGoal implements State {
+
 			private final boolean rightHandSide;
+			private final BallOnTable ballOnTable = new BallOnTable();
 
 			public FrontOfGoal(boolean rightHandSide) {
 				this.rightHandSide = rightHandSide;
@@ -219,11 +221,12 @@ public class SFTDetectionTest {
 
 			@Override
 			public State update(AbsolutePosition absPos) {
-				return absPos.isNull() ? new PossibleGoal(rightHandSide) : new BallOnTable().update(absPos);
+				return absPos.isNull() ? new PossibleGoal(rightHandSide) : ballOnTable.update(absPos);
 			}
 		}
 
 		private static class PossibleGoal implements State {
+
 			private final boolean rightHandSide;
 
 			public PossibleGoal(boolean rightHandSide) {
