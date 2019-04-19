@@ -20,6 +20,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
@@ -32,33 +34,32 @@ import org.junit.Test;
 public class SFTDetectionTest {
 
 	private static interface EventGenerator {
-		void update(AbsolutePosition absPos);
+		Collection<Message> update(AbsolutePosition absPos);
 	}
 
 	private static class MovementPublisher implements EventGenerator {
 
-		private MessagePublisherForTest publisher;
 		private AbsolutePosition prevAbsPos;
 
-		public MovementPublisher(MessagePublisherForTest publisher) {
-			this.publisher = publisher;
-		}
-
 		@Override
-		public void update(AbsolutePosition absPos) {
+		public Collection<Message> update(AbsolutePosition absPos) {
 			RelativePosition relPos = absPos.getRelativePosition();
+			List<Message> messages = Collections.emptyList();
 			if (!relPos.isNull()) {
 				if (prevAbsPos != null) {
-					sendMovement(new Movement(prevAbsPos, absPos));
+					messages = messages(new Movement(prevAbsPos, absPos));
 				}
 				prevAbsPos = absPos;
 			}
+			return messages;
 		}
 
-		private void sendMovement(Movement movement) {
-			publisher.send(new Message("ball/distance/cm", String.valueOf(movement.distance(CENTIMETER))));
-			publisher.send(new Message("ball/velocity/mps", String.valueOf(movement.velocity(MPS))));
-			publisher.send(new Message("ball/velocity/kmh", String.valueOf(movement.velocity(KMH))));
+		private List<Message> messages(Movement movement) {
+			return Arrays.asList( //
+					new Message("ball/distance/cm", String.valueOf(movement.distance(CENTIMETER))), //
+					new Message("ball/velocity/mps", String.valueOf(movement.velocity(MPS))), //
+					new Message("ball/velocity/kmh", String.valueOf(movement.velocity(KMH)) //
+					));
 		}
 
 	}
@@ -72,11 +73,12 @@ public class SFTDetectionTest {
 		}
 
 		@Override
-		public void update(AbsolutePosition absPos) {
+		public Collection<Message> update(AbsolutePosition absPos) {
 			RelativePosition relPos = absPos.getRelativePosition();
 			if (!relPos.isNull()) {
 				sendPositions(absPos);
 			}
+			return Collections.emptyList();
 		}
 
 		private void sendPositions(AbsolutePosition position) {
@@ -100,12 +102,13 @@ public class SFTDetectionTest {
 		}
 
 		@Override
-		public void update(AbsolutePosition absPos) {
+		public Collection<Message> update(AbsolutePosition absPos) {
 			RelativePosition relPos = absPos.getRelativePosition();
 			if (!ballOnTable(relPos) && frontOfGoalPos != null) {
 				sendGoal(frontOfGoalPos);
 			}
 			frontOfGoalPos = isFrontOfGoal(relPos) ? absPos : null;
+			return Collections.emptyList();
 		}
 
 		private boolean isFrontOfGoal(RelativePosition relPos) {
@@ -458,7 +461,10 @@ public class SFTDetectionTest {
 	private void whenStdInInputWasProcessed() throws IOException {
 		EventGenerator goalDetector = new GoalDetector(publisher);
 		EventGenerator positionPublisher = new PositionPublisher(publisher);
-		EventGenerator movementPublisher = new MovementPublisher(publisher);
+		EventGenerator movementPublisher = new MovementPublisher();
+
+		List<EventGenerator> generators = Arrays.asList(goalDetector, positionPublisher, movementPublisher);
+
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
@@ -467,9 +473,11 @@ public class SFTDetectionTest {
 					// TODO log invalid line
 				} else {
 					AbsolutePosition absPos = table.toAbsolute(relPos);
-					goalDetector.update(absPos);
-					positionPublisher.update(absPos);
-					movementPublisher.update(absPos);
+					for (EventGenerator eventGenerator : generators) {
+						for (Message message : eventGenerator.update(absPos)) {
+							publisher.send(message);
+						}
+					}
 				}
 			}
 
