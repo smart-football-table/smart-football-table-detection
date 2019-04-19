@@ -50,9 +50,7 @@ public class MqttSystem implements Closeable {
 		String[] scores = string.split("-");
 		String score0 = scores[0];
 		String score1 = scores[1];
-		String finalString = "{\"score\":[" + score0 + "," + score1 + "]}";
 
-		mqttClient.publish("game/score", finalString.getBytes(), 0, false);
 		mqttClient.publish("game/score/team/0", score0.getBytes(), 0, true);
 		mqttClient.publish("game/score/team/1", score1.getBytes(), 0, true);
 
@@ -89,8 +87,6 @@ public class MqttSystem implements Closeable {
 
 	public void sendVelocity(double velocity) throws MqttPersistenceException, MqttException {
 
-		String finalString = "{\"velocity\":" + velocity + "}";
-		mqttClient.publish("ball/velocity", finalString.getBytes(), 0, false);
 		mqttClient.publish("ball/velocity/kmh", String.valueOf(velocity).getBytes(), 0, false);
 
 	}
@@ -108,8 +104,7 @@ public class MqttSystem implements Closeable {
 	}
 
 	public void sendVelocityMS(double velocityms) throws MqttPersistenceException, MqttException {
-		String finalString = "{\"velocityms\":" + velocityms + "}";
-		mqttClient.publish("ball/velocityms", finalString.getBytes(), 0, false);
+		mqttClient.publish("ball/velocity/ms", String.valueOf(velocityms).getBytes(), 0, false);
 
 	}
 
