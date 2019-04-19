@@ -31,7 +31,11 @@ import org.junit.Test;
 
 public class SFTDetectionTest {
 
-	private static class MovementPublisher {
+	private static interface EventGenerator {
+		void update(AbsolutePosition absPos);
+	}
+
+	private static class MovementPublisher implements EventGenerator {
 
 		private MessagePublisherForTest publisher;
 		private AbsolutePosition prevAbsPos;
@@ -40,6 +44,7 @@ public class SFTDetectionTest {
 			this.publisher = publisher;
 		}
 
+		@Override
 		public void update(AbsolutePosition absPos) {
 			RelativePosition relPos = absPos.getRelativePosition();
 			if (!relPos.isNull()) {
@@ -58,7 +63,7 @@ public class SFTDetectionTest {
 
 	}
 
-	private static class PositionPublisher {
+	private static class PositionPublisher implements EventGenerator {
 
 		private final MessagePublisherForTest publisher;
 
@@ -66,6 +71,7 @@ public class SFTDetectionTest {
 			this.publisher = publisher;
 		}
 
+		@Override
 		public void update(AbsolutePosition absPos) {
 			RelativePosition relPos = absPos.getRelativePosition();
 			if (!relPos.isNull()) {
@@ -84,7 +90,7 @@ public class SFTDetectionTest {
 
 	}
 
-	private static class GoalDetector {
+	private static class GoalDetector implements EventGenerator {
 
 		private final MessagePublisher publisher;
 		private AbsolutePosition frontOfGoalPos;
@@ -93,6 +99,7 @@ public class SFTDetectionTest {
 			this.publisher = publisher;
 		}
 
+		@Override
 		public void update(AbsolutePosition absPos) {
 			RelativePosition relPos = absPos.getRelativePosition();
 			if (!ballOnTable(relPos) && frontOfGoalPos != null) {
@@ -449,9 +456,9 @@ public class SFTDetectionTest {
 	}
 
 	private void whenStdInInputWasProcessed() throws IOException {
-		GoalDetector goalDetector = new GoalDetector(publisher);
-		PositionPublisher positionPublisher = new PositionPublisher(publisher);
-		MovementPublisher movementPublisher = new MovementPublisher(publisher);
+		EventGenerator goalDetector = new GoalDetector(publisher);
+		EventGenerator positionPublisher = new PositionPublisher(publisher);
+		EventGenerator movementPublisher = new MovementPublisher(publisher);
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
