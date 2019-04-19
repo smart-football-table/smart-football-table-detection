@@ -138,47 +138,6 @@ public class SFTDetectionTest {
 
 	}
 
-	static class RelativePosition implements Position {
-
-		public static final RelativePosition NULL = new RelativePosition(-1, -1, -1) {
-			@Override
-			public boolean isNull() {
-				return true;
-			}
-		};
-
-		private final long timestamp;
-		private final double x;
-		private final double y;
-
-		public RelativePosition(long timestamp, double x, double y) {
-			this.timestamp = timestamp;
-			this.x = x;
-			this.y = y;
-		}
-
-		@Override
-		public boolean isNull() {
-			return false;
-		}
-
-		@Override
-		public long getTimestamp() {
-			return timestamp;
-		}
-
-		@Override
-		public double getX() {
-			return x;
-		}
-
-		@Override
-		public double getY() {
-			return y;
-		}
-
-	}
-
 	private static class AbsolutePosition implements Position {
 
 		private final RelativePosition relativePosition;
@@ -332,7 +291,7 @@ public class SFTDetectionTest {
 	@Test
 	public void canDetectGoalOnRightHandSide() throws IOException {
 		givenATableOfAnySize();
-		givenStdInContains(line(anyTimestamp(), 1.0 - 0.2, centerY()), anyTimestamp() + "," + noBallOnTable());
+		givenStdInContains(line(anyTimestamp(), 1.0 - 0.20, centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(0);
 	}
@@ -340,7 +299,7 @@ public class SFTDetectionTest {
 	@Test
 	public void canDetectGoalOnLeftHandSide() throws IOException {
 		givenATableOfAnySize();
-		givenStdInContains(line(anyTimestamp(), 0.0 + 0.2, centerY()), anyTimestamp() + "," + noBallOnTable());
+		givenStdInContains(line(anyTimestamp(), 0.0 + 0.20, centerY()), anyTimestamp() + "," + noBallOnTable());
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(1);
 	}
@@ -492,10 +451,9 @@ public class SFTDetectionTest {
 	}
 
 	private void sendGoal(AbsolutePosition prevAbsPos) {
-		double prevX = prevAbsPos.getRelativePosition().getX();
-		double valBetween00And50 = abs(centerX() - prevX);
-		if (valBetween00And50 >= 0.3) {
-			int teamId = prevX >= centerX() ? 0 : 1;
+		RelativePosition prevRelPos = prevAbsPos.getRelativePosition();
+		if (prevRelPos.normalizeX().getX() >= 0.8) {
+			int teamId = prevRelPos.isRightHandSide() ? 0 : 1;
 			publisher.send(new Message("team/scored", String.valueOf(teamId)));
 		}
 	}
