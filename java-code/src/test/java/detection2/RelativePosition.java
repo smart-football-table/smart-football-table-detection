@@ -4,13 +4,6 @@ import static java.lang.Math.abs;
 
 public class RelativePosition implements Position {
 
-	public static final RelativePosition NULL = new RelativePosition(-1, -1, -1) {
-		@Override
-		public boolean isNull() {
-			return true;
-		}
-	};
-
 	private final long timestamp;
 	private final double x;
 	private final double y;
@@ -23,7 +16,7 @@ public class RelativePosition implements Position {
 
 	@Override
 	public boolean isNull() {
-		return false;
+		return x < 0 || y < 0;
 	}
 
 	@Override
@@ -87,6 +80,10 @@ public class RelativePosition implements Position {
 	@Override
 	public String toString() {
 		return "RelativePosition [timestamp=" + timestamp + ", x=" + x + ", y=" + y + "]";
+	}
+
+	public static RelativePosition noPosition(Long timestamp) {
+		return new RelativePosition(timestamp, -1, -1);
 	}
 
 }

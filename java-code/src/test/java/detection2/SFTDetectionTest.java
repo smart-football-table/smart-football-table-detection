@@ -511,7 +511,7 @@ public class SFTDetectionTest {
 			// TODO test x/y > 1.0?
 			if (isValidTimestamp(timestamp) && !isNull(x, y)) {
 				if (x == -1 && y == -1) {
-					return RelativePosition.NULL;
+					return RelativePosition.noPosition(timestamp);
 				} else if (isValidPosition(x, y)) {
 					return new RelativePosition(timestamp, x, y);
 				}
