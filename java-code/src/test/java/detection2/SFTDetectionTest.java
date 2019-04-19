@@ -66,28 +66,20 @@ public class SFTDetectionTest {
 
 	private static class PositionPublisher implements EventGenerator {
 
-		private final MessagePublisherForTest publisher;
-
-		public PositionPublisher(MessagePublisherForTest publisher) {
-			this.publisher = publisher;
-		}
-
 		@Override
 		public Collection<Message> update(AbsolutePosition absPos) {
-			RelativePosition relPos = absPos.getRelativePosition();
-			if (!relPos.isNull()) {
-				sendPositions(absPos);
-			}
-			return Collections.emptyList();
+			return absPos.getRelativePosition().isNull() ? Collections.emptyList() : messages(absPos);
 		}
 
-		private void sendPositions(AbsolutePosition position) {
-			sendPosition("ball/position/abs", position);
-			sendPosition("ball/position/rel", position.getRelativePosition());
+		private List<Message> messages(AbsolutePosition position) {
+			return Arrays.asList( //
+					positionMessage("ball/position/abs", position), //
+					positionMessage("ball/position/rel", position.getRelativePosition()) //
+			);
 		}
 
-		private void sendPosition(String topic, Position position) {
-			publisher.send(new Message(topic, "{ \"x\":" + position.getX() + ", \"y\":" + position.getY() + " }"));
+		private Message positionMessage(String topic, Position position) {
+			return new Message(topic, "{ \"x\":" + position.getX() + ", \"y\":" + position.getY() + " }");
 		}
 
 	}
@@ -460,7 +452,7 @@ public class SFTDetectionTest {
 
 	private void whenStdInInputWasProcessed() throws IOException {
 		EventGenerator goalDetector = new GoalDetector(publisher);
-		EventGenerator positionPublisher = new PositionPublisher(publisher);
+		EventGenerator positionPublisher = new PositionPublisher();
 		EventGenerator movementPublisher = new MovementPublisher();
 
 		List<EventGenerator> generators = Arrays.asList(goalDetector, positionPublisher, movementPublisher);
