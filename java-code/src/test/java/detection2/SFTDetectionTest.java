@@ -38,7 +38,7 @@ public class SFTDetectionTest {
 		Collection<Message> update(AbsolutePosition absPos);
 	}
 
-	private static class MovementPublisher implements MessageGenerator {
+	private static class MovementMessageGenerator implements MessageGenerator {
 
 		private AbsolutePosition prevAbsPos;
 
@@ -65,7 +65,7 @@ public class SFTDetectionTest {
 
 	}
 
-	private static class PositionPublisher implements MessageGenerator {
+	private static class PositionMessageGenerator implements MessageGenerator {
 
 		@Override
 		public Collection<Message> update(AbsolutePosition absPos) {
@@ -85,7 +85,7 @@ public class SFTDetectionTest {
 
 	}
 
-	private static class GoalDetector implements MessageGenerator {
+	private static class GoalMessageGenerator implements MessageGenerator {
 
 		private AbsolutePosition frontOfGoalPos;
 
@@ -449,9 +449,9 @@ public class SFTDetectionTest {
 
 	private void whenStdInInputWasProcessed() throws IOException {
 		List<MessageGenerator> generators = asList( //
-				new GoalDetector(), //
-				new PositionPublisher(), //
-				new MovementPublisher() //
+				new GoalMessageGenerator(), //
+				new PositionMessageGenerator(), //
+				new MovementMessageGenerator() //
 		);
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 			String line;
