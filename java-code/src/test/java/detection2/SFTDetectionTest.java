@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
@@ -40,6 +41,7 @@ import java.util.stream.Stream;
 import org.hamcrest.Matcher;
 import org.junit.Test;
 
+import detection2.SFTDetectionTest.GoalMessageGenerator.GoalListener;
 import detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder;
 
 public class SFTDetectionTest {
@@ -180,8 +182,11 @@ public class SFTDetectionTest {
 
 	}
 
-	private static class GameStartMessageGenerator implements MessageGenerator {
+	private static class GameStartAndEndMessageGenerator implements MessageGenerator {
 
+		private static final int MAX_BALLS = 10;
+
+		private final Map<Integer, Integer> scores = new HashMap<>();
 		private boolean gameStartSend;
 
 		@Override
@@ -192,6 +197,36 @@ public class SFTDetectionTest {
 				gameStartSend = true;
 				return asList(new Message("game/start", ""));
 			}
+		}
+
+		private final GoalListener goalListener = (teamid, score) -> {
+			scores.put(teamid, score);
+			if (hasWon(teamid)) {
+				return asList(new Message("game/gameover", teamid));
+			} else if (isDraw()) {
+				return asList(new Message("game/gameover", teamids()));
+			}
+			return emptyList();
+		};
+
+		private boolean hasWon(int teamid) {
+			return scores.get(teamid) > MAX_BALLS / 2;
+		}
+
+		private boolean isDraw() {
+			return scoresSum() == MAX_BALLS;
+		}
+
+		private int scoresSum() {
+			return scores.values().stream().mapToInt(Integer::intValue).sum();
+		}
+
+		private String teamids() {
+			return scores.keySet().stream().sorted().map(String::valueOf).collect(joining(","));
+		}
+
+		private GoalListener goalListener() {
+			return goalListener;
 		}
 
 	}
@@ -216,9 +251,11 @@ public class SFTDetectionTest {
 
 	}
 
-	private static class GoalMessageGenerator implements MessageGenerator {
+	public static class GoalMessageGenerator implements MessageGenerator {
 
-		private static final int MAX_BALLS = 10;
+		public static interface GoalListener {
+			List<Message> goal(int teamid, int score);
+		}
 
 		private static interface State {
 			State update(AbsolutePosition pos);
@@ -328,15 +365,13 @@ public class SFTDetectionTest {
 
 		private List<Message> goalMessage(boolean isRightHandSide) {
 			int teamid = isRightHandSide ? 0 : 1;
+			int score = increaseScore(teamid);
 			List<Message> messages = new ArrayList<>();
 			messages.add(new Message("team/scored", teamid));
-			messages.add(new Message("game/score/" + teamid, increaseScore(teamid)));
-			if (hasWon(teamid)) {
-				messages.add(new Message("game/gameover", teamid));
-			} else if (isDraw()) {
-				messages.add(new Message("game/gameover", teamids()));
+			messages.add(new Message("game/score/" + teamid, score));
+			for (GoalListener listener : listeners) {
+				messages.addAll(listener.goal(teamid, score));
 			}
-
 			return messages;
 		}
 
@@ -344,22 +379,6 @@ public class SFTDetectionTest {
 			Integer newScore = scores.getOrDefault(teamid, 0) + 1;
 			scores.put(teamid, newScore);
 			return newScore;
-		}
-
-		private boolean hasWon(int teamid) {
-			return scores.get(teamid) > MAX_BALLS / 2;
-		}
-
-		private boolean isDraw() {
-			return scoresSum() == MAX_BALLS;
-		}
-
-		private int scoresSum() {
-			return scores.values().stream().mapToInt(Integer::intValue).sum();
-		}
-
-		private String teamids() {
-			return scores.keySet().stream().sorted().map(String::valueOf).collect(joining(","));
 		}
 
 		/**
@@ -375,6 +394,13 @@ public class SFTDetectionTest {
 
 		public void setTimeWithoutBallTilGoal(long duration, TimeUnit timeUnit) {
 			this.millisTilGoal = timeUnit.toMillis(duration);
+		}
+
+		private final List<GoalListener> listeners = new CopyOnWriteArrayList<>();
+
+		public GoalMessageGenerator addGoalListener(GoalListener listener) {
+			listeners.add(listener);
+			return this;
 		}
 
 	}
@@ -821,11 +847,12 @@ public class SFTDetectionTest {
 	}
 
 	private void whenStdInInputWasProcessed() throws IOException {
+		GameStartAndEndMessageGenerator gameStartAndEndMessageGenerator = new GameStartAndEndMessageGenerator();
 		List<MessageGenerator> generators = asList( //
-				new GameStartMessageGenerator(), //
+				gameStartAndEndMessageGenerator, //
 				new PositionMessageGenerator(), //
 				new MovementMessageGenerator(), //
-				goalMessageGenerator //
+				goalMessageGenerator.addGoalListener(gameStartAndEndMessageGenerator.goalListener()) //
 		);
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 			String line;
