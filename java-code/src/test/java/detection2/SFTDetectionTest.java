@@ -171,9 +171,9 @@ public class SFTDetectionTest {
 
 		private List<Message> messages(Movement movement) {
 			return asList( //
-					new Message("ball/distance/cm", String.valueOf(movement.distance(CENTIMETER))), //
-					new Message("ball/velocity/mps", String.valueOf(movement.velocity(MPS))), //
-					new Message("ball/velocity/kmh", String.valueOf(movement.velocity(KMH)) //
+					new Message("ball/distance/cm", movement.distance(CENTIMETER)), //
+					new Message("ball/velocity/mps", movement.velocity(MPS)), //
+					new Message("ball/velocity/kmh", movement.velocity(KMH) //
 					));
 		}
 
@@ -200,6 +200,8 @@ public class SFTDetectionTest {
 	}
 
 	private static class GoalMessageGenerator implements MessageGenerator {
+
+		private static final int MAX_BALLS = 10;
 
 		private static interface State {
 			State update(AbsolutePosition pos);
@@ -310,11 +312,11 @@ public class SFTDetectionTest {
 		private List<Message> goalMessage(boolean isRightHandSide) {
 			int teamid = isRightHandSide ? 0 : 1;
 			List<Message> messages = new ArrayList<>();
-			messages.add(new Message("team/scored", String.valueOf(teamid)));
-			messages.add(new Message("game/score/" + teamid, String.valueOf(increaseScore(teamid))));
-			if (scores.get(teamid) == 6) {
-				messages.add(new Message("game/gameover", String.valueOf(teamid)));
-			} else if (scoresSum() == 10) {
+			messages.add(new Message("team/scored", teamid));
+			messages.add(new Message("game/score/" + teamid, increaseScore(teamid)));
+			if (hasWon(teamid)) {
+				messages.add(new Message("game/gameover", teamid));
+			} else if (isDraw()) {
 				messages.add(new Message("game/gameover", teamids()));
 			}
 
@@ -325,6 +327,14 @@ public class SFTDetectionTest {
 			Integer newScore = scores.getOrDefault(teamid, 0) + 1;
 			scores.put(teamid, newScore);
 			return newScore;
+		}
+
+		private boolean hasWon(int teamid) {
+			return scores.get(teamid) > MAX_BALLS / 2;
+		}
+
+		private boolean isDraw() {
+			return scoresSum() == MAX_BALLS;
 		}
 
 		private int scoresSum() {
@@ -507,9 +517,9 @@ public class SFTDetectionTest {
 		private final String topic;
 		private final String payload;
 
-		public Message(String topic, String payload) {
+		public Message(String topic, Object payload) {
 			this.topic = topic;
-			this.payload = payload;
+			this.payload = payload == null ? null : String.valueOf(payload);
 		}
 
 		public String getPayload() {
