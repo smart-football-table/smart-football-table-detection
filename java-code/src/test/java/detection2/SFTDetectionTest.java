@@ -32,14 +32,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.OptionalDouble;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.hamcrest.Matcher;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import detection2.SFTDetectionTest.GoalMessageGenerator.GoalListener;
@@ -215,7 +217,7 @@ public class SFTDetectionTest {
 			if (hasWon(teamid)) {
 				return asList(new Message("game/gameover", teamid));
 			} else if (isDraw()) {
-				return asList(new Message("game/gameover", teamids()));
+				return asList(new Message("game/gameover", teamids().sorted().collect(joining(","))));
 			}
 			return emptyList();
 		};
@@ -225,15 +227,15 @@ public class SFTDetectionTest {
 		}
 
 		private boolean isDraw() {
-			return scoresSum() == MAX_BALLS;
+			return scores().sum() == MAX_BALLS;
 		}
 
-		private int scoresSum() {
-			return scores.values().stream().mapToInt(Integer::intValue).sum();
+		private IntStream scores() {
+			return scores.values().stream().mapToInt(Integer::intValue);
 		}
 
-		private String teamids() {
-			return scores.keySet().stream().sorted().map(String::valueOf).collect(joining(","));
+		private Stream<String> teamids() {
+			return scores.keySet().stream().map(String::valueOf);
 		}
 
 		private GoalListener goalListener() {
@@ -626,6 +628,37 @@ public class SFTDetectionTest {
 		}
 
 		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((payload == null) ? 0 : payload.hashCode());
+			result = prime * result + ((topic == null) ? 0 : topic.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			Message other = (Message) obj;
+			if (payload == null) {
+				if (other.payload != null)
+					return false;
+			} else if (!payload.equals(other.payload))
+				return false;
+			if (topic == null) {
+				if (other.topic != null)
+					return false;
+			} else if (!topic.equals(other.topic))
+				return false;
+			return true;
+		}
+
+		@Override
 		public String toString() {
 			return "Message [topic=" + topic + ", payload=" + payload + "]";
 		}
@@ -672,7 +705,7 @@ public class SFTDetectionTest {
 
 	private final GoalMessageGenerator goalMessageGenerator = new GoalMessageGenerator();
 	private final GameStartAndEndMessageGenerator gameStartAndEndMessageGenerator = new GameStartAndEndMessageGenerator();
-	private final List<MessageGenerator> generators = asList( //
+	private final Supplier<List<MessageGenerator>> generatorsSupplier = () -> asList( //
 			gameStartAndEndMessageGenerator, //
 			new PositionMessageGenerator(), //
 			new MovementMessageGenerator(), //
@@ -830,7 +863,26 @@ public class SFTDetectionTest {
 		);
 		whenStdInInputWasProcessed();
 		thenPayloadsWithTopicAre("game/gameover", "1");
+	}
 
+	@Test
+	public void doesSendDrawWinners() throws IOException {
+		givenATableOfAnySize();
+		givenFrontOfGoalPercentage(20);
+		givenStdInContains(ball() //
+				.prepareForGoal().then().at(frontOfLeftGoal()).makeGoal().then() //
+				.prepareForGoal().then().at(frontOfRightGoal()).makeGoal().then() //
+				.prepareForGoal().then().at(frontOfLeftGoal()).makeGoal().then() //
+				.prepareForGoal().then().at(frontOfRightGoal()).makeGoal().then() //
+				.prepareForGoal().then().at(frontOfLeftGoal()).makeGoal().then() //
+				.prepareForGoal().then().at(frontOfRightGoal()).makeGoal().then() //
+				.prepareForGoal().then().at(frontOfLeftGoal()).makeGoal().then() //
+				.prepareForGoal().then().at(frontOfRightGoal()).makeGoal().then() //
+				.prepareForGoal().then().at(frontOfLeftGoal()).makeGoal().then() //
+				.prepareForGoal().then().at(frontOfRightGoal()).makeGoal() //
+		);
+		whenStdInInputWasProcessed();
+		thenPayloadsWithTopicAre("game/gameover", "0,1");
 	}
 
 	@Test
@@ -881,7 +933,8 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void doesSendDrawWinners() throws IOException {
+	@Ignore
+	public void doesRestartAfterGameEnd() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
 		givenStdInContains(ball() //
@@ -897,7 +950,41 @@ public class SFTDetectionTest {
 				.prepareForGoal().then().at(frontOfRightGoal()).makeGoal() //
 		);
 		whenStdInInputWasProcessed();
-		thenPayloadsWithTopicAre("game/gameover", "0,1");
+		givenStdInContains(ball() //
+				.prepareForGoal().then().at(frontOfLeftGoal()).makeGoal().then() //
+				.prepareForGoal().then().at(frontOfLeftGoal()).makeGoal() //
+		);
+		whenStdInInputWasProcessed();
+		assertThat(publisher.messages.stream().filter(m -> !m.getTopic().startsWith("ball/")).collect(toList()),
+				is(asList( //
+						new Message("game/start", ""), //
+						new Message("team/scored", 1), //
+						new Message("game/score/1", 1), //
+						new Message("team/scored", 0), //
+						new Message("game/score/0", 1), //
+						new Message("team/scored", 1), //
+						new Message("game/score/1", 2), //
+						new Message("team/scored", 0), //
+						new Message("game/score/0", 2), //
+						new Message("team/scored", 1), //
+						new Message("game/score/1", 3), //
+						new Message("team/scored", 0), //
+						new Message("game/score/0", 3), //
+						new Message("team/scored", 1), //
+						new Message("game/score/1", 4), //
+						new Message("team/scored", 0), //
+						new Message("game/score/0", 4), //
+						new Message("team/scored", 1), //
+						new Message("game/score/1", 5), //
+						new Message("team/scored", 0), //
+						new Message("game/score/0", 5), //
+						new Message("game/gameover", "0,1"), //
+						new Message("game/start", ""), //
+						new Message("team/scored", 1), //
+						new Message("game/score/1", 1), //
+						new Message("team/scored", 1), //
+						new Message("game/score/1", 2) //
+				)));
 	}
 
 	private BallPosBuilder frontOfLeftGoal() {
@@ -947,6 +1034,7 @@ public class SFTDetectionTest {
 	}
 
 	private void whenStdInInputWasProcessed() throws IOException {
+		List<MessageGenerator> generators = generatorsSupplier.get();
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
