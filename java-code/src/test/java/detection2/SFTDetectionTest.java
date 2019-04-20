@@ -37,6 +37,7 @@ import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import org.hamcrest.Matcher;
 import org.junit.Test;
 
 import detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder;
@@ -175,6 +176,22 @@ public class SFTDetectionTest {
 					new Message("ball/velocity/mps", movement.velocity(MPS)), //
 					new Message("ball/velocity/kmh", movement.velocity(KMH) //
 					));
+		}
+
+	}
+
+	private static class GameStartMessageGenerator implements MessageGenerator {
+
+		private boolean gameStartSend;
+
+		@Override
+		public Collection<Message> messages(AbsolutePosition pos) {
+			if (gameStartSend || pos.getRelativePosition().isNull()) {
+				return emptyList();
+			} else {
+				gameStartSend = true;
+				return asList(new Message("game/start", ""));
+			}
 		}
 
 	}
@@ -730,6 +747,14 @@ public class SFTDetectionTest {
 	}
 
 	@Test
+	public void doesSendGameStart() throws IOException {
+		givenATableOfAnySize();
+		givenStdInContains(ball().at(kickoff()).at(kickoff()));
+		whenStdInInputWasProcessed();
+		assertOneMessageWithPayload(messagesWithTopic("game/start"), is(""));
+	}
+
+	@Test
 	public void doesSendDrawWinners() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
@@ -747,7 +772,6 @@ public class SFTDetectionTest {
 		);
 		whenStdInInputWasProcessed();
 		thenPayloadsWithTopicAre("game/gameover", "0,1");
-
 	}
 
 	private BallPosBuilder frontOfLeftGoal() {
@@ -798,9 +822,10 @@ public class SFTDetectionTest {
 
 	private void whenStdInInputWasProcessed() throws IOException {
 		List<MessageGenerator> generators = asList( //
-				goalMessageGenerator, //
+				new GameStartMessageGenerator(), //
 				new PositionMessageGenerator(), //
-				new MovementMessageGenerator() //
+				new MovementMessageGenerator(), //
+				goalMessageGenerator //
 		);
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 			String line;
@@ -882,7 +907,11 @@ public class SFTDetectionTest {
 	}
 
 	private void thenGameScoreForTeamIsPublished(int teamid, int score) {
-		assertThat(onlyElement(messagesWithTopic("game/score/" + teamid)).getPayload(), is(String.valueOf(score)));
+		assertOneMessageWithPayload(messagesWithTopic("game/score/" + teamid), is(String.valueOf(score)));
+	}
+
+	private void assertOneMessageWithPayload(Stream<Message> messagesWithTopic, Matcher<String> matcher) {
+		assertThat(onlyElement(messagesWithTopic).getPayload(), matcher);
 	}
 
 	private void thenNoMessageIsSent() {
