@@ -149,22 +149,22 @@ public class SFTDetectionTest {
 	}
 
 	private static interface MessageGenerator {
-		Collection<Message> update(AbsolutePosition absPos);
+		Collection<Message> messages(AbsolutePosition pos);
 	}
 
 	private static class MovementMessageGenerator implements MessageGenerator {
 
-		private AbsolutePosition prevAbsPos;
+		private AbsolutePosition prevPos;
 
 		@Override
-		public Collection<Message> update(AbsolutePosition absPos) {
-			RelativePosition relPos = absPos.getRelativePosition();
+		public Collection<Message> messages(AbsolutePosition pos) {
+			RelativePosition relPos = pos.getRelativePosition();
 			List<Message> messages = emptyList();
 			if (!relPos.isNull()) {
-				if (prevAbsPos != null) {
-					messages = messages(new Movement(prevAbsPos, absPos));
+				if (prevPos != null) {
+					messages = messages(new Movement(prevPos, pos));
 				}
-				prevAbsPos = absPos;
+				prevPos = pos;
 			}
 			return messages;
 		}
@@ -182,14 +182,14 @@ public class SFTDetectionTest {
 	private static class PositionMessageGenerator implements MessageGenerator {
 
 		@Override
-		public Collection<Message> update(AbsolutePosition absPos) {
-			return absPos.getRelativePosition().isNull() ? emptyList() : messages(absPos);
+		public Collection<Message> messages(AbsolutePosition pos) {
+			return pos.getRelativePosition().isNull() ? emptyList() : positions(pos);
 		}
 
-		private List<Message> messages(AbsolutePosition position) {
+		private List<Message> positions(AbsolutePosition pos) {
 			return asList( //
-					positionMessage("ball/position/abs", position), //
-					positionMessage("ball/position/rel", position.getRelativePosition()) //
+					positionMessage("ball/position/abs", pos), //
+					positionMessage("ball/position/rel", pos.getRelativePosition()) //
 			);
 		}
 
@@ -202,18 +202,18 @@ public class SFTDetectionTest {
 	private static class GoalMessageGenerator implements MessageGenerator {
 
 		private static interface State {
-			State update(AbsolutePosition absPos);
+			State update(AbsolutePosition pos);
 		}
 
 		private class WaitForBallOnMiddleLine implements State {
 
 			@Override
-			public State update(AbsolutePosition absPos) {
-				return ballAtMiddleLine(absPos) ? new BallOnTable().update(absPos) : this;
+			public State update(AbsolutePosition pos) {
+				return ballAtMiddleLine(pos) ? new BallOnTable().update(pos) : this;
 			}
 
-			private boolean ballAtMiddleLine(AbsolutePosition absPos) {
-				double normalizeX = absPos.getRelativePosition().normalizeX().getX();
+			private boolean ballAtMiddleLine(AbsolutePosition pos) {
+				double normalizeX = pos.getRelativePosition().normalizeX().getX();
 				return normalizeX >= 0.5 && normalizeX <= 0.55;
 			}
 
@@ -222,8 +222,8 @@ public class SFTDetectionTest {
 		private class BallOnTable implements State {
 
 			@Override
-			public State update(AbsolutePosition absPos) {
-				RelativePosition relPos = absPos.getRelativePosition();
+			public State update(AbsolutePosition pos) {
+				RelativePosition relPos = pos.getRelativePosition();
 				return isFrontOfGoal(relPos) ? new FrontOfGoal(relPos.isRightHandSide()) : this;
 			}
 
@@ -242,14 +242,13 @@ public class SFTDetectionTest {
 			}
 
 			@Override
-			public State update(AbsolutePosition absPos) {
-				if (absPos.isNull()) {
+			public State update(AbsolutePosition pos) {
+				if (pos.isNull()) {
 					return millisTilGoal == 0 //
 							? new Goal(rightHandSide) //
-							: new PossibleGoal(absPos.getTimestamp(), rightHandSide);
-				} else {
-					return ballOnTable.update(absPos);
+							: new PossibleGoal(pos.getTimestamp(), rightHandSide);
 				}
+				return ballOnTable.update(pos);
 			}
 		}
 
@@ -265,15 +264,15 @@ public class SFTDetectionTest {
 			}
 
 			@Override
-			public State update(AbsolutePosition absPos) {
-				if (absPos.isNull()) {
-					return waitTimeElapsed(absPos) ? new Goal(rightHandSide) : this;
+			public State update(AbsolutePosition pos) {
+				if (pos.isNull()) {
+					return waitTimeElapsed(pos) ? new Goal(rightHandSide) : this;
 				}
-				return ballOnTable.update(absPos);
+				return ballOnTable.update(pos);
 			}
 
-			private boolean waitTimeElapsed(AbsolutePosition absPos) {
-				return absPos.getTimestamp() - timestamp >= millisTilGoal;
+			private boolean waitTimeElapsed(AbsolutePosition pos) {
+				return pos.getTimestamp() - timestamp >= millisTilGoal;
 			}
 
 		}
@@ -287,8 +286,8 @@ public class SFTDetectionTest {
 			}
 
 			@Override
-			public State update(AbsolutePosition absPos) {
-				return new WaitForBallOnMiddleLine().update(absPos);
+			public State update(AbsolutePosition pos) {
+				return new WaitForBallOnMiddleLine().update(pos);
 			}
 
 			public boolean isRightHandSide() {
@@ -303,7 +302,7 @@ public class SFTDetectionTest {
 		private State state = new WaitForBallOnMiddleLine();
 
 		@Override
-		public Collection<Message> update(AbsolutePosition pos) {
+		public Collection<Message> messages(AbsolutePosition pos) {
 			state = state.update(pos);
 			return state instanceof Goal ? goalMessage(((Goal) state).isRightHandSide()) : emptyList();
 		}
@@ -802,7 +801,7 @@ public class SFTDetectionTest {
 				} else {
 					AbsolutePosition absPos = table.toAbsolute(relPos);
 					for (MessageGenerator messageGenerator : generators) {
-						for (Message message : messageGenerator.update(absPos)) {
+						for (Message message : messageGenerator.messages(absPos)) {
 							publisher.send(message);
 						}
 					}
