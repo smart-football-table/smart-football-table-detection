@@ -293,7 +293,7 @@ public class SFTDetectionTest {
 			@Override
 			public State update(AbsolutePosition pos) {
 				RelativePosition relPos = pos.getRelativePosition();
-				return isFrontOfGoal(relPos) ? new FrontOfGoal(relPos.isRightHandSide()) : this;
+				return isFrontOfGoal(relPos) ? new FrontOfGoal(relPos.isRightHandSide() ? 0 : 1) : this;
 			}
 
 			private boolean isFrontOfGoal(RelativePosition relPos) {
@@ -303,19 +303,19 @@ public class SFTDetectionTest {
 
 		private class FrontOfGoal implements State {
 
-			private final boolean rightHandSide;
+			private final int teamid;
 			private final BallOnTable ballOnTable = new BallOnTable();
 
-			public FrontOfGoal(boolean rightHandSide) {
-				this.rightHandSide = rightHandSide;
+			public FrontOfGoal(int teamid) {
+				this.teamid = teamid;
 			}
 
 			@Override
 			public State update(AbsolutePosition pos) {
 				if (pos.isNull()) {
 					return millisTilGoal == 0 //
-							? new Goal(rightHandSide) //
-							: new PossibleGoal(pos.getTimestamp(), rightHandSide);
+							? new Goal(teamid) //
+							: new PossibleGoal(pos.getTimestamp(), teamid);
 				}
 				return ballOnTable.update(pos);
 			}
@@ -325,17 +325,17 @@ public class SFTDetectionTest {
 
 			private final BallOnTable ballOnTable = new BallOnTable();
 			private final long timestamp;
-			private final boolean rightHandSide;
+			private final int teamid;
 
-			public PossibleGoal(long timestamp, boolean rightHandSide) {
+			public PossibleGoal(long timestamp, int teamid) {
 				this.timestamp = timestamp;
-				this.rightHandSide = rightHandSide;
+				this.teamid = teamid;
 			}
 
 			@Override
 			public State update(AbsolutePosition pos) {
 				if (pos.isNull()) {
-					return waitTimeElapsed(pos) ? new Goal(rightHandSide) : this;
+					return waitTimeElapsed(pos) ? new Goal(teamid) : this;
 				}
 				return ballOnTable.update(pos);
 			}
@@ -348,10 +348,10 @@ public class SFTDetectionTest {
 
 		private class Goal implements State {
 
-			private final boolean rightHandSide;
+			private final int teamid;
 
-			public Goal(boolean rightHandSide) {
-				this.rightHandSide = rightHandSide;
+			public Goal(int teamid) {
+				this.teamid = teamid;
 			}
 
 			@Override
@@ -359,8 +359,8 @@ public class SFTDetectionTest {
 				return new WaitForBallOnMiddleLine().update(pos);
 			}
 
-			public boolean isRightHandSide() {
-				return rightHandSide;
+			public int getTeamid() {
+				return teamid;
 			}
 
 		}
@@ -373,11 +373,10 @@ public class SFTDetectionTest {
 		@Override
 		public Collection<Message> messages(AbsolutePosition pos) {
 			state = state.update(pos);
-			return state instanceof Goal ? goalMessage(((Goal) state).isRightHandSide()) : emptyList();
+			return state instanceof Goal ? goalMessage(((Goal) state).getTeamid()) : emptyList();
 		}
 
-		private List<Message> goalMessage(boolean isRightHandSide) {
-			int teamid = isRightHandSide ? 0 : 1;
+		private List<Message> goalMessage(int teamid) {
 			int score = increaseScore(teamid);
 			List<Message> messages = new ArrayList<>();
 			messages.add(new Message("team/scored", teamid));
