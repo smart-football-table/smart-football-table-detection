@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.OptionalDouble;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
@@ -81,6 +82,16 @@ public class SFTDetectionTest {
 
 			public BallPosBuilder right(double adjX) {
 				x += adjX;
+				return this;
+			}
+
+			public BallPosBuilder up(double adjY) {
+				y -= adjY;
+				return this;
+			}
+
+			public BallPosBuilder down(double adjY) {
+				y += adjY;
 				return this;
 			}
 
@@ -405,6 +416,47 @@ public class SFTDetectionTest {
 
 	}
 
+	public static class FoulMessageGenerator implements MessageGenerator {
+
+		private static final long TIMEOUT = SECONDS.toMillis(15);
+		private static final double MOVEMENT_GREATER_THAN = 0.05;
+
+		private RelativePosition noMovementSince;
+		private boolean foulInProgress;
+
+		@Override
+		public Collection<Message> messages(AbsolutePosition pos) {
+			Collection<Message> messages = emptyList();
+			if (noMovementSince != null && xChanged(pos)) {
+				noMovementSince = null;
+				foulInProgress = false;
+			} else {
+				if (noMovementSince == null) {
+					noMovementSince = pos.getRelativePosition().normalizeX();
+				} else if (noMovementDurationInMillis(pos) >= TIMEOUT) {
+					if (!foulInProgress) {
+						messages = asList(new Message("game/foul", ""));
+					}
+					foulInProgress = true;
+				}
+			}
+			return messages;
+		}
+
+		private long noMovementDurationInMillis(AbsolutePosition pos) {
+			return pos.getTimestamp() - noMovementSince.getTimestamp();
+		}
+
+		private boolean xChanged(AbsolutePosition pos) {
+			return pos.isNull() || xDiff(pos) > MOVEMENT_GREATER_THAN;
+		}
+
+		private double xDiff(AbsolutePosition pos) {
+			return pos.getRelativePosition().normalizeX().getX() - noMovementSince.getX();
+		}
+
+	}
+
 	static enum DistanceUnit {
 		CENTIMETER {
 			@Override
@@ -624,8 +676,8 @@ public class SFTDetectionTest {
 			gameStartAndEndMessageGenerator, //
 			new PositionMessageGenerator(), //
 			new MovementMessageGenerator(), //
-			goalMessageGenerator.addGoalListener(gameStartAndEndMessageGenerator.goalListener()) //
-	);
+			goalMessageGenerator.addGoalListener(gameStartAndEndMessageGenerator.goalListener()), //
+			new FoulMessageGenerator());
 
 	private final MessagePublisherForTest publisher = new MessagePublisherForTest();
 
@@ -787,6 +839,45 @@ public class SFTDetectionTest {
 		givenStdInContains(ball().at(kickoff()).at(kickoff()));
 		whenStdInInputWasProcessed();
 		assertOneMessageWithPayload(messagesWithTopic("game/start"), is(""));
+	}
+
+	@Test
+	public void doesSendFoul() throws IOException {
+		givenATableOfAnySize();
+		BallPosBuilder middlefieldRow = kickoff().left(0.1);
+		givenStdInContains(ball().at(middlefieldRow) //
+				.thenAfter(10, SECONDS).at(middlefieldRow.up(0.49)) //
+				.thenAfter(5, SECONDS).at(middlefieldRow.down(0.49)) //
+		);
+		whenStdInInputWasProcessed();
+		assertOneMessageWithPayload(messagesWithTopic("game/foul"), is(""));
+	}
+
+	@Test
+	public void doesNotSendFoul() throws IOException {
+		givenATableOfAnySize();
+		BallPosBuilder middlefieldRow = kickoff().left(0.1);
+		givenStdInContains(ball().at(middlefieldRow) //
+				.thenAfter(10, SECONDS).at(middlefieldRow.up(0.49)) //
+				.thenAfter(4, SECONDS).at(frontOfLeftGoal()) //
+				.thenAfter(1, SECONDS).at(middlefieldRow.down(0.49)) //
+		);
+		whenStdInInputWasProcessed();
+		thenNoMessageWithTopicIsSent("game/foul");
+	}
+
+	@Test
+	public void doesSendFoulOnlyOnceUntilFoulIsOver() throws IOException {
+		givenATableOfAnySize();
+		BallPosBuilder middlefieldRow = kickoff().left(0.1);
+		givenStdInContains(ball().at(middlefieldRow.up(0.49)) //
+				.thenAfter(15, SECONDS).at(middlefieldRow.down(0.49)) //
+				.thenAfter(100, MILLISECONDS).at(middlefieldRow.down(0.49)) //
+				.thenAfter(100, MILLISECONDS).at(middlefieldRow.down(0.49)) //
+				.thenAfter(100, MILLISECONDS).at(middlefieldRow.down(0.49)) //
+		);
+		whenStdInInputWasProcessed();
+		assertOneMessageWithPayload(messagesWithTopic("game/foul"), is(""));
 	}
 
 	@Test
