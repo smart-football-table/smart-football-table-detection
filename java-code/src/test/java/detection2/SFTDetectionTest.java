@@ -254,7 +254,7 @@ public class SFTDetectionTest {
 	public static class GoalMessageGenerator implements MessageGenerator {
 
 		public static interface GoalListener {
-			List<Message> goal(int teamid, int score);
+			Collection<Message> goal(int teamid, int score);
 		}
 
 		private static interface State {
@@ -619,7 +619,16 @@ public class SFTDetectionTest {
 	}
 
 	private final GoalMessageGenerator goalMessageGenerator = new GoalMessageGenerator();
+	private final GameStartAndEndMessageGenerator gameStartAndEndMessageGenerator = new GameStartAndEndMessageGenerator();
+	private final List<MessageGenerator> generators = asList( //
+			gameStartAndEndMessageGenerator, //
+			new PositionMessageGenerator(), //
+			new MovementMessageGenerator(), //
+			goalMessageGenerator.addGoalListener(gameStartAndEndMessageGenerator.goalListener()) //
+	);
+
 	private final MessagePublisherForTest publisher = new MessagePublisherForTest();
+
 	private Table table;
 	private InputStream is;
 
@@ -847,13 +856,6 @@ public class SFTDetectionTest {
 	}
 
 	private void whenStdInInputWasProcessed() throws IOException {
-		GameStartAndEndMessageGenerator gameStartAndEndMessageGenerator = new GameStartAndEndMessageGenerator();
-		List<MessageGenerator> generators = asList( //
-				gameStartAndEndMessageGenerator, //
-				new PositionMessageGenerator(), //
-				new MovementMessageGenerator(), //
-				goalMessageGenerator.addGoalListener(gameStartAndEndMessageGenerator.goalListener()) //
-		);
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
