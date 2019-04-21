@@ -694,13 +694,15 @@ public class SFTDetectionTest {
 				}, //
 				new PositionDetector() {
 					protected void position(AbsolutePosition pos) {
-						RelativePosition rel = pos.getRelativePosition();
+						Position rel = pos.getRelativePosition();
 						asList( //
-								new Message("ball/position/abs",
-										"{ \"x\":" + pos.getX() + ", \"y\":" + pos.getY() + " }"), //
-								new Message("ball/position/rel",
-										"{ \"x\":" + rel.getX() + ", \"y\":" + rel.getY() + " }") //
+								new Message("ball/position/abs", payload(pos)), //
+								new Message("ball/position/rel", payload(rel)) //
 						).forEach(publisher::send);
+					}
+
+					private String payload(Position pos) {
+						return "{ \"x\":" + pos.getX() + ", \"y\":" + pos.getY() + " }";
 					}
 				}, //
 				new MovementDetector() {
