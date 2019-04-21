@@ -11,7 +11,6 @@ import static java.lang.Math.abs;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.joining;
@@ -27,12 +26,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
@@ -44,7 +41,6 @@ import org.hamcrest.Matcher;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import detection2.SFTDetectionTest.GoalMessageGenerator.GoalListener;
 import detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder;
 
 public class SFTDetectionTest {
@@ -164,111 +160,62 @@ public class SFTDetectionTest {
 
 	}
 
-	private static interface MessageGenerator {
-		Collection<Message> messages(AbsolutePosition pos);
+	private static interface Detector {
+		void detect(AbsolutePosition pos);
 	}
 
-	private static class MovementMessageGenerator implements MessageGenerator {
+	private static class MovementDetector implements Detector {
 
 		private AbsolutePosition prevPos;
 
 		@Override
-		public Collection<Message> messages(AbsolutePosition pos) {
+		public void detect(AbsolutePosition pos) {
 			RelativePosition relPos = pos.getRelativePosition();
-			List<Message> messages = emptyList();
 			if (!relPos.isNull()) {
 				if (prevPos != null) {
-					messages = messages(new Movement(prevPos, pos));
+					movement(new Movement(prevPos, pos));
 				}
 				prevPos = pos;
 			}
-			return messages;
 		}
 
-		private List<Message> messages(Movement movement) {
-			return asList( //
-					new Message("ball/distance/cm", movement.distance(CENTIMETER)), //
-					new Message("ball/velocity/mps", movement.velocity(MPS)), //
-					new Message("ball/velocity/kmh", movement.velocity(KMH) //
-					));
+		protected void movement(Movement movement) {
 		}
 
 	}
 
-	private static class GameStartAndEndMessageGenerator implements MessageGenerator {
+	private static class GameStartDetector implements Detector {
 
-		private static final int MAX_BALLS = 10;
-
-		private final Map<Integer, Integer> scores = new HashMap<>();
 		private boolean gameStartSend;
 
 		@Override
-		public Collection<Message> messages(AbsolutePosition pos) {
-			if (gameStartSend || pos.getRelativePosition().isNull()) {
-				return emptyList();
-			} else {
+		public void detect(AbsolutePosition pos) {
+			if (!gameStartSend && !pos.getRelativePosition().isNull()) {
 				gameStartSend = true;
-				return asList(new Message("game/start", ""));
+				gameStarted();
 			}
 		}
 
-		private final GoalListener goalListener = (teamid, score) -> {
-			scores.put(teamid, score);
-			if (hasWon(teamid)) {
-				return asList(new Message("game/gameover", teamid));
-			} else if (isDraw()) {
-				return asList(new Message("game/gameover", teamids().sorted().collect(joining(","))));
-			}
-			return emptyList();
-		};
-
-		private boolean hasWon(int teamid) {
-			return scores.get(teamid) > MAX_BALLS / 2;
-		}
-
-		private boolean isDraw() {
-			return scores().sum() == MAX_BALLS;
-		}
-
-		private IntStream scores() {
-			return scores.values().stream().mapToInt(Integer::intValue);
-		}
-
-		private Stream<String> teamids() {
-			return scores.keySet().stream().map(String::valueOf);
-		}
-
-		private GoalListener goalListener() {
-			return goalListener;
+		protected void gameStarted() {
 		}
 
 	}
 
-	private static class PositionMessageGenerator implements MessageGenerator {
+	private static class PositionDetector implements Detector {
 
 		@Override
-		public Collection<Message> messages(AbsolutePosition pos) {
-			return pos.getRelativePosition().isNull() ? emptyList() : positions(pos);
+		public void detect(AbsolutePosition pos) {
+			if (!pos.getRelativePosition().isNull()) {
+				position(pos);
+			}
 		}
 
-		private List<Message> positions(AbsolutePosition pos) {
-			return asList( //
-					positionMessage("ball/position/abs", pos), //
-					positionMessage("ball/position/rel", pos.getRelativePosition()) //
-			);
-		}
-
-		private Message positionMessage(String topic, Position position) {
-			return new Message(topic, "{ \"x\":" + position.getX() + ", \"y\":" + position.getY() + " }");
+		protected void position(AbsolutePosition pos) {
 		}
 
 	}
 
-	public static class GoalMessageGenerator implements MessageGenerator {
-
-		public static interface GoalListener {
-			Collection<Message> goal(int teamid, int score);
-		}
+	public static class GoalDetector implements Detector {
 
 		private static interface State {
 			State update(AbsolutePosition pos);
@@ -365,32 +312,19 @@ public class SFTDetectionTest {
 
 		}
 
-		private final Map<Integer, Integer> scores = new HashMap<>();
 		private int frontOfGoalPercentage = 40;
 		private long millisTilGoal = SECONDS.toMillis(2);
 		private State state = new WaitForBallOnMiddleLine();
 
 		@Override
-		public Collection<Message> messages(AbsolutePosition pos) {
+		public void detect(AbsolutePosition pos) {
 			state = state.update(pos);
-			return state instanceof Goal ? goalMessage(((Goal) state).getTeamid()) : emptyList();
-		}
-
-		private List<Message> goalMessage(int teamid) {
-			int score = increaseScore(teamid);
-			List<Message> messages = new ArrayList<>();
-			messages.add(new Message("team/scored", teamid));
-			messages.add(new Message("game/score/" + teamid, score));
-			for (GoalListener listener : listeners) {
-				messages.addAll(listener.goal(teamid, score));
+			if (state instanceof Goal) {
+				goal(((Goal) state).getTeamid());
 			}
-			return messages;
 		}
 
-		private int increaseScore(int teamid) {
-			Integer newScore = scores.getOrDefault(teamid, 0) + 1;
-			scores.put(teamid, newScore);
-			return newScore;
+		protected void goal(int teamid) {
 		}
 
 		/**
@@ -399,25 +333,19 @@ public class SFTDetectionTest {
 		 * @param i 100% the whole playfield, 50% one side.
 		 * @return
 		 */
-		public GoalMessageGenerator setFrontOfGoalPercentage(int frontOfGoalPercentage) {
+		public GoalDetector frontOfGoalPercentage(int frontOfGoalPercentage) {
 			this.frontOfGoalPercentage = frontOfGoalPercentage;
 			return this;
 		}
 
-		public void setTimeWithoutBallTilGoal(long duration, TimeUnit timeUnit) {
+		public GoalDetector timeWithoutBallTilGoal(long duration, TimeUnit timeUnit) {
 			this.millisTilGoal = timeUnit.toMillis(duration);
-		}
-
-		private final List<GoalListener> listeners = new CopyOnWriteArrayList<>();
-
-		public GoalMessageGenerator addGoalListener(GoalListener listener) {
-			listeners.add(listener);
 			return this;
 		}
 
 	}
 
-	public static class FoulMessageGenerator implements MessageGenerator {
+	public static class FoulDetector implements Detector {
 
 		private static final long TIMEOUT = SECONDS.toMillis(15);
 		private static final double MOVEMENT_GREATER_THAN = 0.05;
@@ -426,8 +354,7 @@ public class SFTDetectionTest {
 		private boolean foulInProgress;
 
 		@Override
-		public Collection<Message> messages(AbsolutePosition pos) {
-			Collection<Message> messages = emptyList();
+		public void detect(AbsolutePosition pos) {
 			if (noMovementSince != null && xChanged(pos)) {
 				noMovementSince = null;
 				foulInProgress = false;
@@ -436,12 +363,14 @@ public class SFTDetectionTest {
 					noMovementSince = pos.getRelativePosition().normalizeX();
 				} else if (noMovementDurationInMillis(pos) >= TIMEOUT) {
 					if (!foulInProgress) {
-						messages = asList(new Message("game/foul", ""));
+						foulHappenend();
 					}
 					foulInProgress = true;
 				}
 			}
-			return messages;
+		}
+
+		protected void foulHappenend() {
 		}
 
 		private long noMovementDurationInMillis(AbsolutePosition pos) {
@@ -702,16 +631,94 @@ public class SFTDetectionTest {
 		void send(Message message);
 	}
 
-	private final GoalMessageGenerator goalMessageGenerator = new GoalMessageGenerator();
-	private final GameStartAndEndMessageGenerator gameStartAndEndMessageGenerator = new GameStartAndEndMessageGenerator();
-	private final Supplier<List<MessageGenerator>> generatorsSupplier = () -> asList( //
-			gameStartAndEndMessageGenerator, //
-			new PositionMessageGenerator(), //
-			new MovementMessageGenerator(), //
-			goalMessageGenerator.addGoalListener(gameStartAndEndMessageGenerator.goalListener()), //
-			new FoulMessageGenerator());
+	private static class ScoreTracker {
+
+		private final Map<Integer, Integer> scores = new HashMap<>();
+
+		private int teamScored(int teamid) {
+			Integer newScore = score(teamid) + 1;
+			scores.put(teamid, newScore);
+			return newScore;
+		}
+
+		private Integer score(int teamid) {
+			return scores.getOrDefault(teamid, 0);
+		}
+
+		private IntStream scores() {
+			return scores.values().stream().mapToInt(Integer::intValue);
+		}
+
+		private Stream<String> teamids() {
+			return scores.keySet().stream().map(String::valueOf);
+		}
+
+	}
 
 	private final MessagePublisherForTest publisher = new MessagePublisherForTest();
+
+	private final ScoreTracker scoreTracker = new ScoreTracker();
+
+	private final GoalDetector goalDetector = new GoalDetector() {
+
+		private static final int MAX_BALLS = 10;
+
+		protected void goal(int teamid) {
+			int score = scoreTracker.teamScored(teamid);
+			List<Message> messages = new ArrayList<>();
+			messages.add(new Message("team/scored", teamid));
+			messages.add(new Message("game/score/" + teamid, score));
+			if (hasWon(teamid)) {
+				messages.add(new Message("game/gameover", teamid));
+			} else if (isDraw()) {
+				messages.add(new Message("game/gameover", scoreTracker.teamids().sorted().collect(joining(","))));
+			}
+			messages.forEach(publisher::send);
+		}
+
+		private boolean hasWon(int teamid) {
+			return scoreTracker.score(teamid) > MAX_BALLS / 2;
+		}
+
+		private boolean isDraw() {
+			return scoreTracker.scores().sum() == MAX_BALLS;
+		}
+
+	};
+	private final Supplier<List<Detector>> detectorsSupplier = () -> {
+		return asList( //
+				new GameStartDetector() {
+					protected void gameStarted() {
+						asList(new Message("game/start", "")).forEach(publisher::send);
+					}
+				}, //
+				new PositionDetector() {
+					protected void position(AbsolutePosition pos) {
+						RelativePosition rel = pos.getRelativePosition();
+						asList( //
+								new Message("ball/position/abs",
+										"{ \"x\":" + pos.getX() + ", \"y\":" + pos.getY() + " }"), //
+								new Message("ball/position/rel",
+										"{ \"x\":" + rel.getX() + ", \"y\":" + rel.getY() + " }") //
+						).forEach(publisher::send);
+					}
+				}, //
+				new MovementDetector() {
+					protected void movement(Movement movement) {
+						asList( //
+								new Message("ball/distance/cm", movement.distance(CENTIMETER)), //
+								new Message("ball/velocity/mps", movement.velocity(MPS)), //
+								new Message("ball/velocity/kmh", movement.velocity(KMH) //
+						)).forEach(publisher::send);
+					}
+				}, //
+				goalDetector, //
+				new FoulDetector() {
+					protected void foulHappenend() {
+						asList(new Message("game/foul", "")).forEach(publisher::send);
+					}
+				});
+	};
 
 	private Table table;
 	private InputStream is;
@@ -1025,15 +1032,15 @@ public class SFTDetectionTest {
 	}
 
 	private void givenFrontOfGoalPercentage(int percentage) {
-		goalMessageGenerator.setFrontOfGoalPercentage(percentage);
+		goalDetector.frontOfGoalPercentage(percentage);
 	}
 
 	private void givenTimeWithoutBallTilGoal(long millis, TimeUnit timeUnit) {
-		goalMessageGenerator.setTimeWithoutBallTilGoal(millis, timeUnit);
+		goalDetector.timeWithoutBallTilGoal(millis, timeUnit);
 	}
 
 	private void whenStdInInputWasProcessed() throws IOException {
-		List<MessageGenerator> generators = generatorsSupplier.get();
+		List<Detector> detectors = detectorsSupplier.get();
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
@@ -1042,10 +1049,8 @@ public class SFTDetectionTest {
 					// TODO log invalid line
 				} else {
 					AbsolutePosition absPos = table.toAbsolute(relPos);
-					for (MessageGenerator messageGenerator : generators) {
-						for (Message message : messageGenerator.messages(absPos)) {
-							publisher.send(message);
-						}
+					for (Detector detector : detectors) {
+						detector.detect(absPos);
 					}
 				}
 			}
