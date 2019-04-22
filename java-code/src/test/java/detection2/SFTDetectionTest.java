@@ -38,7 +38,6 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.hamcrest.Matcher;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder;
@@ -955,7 +954,6 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	@Ignore
 	public void doesRestartAfterGameEnd() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
@@ -1055,7 +1053,55 @@ public class SFTDetectionTest {
 		this.timeWithoutBallTilGoalMillis = timeUnit.toMillis(duration);
 	}
 
+	private static final class GameOverListener implements ScoreTracker.Listener {
+
+		private boolean gameover;
+
+		@Override
+		public void teamScored(int teamid, int score) {
+		}
+
+		@Override
+		public void won(int teamid) {
+			gameover = true;
+		}
+
+		@Override
+		public void draw(int[] teamids) {
+			gameover = true;
+		}
+
+		public boolean isGameover() {
+			return gameover;
+		}
+	}
+
 	private void whenStdInInputWasProcessed() throws IOException {
+		GameOverListener gameOverListener = null;
+		List<Detector> detectors = null;
+
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+			if (detectors == null || gameOverListener.isGameover()) {
+				gameOverListener = new GameOverListener();
+				detectors = detectors(gameOverListener);
+			}
+			String line;
+			while ((line = reader.readLine()) != null) {
+				RelativePosition relPos = parse(line);
+				if (relPos == null) {
+					// TODO log invalid line
+				} else {
+					AbsolutePosition absPos = table.toAbsolute(relPos);
+					for (Detector detector : detectors) {
+						detector.detect(absPos);
+					}
+				}
+			}
+
+		}
+	}
+
+	private List<Detector> detectors(ScoreTracker.Listener l) {
 		ScoreTracker.Listener scoreListener = new ScoreTracker.Listener() {
 			@Override
 			public void teamScored(int teamid, int score) {
@@ -1076,7 +1122,7 @@ public class SFTDetectionTest {
 
 		};
 
-		ScoreTracker scoreTracker = new ScoreTracker().addListener(scoreListener);
+		ScoreTracker scoreTracker = new ScoreTracker().addListener(scoreListener).addListener(l);
 		List<Detector> detectors = asList( //
 				new GameStartDetector(() -> asList(new Message("game/start", "")).forEach(publisher::send)), //
 				new PositionDetector(new PositionDetector.Listener() {
@@ -1101,22 +1147,7 @@ public class SFTDetectionTest {
 						)).forEach(publisher::send)), //
 				goalDetector(scoreTracker), //
 				new FoulDetector(() -> asList(new Message("game/foul", "")).forEach(publisher::send)));
-
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-			String line;
-			while ((line = reader.readLine()) != null) {
-				RelativePosition relPos = parse(line);
-				if (relPos == null) {
-					// TODO log invalid line
-				} else {
-					AbsolutePosition absPos = table.toAbsolute(relPos);
-					for (Detector detector : detectors) {
-						detector.detect(absPos);
-					}
-				}
-			}
-
-		}
+		return detectors;
 	}
 
 	private GoalDetector goalDetector(ScoreTracker scoreTracker) {
