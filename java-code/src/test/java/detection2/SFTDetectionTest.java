@@ -999,6 +999,7 @@ public class SFTDetectionTest {
 						new Message("team/scored", 0), //
 						new Message("game/score/0", 5), //
 						new Message("game/gameover", "0,1"), //
+
 						new Message("game/start", ""), //
 						new Message("team/scored", 1), //
 						new Message("game/score/1", 1), //
@@ -1053,37 +1054,36 @@ public class SFTDetectionTest {
 		this.timeWithoutBallTilGoalMillis = timeUnit.toMillis(duration);
 	}
 
-	private static final class GameOverListener implements ScoreTracker.Listener {
-
-		private boolean gameover;
-
-		@Override
-		public void teamScored(int teamid, int score) {
-		}
-
-		@Override
-		public void won(int teamid) {
-			gameover = true;
-		}
-
-		@Override
-		public void draw(int[] teamids) {
-			gameover = true;
-		}
-
-		public boolean isGameover() {
-			return gameover;
-		}
-	}
-
 	private void whenStdInInputWasProcessed() throws IOException {
+		class GameOverListener implements ScoreTracker.Listener {
+
+			private boolean gameover;
+
+			@Override
+			public void teamScored(int teamid, int score) {
+			}
+
+			@Override
+			public void won(int teamid) {
+				gameover = true;
+			}
+
+			@Override
+			public void draw(int[] teamids) {
+				gameover = true;
+			}
+
+			public boolean isGameover() {
+				return gameover;
+			}
+		}
+
 		GameOverListener gameOverListener = null;
 		List<Detector> detectors = null;
 
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 			if (detectors == null || gameOverListener.isGameover()) {
-				gameOverListener = new GameOverListener();
-				detectors = detectors(gameOverListener);
+				detectors = detectors(gameOverListener = new GameOverListener());
 			}
 			String line;
 			while ((line = reader.readLine()) != null) {
