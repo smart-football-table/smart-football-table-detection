@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
@@ -1093,48 +1092,8 @@ public class SFTDetectionTest {
 		}
 	}
 
-	private List<Detector> detectors(ScoreTracker.Listener listener) {
-		ScoreTracker.Listener scoreListener = new ScoreTracker.Listener() {
-			@Override
-			public void teamScored(int teamid, int score) {
-				asList(new Message("team/scored", teamid), new Message("game/score/" + teamid, score))
-						.forEach(publisher::send);
-			}
-
-			@Override
-			public void won(int teamid) {
-				publisher.send(new Message("game/gameover", teamid));
-			}
-
-			@Override
-			public void draw(int[] teamids) {
-				publisher.send(new Message("game/gameover",
-						IntStream.of(teamids).mapToObj(String::valueOf).collect(joining(","))));
-			}
-
-		};
-
-		ScoreTracker.Listener m = new ScoreTracker.Listener() {
-			@Override
-			public void teamScored(int teamid, int score) {
-				scoreListener.teamScored(teamid, score);
-				listener.teamScored(teamid, score);
-			}
-
-			@Override
-			public void won(int teamid) {
-				scoreListener.won(teamid);
-				listener.won(teamid);
-			}
-
-			@Override
-			public void draw(int[] teamids) {
-				scoreListener.draw(teamids);
-				listener.draw(teamids);
-			}
-		};
-		ScoreTracker scoreTracker = new ScoreTracker(m);
-		List<Detector> detectors = asList( //
+	private List<Detector> detectors(ScoreTracker.Listener gameOverListener) {
+		return asList( //
 				new GameStartDetector(() -> asList(new Message("game/start", "")).forEach(publisher::send)), //
 				new PositionDetector(new PositionDetector.Listener() {
 					@Override
@@ -1156,9 +1115,51 @@ public class SFTDetectionTest {
 						new Message("ball/velocity/mps", movement.velocity(MPS)), //
 						new Message("ball/velocity/kmh", movement.velocity(KMH) //
 						)).forEach(publisher::send)), //
-				goalDetector(scoreTracker), //
+				goalDetector(new ScoreTracker(multiplexed(new ScoreTracker.Listener() {
+					@Override
+					public void teamScored(int teamid, int score) {
+						asList(new Message("team/scored", teamid), new Message("game/score/" + teamid, score))
+								.forEach(publisher::send);
+					}
+
+					@Override
+					public void won(int teamid) {
+						publisher.send(new Message("game/gameover", teamid));
+					}
+
+					@Override
+					public void draw(int[] teamids) {
+						publisher.send(new Message("game/gameover",
+								IntStream.of(teamids).mapToObj(String::valueOf).collect(joining(","))));
+					}
+
+				}, gameOverListener))), //
 				new FoulDetector(() -> asList(new Message("game/foul", "")).forEach(publisher::send)));
-		return detectors;
+	}
+
+	private ScoreTracker.Listener multiplexed(ScoreTracker.Listener... listeners) {
+		return new ScoreTracker.Listener() {
+			@Override
+			public void teamScored(int teamid, int score) {
+				for (ScoreTracker.Listener listener : listeners) {
+					listener.teamScored(teamid, score);
+				}
+			}
+
+			@Override
+			public void won(int teamid) {
+				for (ScoreTracker.Listener listener : listeners) {
+					listener.won(teamid);
+				}
+			}
+
+			@Override
+			public void draw(int[] teamids) {
+				for (ScoreTracker.Listener listener : listeners) {
+					listener.draw(teamids);
+				}
+			}
+		};
 	}
 
 	private GoalDetector goalDetector(ScoreTracker scoreTracker) {
