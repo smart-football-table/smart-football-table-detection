@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
@@ -165,6 +166,16 @@ public class SFTDetectionTest {
 
 	private static class MovementDetector implements Detector {
 
+		private final Listener listener;
+
+		public static interface Listener {
+			void movement(Movement movement);
+		}
+
+		public MovementDetector(Listener listener) {
+			this.listener = listener;
+		}
+
 		private AbsolutePosition prevPos;
 
 		@Override
@@ -172,18 +183,25 @@ public class SFTDetectionTest {
 			RelativePosition relPos = pos.getRelativePosition();
 			if (!relPos.isNull()) {
 				if (prevPos != null) {
-					movement(new Movement(prevPos, pos));
+					listener.movement(new Movement(prevPos, pos));
 				}
 				prevPos = pos;
 			}
 		}
 
-		protected void movement(Movement movement) {
-		}
-
 	}
 
 	private static class GameStartDetector implements Detector {
+
+		public static interface Listener {
+			void gameStarted();
+		}
+
+		private final Listener listener;
+
+		public GameStartDetector(Listener listener) {
+			this.listener = listener;
+		}
 
 		private boolean gameStartSend;
 
@@ -191,30 +209,44 @@ public class SFTDetectionTest {
 		public void detect(AbsolutePosition pos) {
 			if (!gameStartSend && !pos.getRelativePosition().isNull()) {
 				gameStartSend = true;
-				gameStarted();
+				listener.gameStarted();
 			}
-		}
-
-		protected void gameStarted() {
 		}
 
 	}
 
 	private static class PositionDetector implements Detector {
 
+		private final Listener listener;
+
+		public static interface Listener {
+			void position(AbsolutePosition pos);
+		}
+
+		public PositionDetector(Listener listener) {
+			this.listener = listener;
+		}
+
 		@Override
 		public void detect(AbsolutePosition pos) {
 			if (!pos.getRelativePosition().isNull()) {
-				position(pos);
+				listener.position(pos);
 			}
-		}
-
-		protected void position(AbsolutePosition pos) {
 		}
 
 	}
 
 	public static class GoalDetector implements Detector {
+
+		private final Listener listener;
+
+		public static interface Listener {
+			void goal(int teamid);
+		}
+
+		public GoalDetector(Listener listener) {
+			this.listener = listener;
+		}
 
 		private static interface State {
 			State update(AbsolutePosition pos);
@@ -319,11 +351,8 @@ public class SFTDetectionTest {
 		public void detect(AbsolutePosition pos) {
 			state = state.update(pos);
 			if (state instanceof Goal) {
-				goal(((Goal) state).getTeamid());
+				listener.goal(((Goal) state).getTeamid());
 			}
-		}
-
-		protected void goal(int teamid) {
 		}
 
 		/**
@@ -346,11 +375,21 @@ public class SFTDetectionTest {
 
 	public static class FoulDetector implements Detector {
 
+		public static interface Listener {
+			void foulHappenend();
+		}
+
 		private static final long TIMEOUT = SECONDS.toMillis(15);
 		private static final double MOVEMENT_GREATER_THAN = 0.05;
 
+		private final Listener listener;
+
 		private RelativePosition noMovementSince;
 		private boolean foulInProgress;
+
+		public FoulDetector(Listener listener) {
+			this.listener = listener;
+		}
 
 		@Override
 		public void detect(AbsolutePosition pos) {
@@ -362,14 +401,11 @@ public class SFTDetectionTest {
 					noMovementSince = pos.getRelativePosition().normalizeX();
 				} else if (noMovementDurationInMillis(pos) >= TIMEOUT) {
 					if (!foulInProgress) {
-						foulHappenend();
+						listener.foulHappenend();
 					}
 					foulInProgress = true;
 				}
 			}
-		}
-
-		protected void foulHappenend() {
 		}
 
 		private long noMovementDurationInMillis(AbsolutePosition pos) {
@@ -459,7 +495,7 @@ public class SFTDetectionTest {
 
 		private final long durationInMillis;
 		private final Velocity velocity;
-		private Distance distance;
+		private final Distance distance;
 
 		public Movement(Position pos1, Position pos2) {
 			this.distance = new Distance(sqrt(pow2(absDiffX(pos1, pos2)) + pow2(absDiffY(pos1, pos2))), CENTIMETER);
@@ -556,7 +592,7 @@ public class SFTDetectionTest {
 
 		@Override
 		public int hashCode() {
-			final int prime = 31;
+			int prime = 31;
 			int result = 1;
 			result = prime * result + ((payload == null) ? 0 : payload.hashCode());
 			result = prime * result + ((topic == null) ? 0 : topic.hashCode());
@@ -632,7 +668,7 @@ public class SFTDetectionTest {
 
 	private static class ScoreTracker {
 
-		public static interface ScoreListener {
+		public static interface Listener {
 			void teamScored(int teamid, int score);
 
 			void won(int teamid);
@@ -642,10 +678,11 @@ public class SFTDetectionTest {
 
 		private static final int MAX_BALLS = 10;
 
-		private final ScoreListener listener;
+		private final List<Listener> listener = new CopyOnWriteArrayList<>();
 
-		public ScoreTracker(ScoreListener listener) {
-			this.listener = listener;
+		public ScoreTracker addListener(Listener listener) {
+			this.listener.add(listener);
+			return this;
 		}
 
 		private final Map<Integer, Integer> scores = new HashMap<>();
@@ -653,16 +690,22 @@ public class SFTDetectionTest {
 		private int teamScored(int teamid) {
 			Integer newScore = score(teamid) + 1;
 			scores.put(teamid, newScore);
-			listener.teamScored(teamid, newScore);
+			for (Listener listener : this.listener) {
+				listener.teamScored(teamid, newScore);
+			}
 			checkState(teamid, newScore);
 			return newScore;
 		}
 
 		private void checkState(int teamid, Integer newScore) {
 			if (isWinningGoal(newScore)) {
-				listener.won(teamid);
+				for (Listener listener : this.listener) {
+					listener.won(teamid);
+				}
 			} else if (isDraw()) {
-				listener.draw(teamids());
+				for (Listener listener : this.listener) {
+					listener.draw(teamids());
+				}
 			}
 		}
 
@@ -690,81 +733,11 @@ public class SFTDetectionTest {
 
 	private final MessagePublisherForTest publisher = new MessagePublisherForTest();
 
-	private class Detectors {
-
-		private final ScoreTracker scoreTracker = new ScoreTracker(
-				new detection2.SFTDetectionTest.ScoreTracker.ScoreListener() {
-					@Override
-					public void teamScored(int teamid, int score) {
-						asList(new Message("team/scored", teamid), new Message("game/score/" + teamid, score))
-								.forEach(publisher::send);
-
-					}
-
-					@Override
-					public void won(int teamid) {
-						publisher.send(new Message("game/gameover", teamid));
-					}
-
-					@Override
-					public void draw(int[] teamids) {
-						publisher.send(new Message("game/gameover",
-								IntStream.of(teamids).mapToObj(String::valueOf).collect(joining(","))));
-					}
-
-				});
-
-		private final GoalDetector goalDetector = new GoalDetector() {
-
-			protected void goal(int teamid) {
-				scoreTracker.teamScored(teamid);
-			}
-
-		};
-
-		public List<Detector> create() {
-			return asList( //
-					new GameStartDetector() {
-						protected void gameStarted() {
-							asList(new Message("game/start", "")).forEach(publisher::send);
-						}
-					}, //
-					new PositionDetector() {
-						protected void position(AbsolutePosition pos) {
-							Position rel = pos.getRelativePosition();
-							asList( //
-									new Message("ball/position/abs", payload(pos)), //
-									new Message("ball/position/rel", payload(rel)) //
-							).forEach(publisher::send);
-						}
-
-						private String payload(Position pos) {
-							return "{ \"x\":" + pos.getX() + ", \"y\":" + pos.getY() + " }";
-						}
-					}, //
-					new MovementDetector() {
-						protected void movement(Movement movement) {
-							asList( //
-									new Message("ball/distance/cm", movement.distance(CENTIMETER)), //
-									new Message("ball/velocity/mps", movement.velocity(MPS)), //
-									new Message("ball/velocity/kmh", movement.velocity(KMH) //
-							)).forEach(publisher::send);
-						}
-					}, //
-					goalDetector, //
-					new FoulDetector() {
-						protected void foulHappenend() {
-							asList(new Message("game/foul", "")).forEach(publisher::send);
-						}
-					});
-		}
-
-	}
-
-	private final Detectors detectors = new Detectors();
-
 	private Table table;
 	private InputStream is;
+
+	private Integer frontOfGoalPercentage;
+	private Long timeWithoutBallTilGoalMillis;
 
 	@Test
 	public void relativeValuesGetsConvertedToAbsolutesAtKickoff() throws IOException {
@@ -1074,16 +1047,61 @@ public class SFTDetectionTest {
 		givenStdInContains(builder.build());
 	}
 
-	private void givenFrontOfGoalPercentage(int percentage) {
-		detectors.goalDetector.frontOfGoalPercentage(percentage);
+	private void givenFrontOfGoalPercentage(int frontOfGoalPercentage) {
+		this.frontOfGoalPercentage = frontOfGoalPercentage;
 	}
 
-	private void givenTimeWithoutBallTilGoal(long millis, TimeUnit timeUnit) {
-		detectors.goalDetector.timeWithoutBallTilGoal(millis, timeUnit);
+	private void givenTimeWithoutBallTilGoal(long duration, TimeUnit timeUnit) {
+		this.timeWithoutBallTilGoalMillis = timeUnit.toMillis(duration);
 	}
 
 	private void whenStdInInputWasProcessed() throws IOException {
-		List<Detector> detectors = this.detectors.create();
+		ScoreTracker.Listener scoreListener = new ScoreTracker.Listener() {
+			@Override
+			public void teamScored(int teamid, int score) {
+				asList(new Message("team/scored", teamid), new Message("game/score/" + teamid, score))
+						.forEach(publisher::send);
+			}
+
+			@Override
+			public void won(int teamid) {
+				publisher.send(new Message("game/gameover", teamid));
+			}
+
+			@Override
+			public void draw(int[] teamids) {
+				publisher.send(new Message("game/gameover",
+						IntStream.of(teamids).mapToObj(String::valueOf).collect(joining(","))));
+			}
+
+		};
+
+		ScoreTracker scoreTracker = new ScoreTracker().addListener(scoreListener);
+		List<Detector> detectors = asList( //
+				new GameStartDetector(() -> asList(new Message("game/start", "")).forEach(publisher::send)), //
+				new PositionDetector(new PositionDetector.Listener() {
+					@Override
+					public void position(AbsolutePosition pos) {
+						Position rel = pos.getRelativePosition();
+						asList( //
+								new Message("ball/position/abs", payload(pos)), //
+								new Message("ball/position/rel", payload(rel)) //
+						).forEach(publisher::send);
+					}
+
+					private String payload(Position pos) {
+						return "{ \"x\":" + pos.getX() + ", \"y\":" + pos.getY() + " }";
+					}
+
+				}), //
+				new MovementDetector(movement -> asList( //
+						new Message("ball/distance/cm", movement.distance(CENTIMETER)), //
+						new Message("ball/velocity/mps", movement.velocity(MPS)), //
+						new Message("ball/velocity/kmh", movement.velocity(KMH) //
+						)).forEach(publisher::send)), //
+				goalDetector(scoreTracker), //
+				new FoulDetector(() -> asList(new Message("game/foul", "")).forEach(publisher::send)));
+
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
@@ -1099,6 +1117,13 @@ public class SFTDetectionTest {
 			}
 
 		}
+	}
+
+	private GoalDetector goalDetector(ScoreTracker scoreTracker) {
+		GoalDetector goalDetector = new GoalDetector(teamid -> scoreTracker.teamScored(teamid));
+		goalDetector = timeWithoutBallTilGoalMillis == null ? goalDetector
+				: goalDetector.timeWithoutBallTilGoal(timeWithoutBallTilGoalMillis, MILLISECONDS);
+		return frontOfGoalPercentage == null ? goalDetector : goalDetector.frontOfGoalPercentage(frontOfGoalPercentage);
 	}
 
 	private static RelativePosition parse(String line) {
