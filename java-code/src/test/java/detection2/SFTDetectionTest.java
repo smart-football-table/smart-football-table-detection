@@ -6,6 +6,7 @@ import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.offTable;
 import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.pos;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -427,6 +428,34 @@ public class SFTDetectionTest {
 						new Message("team/scored", 1), //
 						new Message("game/score/1", 2) //
 				)));
+	}
+
+	@Test
+	public void doesSendIdleOn() throws IOException {
+		givenATableOfAnySize();
+		givenStdInContains(ball().at(kickoff()) //
+				.thenAfter(1, SECONDS).at(offTable()) //
+				.thenAfter(1, MINUTES).at(offTable()) //
+				.thenAfter(1, SECONDS).at(offTable()) //
+				.thenAfter(1, SECONDS).at(offTable()) //
+				.thenAfter(1, SECONDS).at(offTable()) //
+		);
+		whenStdInInputWasProcessed();
+		thenPayloadsWithTopicAre("game/idle", "true");
+	}
+
+	@Test
+	public void doesSendIdleOff() throws IOException {
+		givenATableOfAnySize();
+		givenStdInContains(ball().at(kickoff()) //
+				.thenAfter(1, SECONDS).at(offTable()) //
+				.thenAfter(1, MINUTES).at(offTable()) //
+				.thenAfter(1, SECONDS).at(kickoff()) //
+				.thenAfter(1, SECONDS).at(kickoff()) //
+				.thenAfter(1, SECONDS).at(kickoff()) //
+		);
+		whenStdInInputWasProcessed();
+		thenPayloadsWithTopicAre("game/idle", "true", "false");
 	}
 
 	private BallPosBuilder frontOfLeftGoal() {

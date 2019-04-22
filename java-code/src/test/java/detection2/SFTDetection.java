@@ -10,6 +10,7 @@ import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.joining;
 
@@ -456,6 +457,51 @@ public class SFTDetection {
 
 	}
 
+	public static class IdleDetector implements Detector {
+
+		private final long idleWhen = MINUTES.toMillis(1);
+
+		public static interface Listener {
+			void idle(boolean state);
+		}
+
+		private final Listener listener;
+		private AbsolutePosition offTableSince;
+		private boolean idle;
+
+		public IdleDetector(Listener listener) {
+			this.listener = listener;
+		}
+
+		@Override
+		public void detect(AbsolutePosition pos) {
+			if (offTable(pos)) {
+				if (offTableSince == null) {
+					offTableSince = pos;
+				} else {
+					long diff = pos.getTimestamp() - offTableSince.getTimestamp();
+					if (diff >= idleWhen) {
+						if (!idle) {
+							listener.idle(true);
+							idle = true;
+						}
+					}
+				}
+			} else {
+				if (idle) {
+					listener.idle(false);
+					idle = false;
+				}
+			}
+		}
+
+		private boolean offTable(AbsolutePosition pos) {
+			boolean offTable = pos.isNull();
+			return offTable;
+		}
+
+	}
+
 	public static class FoulDetector implements Detector {
 
 		public static interface Listener {
@@ -883,7 +929,9 @@ public class SFTDetection {
 						new Message("ball/velocity/kmh", movement.velocity(KMH) //
 						)).forEach(publisher::accept)), //
 				new GoalDetector(goalDetectorConfig, teamid1 -> scoreTracker.teamScored(teamid1)), //
-				new FoulDetector(() -> asList(new Message("game/foul", "")).forEach(publisher::accept)));
+				new FoulDetector(() -> asList(new Message("game/foul", "")).forEach(publisher::accept)),
+				new IdleDetector(
+						(s) -> asList(new Message("game/idle", Boolean.toString(s))).forEach(publisher::accept)));
 	}
 
 	private ScoreTracker.Listener multiplexed(ScoreTracker.Listener... listeners) {
