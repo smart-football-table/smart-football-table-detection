@@ -236,13 +236,51 @@ public class SFTDetectionTest {
 
 	public static class GoalDetector implements Detector {
 
+		private static class Config {
+
+			private long timeWithoutBallTilGoalMillisDuration = 2;
+			private TimeUnit timeWithoutBallTilGoalMillisTimeUnit = SECONDS;
+			private int frontOfGoalPercentage = 40;
+
+			/**
+			 * Sets where the ball has to been detected before the ball has been gone.
+			 * 
+			 * @param frontOfGoalPercentage 100% the whole playfield, 50% one side.
+			 * @return this config
+			 */
+			public Config frontOfGoalPercentage(int frontOfGoalPercentage) {
+				this.frontOfGoalPercentage = frontOfGoalPercentage;
+				return this;
+			}
+
+			public Config timeWithoutBallTilGoal(long duration, TimeUnit timeUnit) {
+				this.timeWithoutBallTilGoalMillisDuration = duration;
+				this.timeWithoutBallTilGoalMillisTimeUnit = timeUnit;
+				return this;
+			}
+
+			public int getFrontOfGoalPercentage() {
+				return frontOfGoalPercentage;
+			}
+
+			public long getGoalTimeout(TimeUnit timeUnit) {
+				return timeUnit.convert(timeWithoutBallTilGoalMillisDuration, timeWithoutBallTilGoalMillisTimeUnit);
+			}
+
+		}
+
+		private final int frontOfGoalPercentage;
+		private final long millisTilGoal;
+		private State state = new WaitForBallOnMiddleLine();
 		private final Listener listener;
 
 		public static interface Listener {
 			void goal(int teamid);
 		}
 
-		public GoalDetector(Listener listener) {
+		public GoalDetector(Config config, Listener listener) {
+			this.frontOfGoalPercentage = config.getFrontOfGoalPercentage();
+			this.millisTilGoal = config.getGoalTimeout(MILLISECONDS);
 			this.listener = listener;
 		}
 
@@ -341,32 +379,12 @@ public class SFTDetectionTest {
 
 		}
 
-		private int frontOfGoalPercentage = 40;
-		private long millisTilGoal = SECONDS.toMillis(2);
-		private State state = new WaitForBallOnMiddleLine();
-
 		@Override
 		public void detect(AbsolutePosition pos) {
 			state = state.update(pos);
 			if (state instanceof Goal) {
 				listener.goal(((Goal) state).getTeamid());
 			}
-		}
-
-		/**
-		 * Sets where the ball has to been detected before the ball has been gone.
-		 * 
-		 * @param i 100% the whole playfield, 50% one side.
-		 * @return
-		 */
-		public GoalDetector frontOfGoalPercentage(int frontOfGoalPercentage) {
-			this.frontOfGoalPercentage = frontOfGoalPercentage;
-			return this;
-		}
-
-		public GoalDetector timeWithoutBallTilGoal(long duration, TimeUnit timeUnit) {
-			this.millisTilGoal = timeUnit.toMillis(duration);
-			return this;
 		}
 
 	}
@@ -722,12 +740,10 @@ public class SFTDetectionTest {
 	}
 
 	private final MessagePublisherForTest publisher = new MessagePublisherForTest();
+	private GoalDetector.Config goalDetectorConfig = new GoalDetector.Config();
 
 	private Table table;
 	private InputStream is;
-
-	private Integer frontOfGoalPercentage;
-	private Long timeWithoutBallTilGoalMillis;
 
 	@Test
 	public void relativeValuesGetsConvertedToAbsolutesAtKickoff() throws IOException {
@@ -1038,11 +1054,11 @@ public class SFTDetectionTest {
 	}
 
 	private void givenFrontOfGoalPercentage(int frontOfGoalPercentage) {
-		this.frontOfGoalPercentage = frontOfGoalPercentage;
+		this.goalDetectorConfig.frontOfGoalPercentage(frontOfGoalPercentage);
 	}
 
 	private void givenTimeWithoutBallTilGoal(long duration, TimeUnit timeUnit) {
-		this.timeWithoutBallTilGoalMillis = timeUnit.toMillis(duration);
+		this.goalDetectorConfig.timeWithoutBallTilGoal(duration, timeUnit);
 	}
 
 	private void whenStdInInputWasProcessed() throws IOException {
@@ -1163,10 +1179,7 @@ public class SFTDetectionTest {
 	}
 
 	private GoalDetector goalDetector(ScoreTracker scoreTracker) {
-		GoalDetector goalDetector = new GoalDetector(teamid -> scoreTracker.teamScored(teamid));
-		goalDetector = timeWithoutBallTilGoalMillis == null ? goalDetector
-				: goalDetector.timeWithoutBallTilGoal(timeWithoutBallTilGoalMillis, MILLISECONDS);
-		return frontOfGoalPercentage == null ? goalDetector : goalDetector.frontOfGoalPercentage(frontOfGoalPercentage);
+		return new GoalDetector(goalDetectorConfig, teamid -> scoreTracker.teamScored(teamid));
 	}
 
 	private static RelativePosition parse(String line) {
