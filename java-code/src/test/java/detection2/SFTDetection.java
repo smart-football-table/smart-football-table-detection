@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
 import detection2.SFTDetection.GoalDetector.Config;
@@ -34,14 +35,15 @@ public class SFTDetection {
 	}
 
 	private final Table table;
-	private MessagePublisher publisher = MessagePublisher.NULL;
+	private Consumer<Message> publisher = m -> {
+	};
 	private GoalDetector.Config goalDetectorConfig = new GoalDetector.Config();
 
 	private SFTDetection(Table table) {
 		this.table = table;
 	}
 
-	public SFTDetection publishTo(MessagePublisher publisher) {
+	public SFTDetection publishTo(Consumer<Message> publisher) {
 		this.publisher = publisher;
 		return this;
 	}
@@ -733,23 +735,6 @@ public class SFTDetection {
 
 	}
 
-	static class MessagePublisherForTest implements MessagePublisher {
-
-		private final List<Message> messages = new ArrayList<>();
-
-		@Override
-		public void send(Message message) {
-			messages.add(message);
-		}
-	}
-
-	public static interface MessagePublisher {
-		MessagePublisher NULL = m -> {
-		};
-
-		void send(Message message);
-	}
-
 	private static class ScoreTracker {
 
 		public static interface Listener {
@@ -860,23 +845,23 @@ public class SFTDetection {
 			@Override
 			public void teamScored(int teamid, int score) {
 				asList(new Message("team/scored", teamid), new Message("game/score/" + teamid, score))
-						.forEach(publisher::send);
+						.forEach(publisher::accept);
 			}
 
 			@Override
 			public void won(int teamid) {
-				publisher.send(new Message("game/gameover", teamid));
+				publisher.accept(new Message("game/gameover", teamid));
 			}
 
 			@Override
 			public void draw(int[] teamids) {
-				publisher.send(new Message("game/gameover",
+				publisher.accept(new Message("game/gameover",
 						IntStream.of(teamids).mapToObj(String::valueOf).collect(joining(","))));
 			}
 
 		}, gameOverListener));
 		return asList( //
-				new GameStartDetector(() -> asList(new Message("game/start", "")).forEach(publisher::send)), //
+				new GameStartDetector(() -> asList(new Message("game/start", "")).forEach(publisher::accept)), //
 				new PositionDetector(new PositionDetector.Listener() {
 					@Override
 					public void position(AbsolutePosition pos) {
@@ -884,7 +869,7 @@ public class SFTDetection {
 						asList( //
 								new Message("ball/position/abs", payload(pos)), //
 								new Message("ball/position/rel", payload(rel)) //
-						).forEach(publisher::send);
+						).forEach(publisher::accept);
 					}
 
 					private String payload(Position pos) {
@@ -896,9 +881,9 @@ public class SFTDetection {
 						new Message("ball/distance/cm", movement.distance(CENTIMETER)), //
 						new Message("ball/velocity/mps", movement.velocity(MPS)), //
 						new Message("ball/velocity/kmh", movement.velocity(KMH) //
-						)).forEach(publisher::send)), //
+						)).forEach(publisher::accept)), //
 				new GoalDetector(goalDetectorConfig, teamid1 -> scoreTracker.teamScored(teamid1)), //
-				new FoulDetector(() -> asList(new Message("game/foul", "")).forEach(publisher::send)));
+				new FoulDetector(() -> asList(new Message("game/foul", "")).forEach(publisher::accept)));
 	}
 
 	private ScoreTracker.Listener multiplexed(ScoreTracker.Listener... listeners) {

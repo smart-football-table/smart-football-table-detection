@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -30,7 +31,6 @@ import org.junit.Test;
 
 import detection2.SFTDetection.GoalDetector;
 import detection2.SFTDetection.Message;
-import detection2.SFTDetection.MessagePublisher;
 import detection2.SFTDetection.RelativeValueParser;
 import detection2.SFTDetection.Table;
 import detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder;
@@ -152,18 +152,9 @@ public class SFTDetectionTest {
 
 	}
 
-	private static class MessagePublisherForTest implements MessagePublisher {
-
-		private final List<Message> messages = new ArrayList<>();
-
-		@Override
-		public void send(Message message) {
-			messages.add(message);
-		}
-	}
-
-	private MessagePublisherForTest publisher = new MessagePublisherForTest();
-	private GoalDetector.Config goalDetectorConfig = new GoalDetector.Config();
+	private final List<Message> collectedMessages = new ArrayList<>();
+	private final Consumer<Message> messageCollector = collectedMessages::add;
+	private final GoalDetector.Config goalDetectorConfig = new GoalDetector.Config();
 
 	private SFTDetection sut;
 	private InputStream is;
@@ -405,7 +396,7 @@ public class SFTDetectionTest {
 				.prepareForGoal().then().at(frontOfLeftGoal()).makeGoal() //
 		);
 		whenStdInInputWasProcessed();
-		assertThat(publisher.messages.stream().filter(m -> !m.getTopic().startsWith("ball/")).collect(toList()),
+		assertThat(collectedMessages.stream().filter(m -> !m.getTopic().startsWith("ball/")).collect(toList()),
 				is(asList( //
 						new Message("game/start", ""), //
 						new Message("team/scored", 1), //
@@ -461,7 +452,7 @@ public class SFTDetectionTest {
 	}
 
 	private void givenATableOfSize(int width, int height) {
-		this.sut = SFTDetection.detectionOn(new Table(width, height)).publishTo(publisher);
+		this.sut = SFTDetection.detectionOn(new Table(width, height)).publishTo(messageCollector);
 	}
 
 	private void givenATableOfAnySize() {
@@ -509,7 +500,7 @@ public class SFTDetectionTest {
 	}
 
 	private void thenNoMessageIsSent() {
-		assertThat(String.valueOf(publisher.messages), publisher.messages.isEmpty(), is(true));
+		assertThat(String.valueOf(collectedMessages), collectedMessages.isEmpty(), is(true));
 	}
 
 	private void thenNoMessageWithTopicIsSent(String topic) {
@@ -517,7 +508,7 @@ public class SFTDetectionTest {
 	}
 
 	private void thenNoMessageIsSent(Predicate<Message> predicate) {
-		List<Message> mWithTopic = publisher.messages.stream().filter(predicate).collect(toList());
+		List<Message> mWithTopic = collectedMessages.stream().filter(predicate).collect(toList());
 		assertThat(String.valueOf(mWithTopic), mWithTopic.isEmpty(), is(true));
 	}
 
@@ -538,7 +529,7 @@ public class SFTDetectionTest {
 	}
 
 	private Stream<Message> messagesWithTopic(String topic) {
-		return publisher.messages.stream().filter(m -> m.getTopic().equals(topic));
+		return collectedMessages.stream().filter(m -> m.getTopic().equals(topic));
 	}
 
 	private static <T> T onlyElement(Stream<T> stream) {
