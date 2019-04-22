@@ -676,12 +676,10 @@ public class SFTDetectionTest {
 		}
 
 		private static final int MAX_BALLS = 10;
+		private final Listener listener;
 
-		private final List<Listener> listener = new CopyOnWriteArrayList<>();
-
-		public ScoreTracker addListener(Listener listener) {
-			this.listener.add(listener);
-			return this;
+		public ScoreTracker(Listener listener) {
+			this.listener = listener;
 		}
 
 		private final Map<Integer, Integer> scores = new HashMap<>();
@@ -689,22 +687,16 @@ public class SFTDetectionTest {
 		private int teamScored(int teamid) {
 			Integer newScore = score(teamid) + 1;
 			scores.put(teamid, newScore);
-			for (Listener listener : this.listener) {
-				listener.teamScored(teamid, newScore);
-			}
+			listener.teamScored(teamid, newScore);
 			checkState(teamid, newScore);
 			return newScore;
 		}
 
 		private void checkState(int teamid, Integer newScore) {
 			if (isWinningGoal(newScore)) {
-				for (Listener listener : this.listener) {
-					listener.won(teamid);
-				}
+				listener.won(teamid);
 			} else if (isDraw()) {
-				for (Listener listener : this.listener) {
-					listener.draw(teamids());
-				}
+				listener.draw(teamids());
 			}
 		}
 
@@ -1101,7 +1093,7 @@ public class SFTDetectionTest {
 		}
 	}
 
-	private List<Detector> detectors(ScoreTracker.Listener l) {
+	private List<Detector> detectors(ScoreTracker.Listener listener) {
 		ScoreTracker.Listener scoreListener = new ScoreTracker.Listener() {
 			@Override
 			public void teamScored(int teamid, int score) {
@@ -1122,7 +1114,26 @@ public class SFTDetectionTest {
 
 		};
 
-		ScoreTracker scoreTracker = new ScoreTracker().addListener(scoreListener).addListener(l);
+		ScoreTracker.Listener m = new ScoreTracker.Listener() {
+			@Override
+			public void teamScored(int teamid, int score) {
+				scoreListener.teamScored(teamid, score);
+				listener.teamScored(teamid, score);
+			}
+
+			@Override
+			public void won(int teamid) {
+				scoreListener.won(teamid);
+				listener.won(teamid);
+			}
+
+			@Override
+			public void draw(int[] teamids) {
+				scoreListener.draw(teamids);
+				listener.draw(teamids);
+			}
+		};
+		ScoreTracker scoreTracker = new ScoreTracker(m);
 		List<Detector> detectors = asList( //
 				new GameStartDetector(() -> asList(new Message("game/start", "")).forEach(publisher::send)), //
 				new PositionDetector(new PositionDetector.Listener() {
