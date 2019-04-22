@@ -1024,9 +1024,9 @@ public class SFTDetectionTest {
 	}
 
 	private void thenDistanceInCentimetersAndVelocityArePublished(double centimeters, double mps, double kmh) {
-		assertThat(onlyElement(messagesWithTopic("ball/distance/cm")).getPayload(), is(String.valueOf(centimeters)));
-		assertThat(onlyElement(messagesWithTopic("ball/velocity/mps")).getPayload(), is(String.valueOf(mps)));
-		assertThat(onlyElement(messagesWithTopic("ball/velocity/kmh")).getPayload(), is(String.valueOf(kmh)));
+		assertOneMessageWithPayload(messagesWithTopic("ball/distance/cm"), is(String.valueOf(centimeters)));
+		assertOneMessageWithPayload(messagesWithTopic("ball/velocity/mps"), is(String.valueOf(mps)));
+		assertOneMessageWithPayload(messagesWithTopic("ball/velocity/kmh"), is(String.valueOf(kmh)));
 	}
 
 	private double centerX() {
