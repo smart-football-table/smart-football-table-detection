@@ -337,7 +337,7 @@ public class SFTDetection {
 
 		}
 
-		private final int frontOfGoalPercentage;
+		private final double frontOfGoal;
 		private final long millisTilGoal;
 		private State state = new WaitForBallOnMiddleLine();
 		private final Listener listener;
@@ -347,7 +347,7 @@ public class SFTDetection {
 		}
 
 		public GoalDetector(Config config, Listener listener) {
-			this.frontOfGoalPercentage = config.getFrontOfGoalPercentage();
+			this.frontOfGoal = 1 - ((double) config.getFrontOfGoalPercentage()) / 100;
 			this.millisTilGoal = config.getGoalTimeout(MILLISECONDS);
 			this.listener = listener;
 		}
@@ -358,14 +358,16 @@ public class SFTDetection {
 
 		private class WaitForBallOnMiddleLine implements State {
 
+			private final double midAreasPercent = 5D;
+			private final double midAreaMax = 0.5 + midAreasPercent / 100;
+
 			@Override
 			public State update(AbsolutePosition pos) {
 				return ballAtMiddleLine(pos) ? new BallOnTable().update(pos) : this;
 			}
 
 			private boolean ballAtMiddleLine(AbsolutePosition pos) {
-				double normalizeX = pos.getRelativePosition().normalizeX().getX();
-				return normalizeX >= 0.5 && normalizeX <= 0.55;
+				return pos.getRelativePosition().normalizeX().getX() <= midAreaMax;
 			}
 
 		}
@@ -379,14 +381,13 @@ public class SFTDetection {
 			}
 
 			private boolean isFrontOfGoal(RelativePosition relPos) {
-				return relPos.normalizeX().getX() >= 1 - ((double) frontOfGoalPercentage) / 100;
+				return relPos.normalizeX().getX() >= frontOfGoal;
 			}
 		}
 
 		private class FrontOfGoal implements State {
 
 			private final int teamid;
-			private final BallOnTable ballOnTable = new BallOnTable();
 
 			public FrontOfGoal(int teamid) {
 				this.teamid = teamid;
@@ -399,13 +400,12 @@ public class SFTDetection {
 							? new Goal(teamid) //
 							: new PossibleGoal(pos.getTimestamp(), teamid);
 				}
-				return ballOnTable.update(pos);
+				return new BallOnTable().update(pos);
 			}
 		}
 
 		private class PossibleGoal implements State {
 
-			private final BallOnTable ballOnTable = new BallOnTable();
 			private final long timestamp;
 			private final int teamid;
 
@@ -419,7 +419,7 @@ public class SFTDetection {
 				if (pos.isNull()) {
 					return waitTimeElapsed(pos) ? new Goal(teamid) : this;
 				}
-				return ballOnTable.update(pos);
+				return new BallOnTable().update(pos);
 			}
 
 			private boolean waitTimeElapsed(AbsolutePosition pos) {
