@@ -406,7 +406,9 @@ public class SFTDetectionTest {
 				.prepareForRightGoal().score() //
 				//
 				.prepareForLeftGoal().score().then() //
-				.prepareForLeftGoal().score() //
+				.prepareForLeftGoal().score().then() //
+				.prepareForRightGoal().score().then() //
+				.prepareForRightGoal().score() //
 		);
 		whenStdInInputWasProcessed();
 		assertThat(collectedMessages.stream().filter(m -> !m.getTopic().startsWith("ball/")).collect(toList()),
@@ -433,12 +435,16 @@ public class SFTDetectionTest {
 						new Message("team/scored", 0), //
 						new Message("game/score/0", 5), //
 						new Message("game/gameover", "0,1"), //
-
+						//
 						new Message("game/start", ""), //
 						new Message("team/scored", 1), //
 						new Message("game/score/1", 1), //
 						new Message("team/scored", 1), //
-						new Message("game/score/1", 2) //
+						new Message("game/score/1", 2), //
+						new Message("team/scored", 0), //
+						new Message("game/score/0", 1), //
+						new Message("team/scored", 0), //
+						new Message("game/score/0", 2) //
 				)));
 	}
 
