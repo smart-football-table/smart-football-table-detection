@@ -14,12 +14,16 @@ public class FoulDetector implements Detector {
 	private static final long TIMEOUT = SECONDS.toMillis(15);
 	private static final double MOVEMENT_GREATER_THAN = 0.05;
 
+	public static FoulDetector onFoul(Listener listener) {
+		return new FoulDetector(listener);
+	}
+
 	private final FoulDetector.Listener listener;
 
 	private RelativePosition noMovementSince;
 	private boolean foulInProgress;
 
-	public FoulDetector(FoulDetector.Listener listener) {
+	private FoulDetector(FoulDetector.Listener listener) {
 		this.listener = listener;
 	}
 

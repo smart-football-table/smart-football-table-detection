@@ -425,38 +425,37 @@ public class SFTDetectionTest {
 		whenStdInInputWasProcessed();
 		assertThat(collectedMessages.stream().filter(m -> !m.getTopic().startsWith("ball/")).collect(toList()),
 				is(asList( //
-						new Message("game/start", ""), //
-						new Message("team/scored", 1), //
-						new Message("game/score/1", 1), //
-						new Message("team/scored", 0), //
-						new Message("game/score/0", 1), //
-						new Message("team/scored", 1), //
-						new Message("game/score/1", 2), //
-						new Message("team/scored", 0), //
-						new Message("game/score/0", 2), //
-						new Message("team/scored", 1), //
-						new Message("game/score/1", 3), //
-						new Message("team/scored", 0), //
-						new Message("game/score/0", 3), //
-						new Message("team/scored", 1), //
-						new Message("game/score/1", 4), //
-						new Message("team/scored", 0), //
-						new Message("game/score/0", 4), //
-						new Message("team/scored", 1), //
-						new Message("game/score/1", 5), //
-						new Message("team/scored", 0), //
-						new Message("game/score/0", 5), //
-						new Message("game/gameover", "0,1"), //
-						//
-						new Message("game/start", ""), //
-						new Message("team/scored", 1), //
-						new Message("game/score/1", 1), //
-						new Message("team/scored", 1), //
-						new Message("game/score/1", 2), //
-						new Message("team/scored", 0), //
-						new Message("game/score/0", 1), //
-						new Message("team/scored", 0), //
-						new Message("game/score/0", 2) //
+						Message.message("game/start", ""), //
+						Message.message("team/scored", 1), //
+						Message.message("game/score/1", 1), //
+						Message.message("team/scored", 0), //
+						Message.message("game/score/0", 1), //
+						Message.message("team/scored", 1), //
+						Message.message("game/score/1", 2), //
+						Message.message("team/scored", 0), //
+						Message.message("game/score/0", 2), //
+						Message.message("team/scored", 1), //
+						Message.message("game/score/1", 3), //
+						Message.message("team/scored", 0), //
+						Message.message("game/score/0", 3), //
+						Message.message("team/scored", 1), //
+						Message.message("game/score/1", 4), //
+						Message.message("team/scored", 0), //
+						Message.message("game/score/0", 4), //
+						Message.message("team/scored", 1), //
+						Message.message("game/score/1", 5), //
+						Message.message("team/scored", 0), //
+						Message.message("game/score/0", 5), //
+						Message.message("game/gameover", "0,1"), //
+						Message.message("game/start", ""), //
+						Message.message("team/scored", 1), //
+						Message.message("game/score/1", 1), //
+						Message.message("team/scored", 1), //
+						Message.message("game/score/1", 2), //
+						Message.message("team/scored", 0), //
+						Message.message("game/score/0", 1), //
+						Message.message("team/scored", 0), //
+						Message.message("game/score/0", 2)
 				)));
 	}
 
@@ -541,7 +540,8 @@ public class SFTDetectionTest {
 	}
 
 	void whenStdInInputWasProcessed() throws IOException {
-		sut.usingGoalDetectorConfig(goalDetectorConfig).process(new RelativeValueParser(), is);
+		sut.getDetectors().goalDetectorConfig(goalDetectorConfig);
+		sut.process(new RelativeValueParser(), is);
 	}
 
 	private void thenTheRelativePositionOnTheTableIsPublished(double x, double y) {

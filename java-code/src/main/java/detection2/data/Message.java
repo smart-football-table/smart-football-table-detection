@@ -2,10 +2,14 @@ package detection2.data;
 
 public class Message {
 
+	public static Message message(String topic, Object payload) {
+		return new Message(topic, payload);
+	}
+
 	private final String topic;
 	private final String payload;
 
-	public Message(String topic, Object payload) {
+	private Message(String topic, Object payload) {
 		this.topic = topic;
 		this.payload = payload == null ? null : String.valueOf(payload);
 	}

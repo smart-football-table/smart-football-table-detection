@@ -8,9 +8,13 @@ public class GameStartDetector implements Detector {
 		void gameStarted();
 	}
 
+	public static GameStartDetector onGameStart(Listener listener) {
+		return new GameStartDetector(listener);
+	}
+
 	private final GameStartDetector.Listener listener;
 
-	public GameStartDetector(GameStartDetector.Listener listener) {
+	private GameStartDetector(GameStartDetector.Listener listener) {
 		this.listener = listener;
 	}
 

@@ -6,13 +6,17 @@ import detection2.data.position.RelativePosition;
 
 public class MovementDetector implements Detector {
 
+	public static MovementDetector onMovement(Listener listener) {
+		return new MovementDetector(listener);
+	}
+
 	private final MovementDetector.Listener listener;
 
 	public static interface Listener {
 		void movement(Movement movement);
 	}
 
-	public MovementDetector(MovementDetector.Listener listener) {
+	private MovementDetector(MovementDetector.Listener listener) {
 		this.listener = listener;
 	}
 

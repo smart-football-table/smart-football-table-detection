@@ -6,6 +6,10 @@ import detection2.data.position.AbsolutePosition;
 
 public class IdleDetector implements Detector {
 
+	public static IdleDetector onIdle(Listener listener) {
+		return new IdleDetector(listener);
+	}
+
 	private final long idleWhen = MINUTES.toMillis(1);
 
 	public static interface Listener {
@@ -16,7 +20,7 @@ public class IdleDetector implements Detector {
 	private AbsolutePosition offTableSince;
 	private boolean idle;
 
-	public IdleDetector(IdleDetector.Listener listener) {
+	private IdleDetector(IdleDetector.Listener listener) {
 		this.listener = listener;
 	}
 
