@@ -31,6 +31,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.hamcrest.Matcher;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import detection2.SFTDetection.GoalDetector;
@@ -484,6 +485,20 @@ public class SFTDetectionTest {
 		);
 		whenStdInInputWasProcessed();
 		thenPayloadsWithTopicAre("game/idle", "true", "false");
+	}
+
+	@Test
+	@Ignore
+	public void canResetAgameInPlay() throws IOException {
+		givenATableOfAnySize();
+		givenFrontOfGoalPercentage(20);
+		givenStdInContains(ball() //
+				.prepareForLeftGoal().score().then() //
+				.prepareForRightGoal().score() //
+		);
+		whenStdInInputWasProcessed();
+		thenPayloadsWithTopicAre("game/start", "", "");
+		thenPayloadsWithTopicAre("game/gameover", "");
 	}
 
 	private void thenDistanceInCentimetersAndVelocityArePublished(double centimeters, double mps, double kmh) {

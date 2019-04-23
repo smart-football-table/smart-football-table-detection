@@ -4,8 +4,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
+import detection2.SFTDetection.GoalDetector;
+import detection2.SFTDetection.GoalDetector.Config;
 import detection2.SFTDetection.LineParser;
+import detection2.SFTDetection.Message;
 import detection2.SFTDetection.RelativeValueParser;
 import detection2.SFTDetection.Table;
 
@@ -17,7 +21,6 @@ public class PythonOutputProcessingMain {
 
 		@Override
 		public RelativePosition parse(String line) {
-			System.out.println(">>> " + line);
 			String[] values = line.split("\\|");
 			if (values.length == 3) {
 				String[] secsMillis = values[0].split("\\.");
@@ -48,8 +51,16 @@ public class PythonOutputProcessingMain {
 	}
 
 	public static void main(String[] args) throws IOException {
+		Consumer<Message> sysout = System.out::println;
+//		Consumer<Message> publisher = t -> {
+//			if (t.getTopic().contains("score")) {
+//				sysout.accept(t);
+//			}
+//		};
+
 		SFTDetection.detectionOn(new Table(160, 80)) //
-				.publishTo(System.out::println) //
+				.publishTo(sysout) //
+				.usingGoalDetectorConfig(new GoalDetector.Config().frontOfGoalPercentage(40)) //
 				.process(new AbsValueParser(), new FileInputStream(new File("python_output_opencv.txt")));
 	}
 
