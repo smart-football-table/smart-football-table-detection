@@ -1,5 +1,6 @@
 package detection2;
 
+import static detection2.ScoreTracker.onScoreChange;
 import static detection2.data.Message.message;
 import static detection2.data.unit.DistanceUnit.CENTIMETER;
 import static detection2.data.unit.SpeedUnit.KMH;
@@ -42,7 +43,7 @@ public final class Detectors {
 	}
 
 	public List<Detector> createNew(Consumer<Message> pub) {
-		ScoreTracker scoreTracker = newScoreTracker(pub);
+		ScoreTracker scoreTracker = onScoreChange(multiplexed(publishScoreChanges(pub), gameOverListener));
 		return asList( //
 				onGameStart(() -> pub.accept(message("game/start", ""))), //
 				onPositionChange(p -> {
@@ -77,8 +78,8 @@ public final class Detectors {
 		};
 	}
 
-	private ScoreTracker newScoreTracker(Consumer<Message> pub) {
-		return new ScoreTracker(multiplexed(new ScoreTracker.Listener() {
+	private Listener publishScoreChanges(Consumer<Message> pub) {
+		return new ScoreTracker.Listener() {
 
 			@Override
 			public void teamScored(int teamid, int score) {
@@ -97,7 +98,7 @@ public final class Detectors {
 						IntStream.of(teamids).mapToObj(String::valueOf).collect(joining(","))));
 			}
 
-		}, gameOverListener));
+		};
 	}
 
 	private static ScoreTracker.Listener multiplexed(ScoreTracker.Listener... listeners) {

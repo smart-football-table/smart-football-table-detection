@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.IntStream;
 
+import detection2.ScoreTracker.Listener;
+
 public class ScoreTracker {
 
 	public static interface Listener {
@@ -15,9 +17,13 @@ public class ScoreTracker {
 	}
 
 	private static final int MAX_BALLS = 10;
+	public static ScoreTracker onScoreChange(Listener listener) {
+		return new ScoreTracker(listener);
+	}
+
 	private final ScoreTracker.Listener listener;
 
-	public ScoreTracker(ScoreTracker.Listener listener) {
+	private ScoreTracker(ScoreTracker.Listener listener) {
 		this.listener = listener;
 	}
 
