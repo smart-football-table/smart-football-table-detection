@@ -38,11 +38,19 @@ public class RelativePosition implements Position {
 		return new RelativePosition(timestamp, centerX() + abs(centerX() - x), y);
 	}
 
+	public RelativePosition normalizeY() {
+		return new RelativePosition(timestamp, x, centerY() + abs(centerY() - y));
+	}
+
 	public boolean isRightHandSide() {
 		return x >= centerX();
 	}
 
 	private double centerX() {
+		return 0.5;
+	}
+
+	private double centerY() {
 		return 0.5;
 	}
 
