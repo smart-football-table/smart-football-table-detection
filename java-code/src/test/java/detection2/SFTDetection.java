@@ -744,11 +744,11 @@ public class SFTDetection {
 		List<Detector> detectors = null;
 
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-			if (detectors == null || gameOverListener.isGameover()) {
-				detectors = detectors(gameOverListener = new GameOverListener());
-			}
 			String line;
 			while ((line = reader.readLine()) != null) {
+				if (detectors == null || gameOverListener.isGameover()) {
+					detectors = detectors(gameOverListener = new GameOverListener());
+				}
 				RelativePosition relPos = lineParser.parse(line);
 				if (relPos == null) {
 					// TODO log invalid line
