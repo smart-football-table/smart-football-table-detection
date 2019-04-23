@@ -5,6 +5,8 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
+import detection2.data.position.RelativePosition;
+
 public class RelativePositionTest {
 
 	@Test

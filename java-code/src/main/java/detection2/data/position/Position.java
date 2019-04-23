@@ -1,6 +1,6 @@
-package detection2;
+package detection2.data.position;
 
-interface Position {
+public interface Position {
 
 	boolean isNull();
 

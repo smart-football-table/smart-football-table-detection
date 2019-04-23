@@ -1,4 +1,4 @@
-package detection2;
+package detection2.data.position;
 
 import static java.lang.Math.abs;
 

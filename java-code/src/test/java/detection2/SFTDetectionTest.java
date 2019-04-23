@@ -34,11 +34,12 @@ import org.hamcrest.Matcher;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import detection2.SFTDetection.GoalDetector;
-import detection2.SFTDetection.Message;
 import detection2.SFTDetection.RelativeValueParser;
-import detection2.SFTDetection.Table;
 import detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder;
+import detection2.data.Message;
+import detection2.data.Table;
+import detection2.data.position.RelativePosition;
+import detection2.detector.GoalDetector;
 
 public class SFTDetectionTest {
 
