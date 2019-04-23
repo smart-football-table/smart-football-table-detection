@@ -7,6 +7,7 @@ import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.kickoff;
 import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.offTable;
 import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.pos;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
@@ -274,7 +276,7 @@ public class SFTDetectionTest {
 	public void noGoalsIfBallWasNotDetectedAtMiddleLine() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(ball().at(frontOfLeftGoal()).then(offTable()).score());
+		givenStdInContains(ball().at(frontOfLeftGoal()).then().score());
 		whenStdInInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
 	}
@@ -301,7 +303,16 @@ public class SFTDetectionTest {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
 		givenTimeWithoutBallTilGoal(0, MILLISECONDS);
-		givenStdInContains(ball().prepareForLeftGoal().then(offTable()));
+		givenStdInContains(ball().prepareForLeftGoal().then().score());
+		whenStdInInputWasProcessed();
+		thenGoalForTeamIsPublished(1);
+	}
+
+	@Test
+	public void canRevertGoals() throws IOException {
+		givenATableOfAnySize();
+		givenFrontOfGoalPercentage(20);
+		givenStdInContains(ball().prepareForLeftGoal().then().score().then(pos(0.0, 0.0)));
 		whenStdInInputWasProcessed();
 		thenGoalForTeamIsPublished(1);
 	}
@@ -519,15 +530,15 @@ public class SFTDetectionTest {
 	}
 
 	private void thenTheRelativePositionOnTheTableIsPublished(double x, double y) {
-		assertThat(onlyElement(messagesWithTopic("ball/position/rel")).getPayload(), is(makePayload(x, y)));
+		assertOneMessageWithPayload(messagesWithTopic("ball/position/rel"), is(makePayload(x, y)));
 	}
 
 	private void thenTheAbsolutePositionOnTheTableIsPublished(double x, double y) {
-		assertThat(onlyElement(messagesWithTopic("ball/position/abs")).getPayload(), is(makePayload(x, y)));
+		assertOneMessageWithPayload(messagesWithTopic("ball/position/abs"), is(makePayload(x, y)));
 	}
 
 	private void thenGoalForTeamIsPublished(int teamid) {
-		assertThat(onlyElement(messagesWithTopic("team/scored")).getPayload(), is(String.valueOf(teamid)));
+		assertOneMessageWithPayload(messagesWithTopic("team/scored"), is(String.valueOf(teamid)));
 	}
 
 	private void thenGameScoreForTeamIsPublished(int teamid, int score) {
@@ -539,7 +550,7 @@ public class SFTDetectionTest {
 	}
 
 	private void thenNoMessageIsSent() {
-		assertThat(String.valueOf(collectedMessages), collectedMessages.isEmpty(), is(true));
+		thenNoMessageIsSent(a -> true);
 	}
 
 	private void thenNoMessageWithTopicIsSent(String topic) {
@@ -547,8 +558,7 @@ public class SFTDetectionTest {
 	}
 
 	private void thenNoMessageIsSent(Predicate<Message> predicate) {
-		List<Message> mWithTopic = collectedMessages.stream().filter(predicate).collect(toList());
-		assertThat(String.valueOf(mWithTopic), mWithTopic.isEmpty(), is(true));
+		assertThat(collectedMessages.stream().filter(predicate).collect(toList()), is(emptyList()));
 	}
 
 	private void thenPayloadsWithTopicAre(String topic, String... payloads) {
