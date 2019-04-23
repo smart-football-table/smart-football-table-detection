@@ -44,21 +44,19 @@ public final class Detectors {
 	public List<Detector> createNew(Consumer<Message> pub) {
 		ScoreTracker scoreTracker = newScoreTracker(pub);
 		return asList( //
-				onGameStart(() -> asList(message("game/start", "")).forEach(pub::accept)), //
+				onGameStart(() -> pub.accept(message("game/start", ""))), //
 				onPositionChange(p -> {
-					asList( //
-							message("ball/position/abs", posPayload(p)), //
-							message("ball/position/rel", posPayload(p.getRelativePosition())) //
-					).forEach(pub::accept);
+					pub.accept(message("ball/position/abs", posPayload(p)));
+					pub.accept(message("ball/position/rel", posPayload(p.getRelativePosition())));
 				}), //
-				onMovement(m -> asList( //
-						message("ball/distance/cm", m.distance(CENTIMETER)), //
-						message("ball/velocity/mps", m.velocity(MPS)), //
-						message("ball/velocity/kmh", m.velocity(KMH) //
-						)).forEach(pub::accept)), //
+				onMovement(m -> {
+					pub.accept(message("ball/distance/cm", m.distance(CENTIMETER)));
+					pub.accept(message("ball/velocity/mps", m.velocity(MPS)));
+					pub.accept(message("ball/velocity/kmh", m.velocity(KMH)));
+				}), //
 				onGoal(goalDetectorConfig, inform(scoreTracker)), //
-				onFoul(() -> asList(message("game/foul", "")).forEach(pub::accept)),
-				onIdle((s) -> asList(message("game/idle", Boolean.toString(s))).forEach(pub::accept)));
+				onFoul(() -> pub.accept(message("game/foul", ""))),
+				onIdle(s -> pub.accept(message("game/idle", Boolean.toString(s)))));
 	}
 
 	private String posPayload(Position pos) {
@@ -84,10 +82,8 @@ public final class Detectors {
 
 			@Override
 			public void teamScored(int teamid, int score) {
-				asList( //
-						message("team/scored", teamid), //
-						message("game/score/" + teamid, score) //
-				).forEach(pub::accept);
+				pub.accept(message("team/scored", teamid));
+				pub.accept(message("game/score/" + teamid, score));
 			}
 
 			@Override
