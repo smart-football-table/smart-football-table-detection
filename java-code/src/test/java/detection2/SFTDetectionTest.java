@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
@@ -314,7 +313,7 @@ public class SFTDetectionTest {
 		givenFrontOfGoalPercentage(20);
 		givenStdInContains(ball().prepareForLeftGoal().then().score().then(pos(0.0, 0.0)));
 		whenStdInInputWasProcessed();
-		thenGoalForTeamIsPublished(1);
+		thenPayloadsWithTopicAre("game/score/1", "1", "0");
 	}
 
 	@Test

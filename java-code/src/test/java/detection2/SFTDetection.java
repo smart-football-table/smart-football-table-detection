@@ -225,6 +225,8 @@ public class SFTDetection {
 
 		public static interface Listener {
 			void goal(int teamid);
+
+			void goalRevert(int teamid);
 		}
 
 		public GoalDetector(Config config, Listener listener) {
@@ -235,6 +237,47 @@ public class SFTDetection {
 
 		private static interface State {
 			State update(AbsolutePosition pos);
+		}
+
+		private class WaitForBallAfterGoal implements State {
+
+			private final int teamid;
+
+			public WaitForBallAfterGoal(int teamid) {
+				this.teamid = teamid;
+			}
+
+			@Override
+			public State update(AbsolutePosition pos) {
+				if (pos.isNull()) {
+					return this;
+				}
+				RelativePosition normalized = pos.getRelativePosition().normalizeX().normalizeY();
+				if (normalized.getX() >= 0.99 && normalized.getY() >= 0.99) {
+					return new RevertGoal(teamid);
+				}
+				return new WaitForBallOnMiddleLine().update(pos);
+			}
+
+		}
+
+		private class RevertGoal implements State {
+
+			private final int teamid;
+
+			public RevertGoal(int teamid) {
+				this.teamid = teamid;
+			}
+
+			@Override
+			public State update(AbsolutePosition pos) {
+				return new BallOnTable().update(pos);
+			}
+
+			public int getTeamid() {
+				return teamid;
+			}
+
 		}
 
 		private class WaitForBallOnMiddleLine implements State {
@@ -316,7 +359,7 @@ public class SFTDetection {
 
 			@Override
 			public State update(AbsolutePosition pos) {
-				return new WaitForBallOnMiddleLine().update(pos);
+				return new WaitForBallAfterGoal(teamid).update(pos);
 			}
 
 			public int getTeamid() {
@@ -330,6 +373,8 @@ public class SFTDetection {
 			state = state.update(pos);
 			if (state instanceof Goal) {
 				listener.goal(((Goal) state).getTeamid());
+			} else if (state instanceof RevertGoal) {
+				listener.goalRevert(((RevertGoal) state).getTeamid());
 			}
 		}
 
@@ -679,7 +724,15 @@ public class SFTDetection {
 		private final Map<Integer, Integer> scores = new HashMap<>();
 
 		private int teamScored(int teamid) {
-			Integer newScore = score(teamid) + 1;
+			return changeScore(teamid, +1);
+		}
+
+		private int revertGoal(int teamid) {
+			return changeScore(teamid, -1);
+		}
+
+		private int changeScore(int teamid, int d) {
+			Integer newScore = score(teamid) + d;
 			scores.put(teamid, newScore);
 			listener.teamScored(teamid, newScore);
 			checkState(teamid, newScore);
@@ -806,7 +859,17 @@ public class SFTDetection {
 						new Message("ball/velocity/mps", movement.velocity(MPS)), //
 						new Message("ball/velocity/kmh", movement.velocity(KMH) //
 						)).forEach(publisher::accept)), //
-				new GoalDetector(goalDetectorConfig, teamid1 -> scoreTracker.teamScored(teamid1)), //
+				new GoalDetector(goalDetectorConfig, new GoalDetector.Listener() {
+					@Override
+					public void goal(int teamid) {
+						scoreTracker.teamScored(teamid);
+					}
+
+					@Override
+					public void goalRevert(int teamid) {
+						scoreTracker.revertGoal(teamid);
+					}
+				}), //
 				new FoulDetector(() -> asList(new Message("game/foul", "")).forEach(publisher::accept)),
 				new IdleDetector(
 						(s) -> asList(new Message("game/idle", Boolean.toString(s))).forEach(publisher::accept)));
