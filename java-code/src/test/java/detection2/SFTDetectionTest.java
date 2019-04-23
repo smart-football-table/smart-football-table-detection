@@ -285,17 +285,13 @@ public class SFTDetectionTest {
 		givenFrontOfGoalPercentage(20);
 		long timeout = SECONDS.toMillis(2);
 		givenTimeWithoutBallTilGoal(timeout, MILLISECONDS);
-		givenStdInContains(
-				ball().prepareForLeftGoal().then(offTable()).thenAfter(timeout - 1, MILLISECONDS).then(offTable()));
-		whenStdInInputWasProcessed();
-		givenStdInContains(
-				ball().prepareForRightGoal().then(offTable()).thenAfter(timeout - 1, MILLISECONDS).then(offTable()));
-		whenStdInInputWasProcessed();
-		givenStdInContains(
-				ball().prepareForLeftGoal().then(offTable()).thenAfter(timeout - 1, MILLISECONDS).then(kickoff()));
-		whenStdInInputWasProcessed();
-		givenStdInContains(
-				ball().prepareForRightGoal().then(offTable()).thenAfter(timeout - 1, MILLISECONDS).then(kickoff()));
+		long justNotTimeout = timeout - 1;
+		givenStdInContains(ball() //
+				.prepareForLeftGoal().then(offTable()).thenAfter(justNotTimeout, MILLISECONDS).then(offTable()).then() //
+				.prepareForRightGoal().then(offTable()).thenAfter(justNotTimeout, MILLISECONDS).then(offTable()).then() //
+				.prepareForLeftGoal().then(offTable()).thenAfter(justNotTimeout, MILLISECONDS).then(kickoff()).then() //
+				.prepareForRightGoal().then(offTable()).thenAfter(justNotTimeout, MILLISECONDS).then(kickoff()) //
+		);
 		whenStdInInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
 	}
@@ -408,9 +404,7 @@ public class SFTDetectionTest {
 				.prepareForRightGoal().score().then() //
 				.prepareForLeftGoal().score().then() //
 				.prepareForRightGoal().score() //
-		);
-		whenStdInInputWasProcessed();
-		givenStdInContains(ball() //
+				//
 				.prepareForLeftGoal().score().then() //
 				.prepareForLeftGoal().score() //
 		);
