@@ -3,8 +3,6 @@ package detection2;
 import static detection2.SFTDetection.DistanceUnit.CENTIMETER;
 import static detection2.SFTDetection.SpeedUnit.KMH;
 import static detection2.SFTDetection.SpeedUnit.MPS;
-import static detection2.SFTDetection.StdInBuilder.BallPosBuilder.kickoff;
-import static detection2.SFTDetection.StdInBuilder.BallPosBuilder.offTable;
 import static java.lang.Math.abs;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
@@ -18,8 +16,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -107,121 +103,6 @@ public class SFTDetection {
 			} catch (NumberFormatException e) {
 				return null;
 			}
-		}
-
-	}
-
-	public static class StdInBuilder {
-
-		public static class BallPosBuilder {
-
-			private double x;
-			private double y;
-
-			public BallPosBuilder(double x, double y) {
-				this.x = x;
-				this.y = y;
-			}
-
-			public static BallPosBuilder kickoff() {
-				return pos(centerX(), centerY());
-			}
-
-			public static BallPosBuilder pos(double x, double y) {
-				return new BallPosBuilder(x, y);
-			}
-
-			private static double centerX() {
-				return 0.5;
-			}
-
-			private static double centerY() {
-				return 0.5;
-			}
-
-			public BallPosBuilder left(double adjX) {
-				x -= adjX;
-				return this;
-			}
-
-			public BallPosBuilder right(double adjX) {
-				x += adjX;
-				return this;
-			}
-
-			public BallPosBuilder up(double adjY) {
-				y -= adjY;
-				return this;
-			}
-
-			public BallPosBuilder down(double adjY) {
-				y += adjY;
-				return this;
-			}
-
-			public static BallPosBuilder offTable() {
-				RelativePosition noBall = RelativePosition.noPosition(0L);
-				return pos(noBall.getX(), noBall.getY());
-			}
-
-		}
-
-		private long timestamp;
-		private final List<String> lines = new ArrayList<>();
-
-		public StdInBuilder(long timestamp) {
-			this.timestamp = timestamp;
-		}
-
-		public static StdInBuilder ball() {
-			return messagesStartingAt(anyTimestamp());
-		}
-
-		private static StdInBuilder messagesStartingAt(long timestamp) {
-			return new StdInBuilder(timestamp);
-		}
-
-		private static long anyTimestamp() {
-			return 1234;
-		}
-
-		public StdInBuilder then() {
-			return this;
-		}
-
-		public StdInBuilder then(BallPosBuilder ballPosBuilder) {
-			return at(ballPosBuilder);
-		}
-
-		private StdInBuilder at(BallPosBuilder ballPosBuilder) {
-			lines.add(line(timestamp, 0.0 + ballPosBuilder.x, ballPosBuilder.y));
-			return this;
-		}
-
-		StdInBuilder thenAfter(long adjustment, TimeUnit timeUnit) {
-			timestamp += timeUnit.toMillis(adjustment);
-			return this;
-		}
-
-		public StdInBuilder invalidData() {
-			lines.add(line(timestamp, "A", "B"));
-			return this;
-		}
-
-		private String line(Object... objects) {
-			return Arrays.stream(objects).map(String::valueOf).collect(joining(","));
-		}
-
-		public StdInBuilder prepareForGoal() {
-			return at(kickoff());
-		}
-
-		public StdInBuilder makeGoal() {
-			return then(offTable()).thenAfter(2, SECONDS).then(offTable());
-		}
-
-		public String[] build() {
-			return lines.toArray(new String[lines.size()]);
 		}
 
 	}
@@ -395,12 +276,9 @@ public class SFTDetection {
 
 			@Override
 			public State update(AbsolutePosition pos) {
-				if (pos.isNull()) {
-					return millisTilGoal == 0 //
-							? new Goal(teamid) //
-							: new PossibleGoal(pos.getTimestamp(), teamid);
-				}
-				return new BallOnTable().update(pos);
+				return pos.isNull() ? //
+						new PossibleGoal(pos.getTimestamp(), teamid).update(pos) : //
+						new BallOnTable().update(pos);
 			}
 		}
 
