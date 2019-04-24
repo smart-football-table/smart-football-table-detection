@@ -13,6 +13,7 @@ import detection2.data.Table;
 import detection2.data.position.AbsolutePosition;
 import detection2.data.position.RelativePosition;
 import detection2.detector.Detector;
+import detection2.parser.LineParser;
 
 public class SFTDetection {
 
@@ -36,63 +37,6 @@ public class SFTDetection {
 
 	public Detectors getDetectors() {
 		return detectorFactory;
-	}
-
-	public static interface LineParser {
-		RelativePosition parse(String line);
-	}
-
-	static class RelativeValueParser implements LineParser {
-
-		@Override
-		public RelativePosition parse(String line) {
-			String[] values = line.split("\\,");
-			if (values.length == 3) {
-				Long timestamp = toLong(values[0]);
-				Double x = toDouble(values[1]);
-				Double y = toDouble(values[2]);
-
-				// TODO test x/y > 1.0?
-				if (isValidTimestamp(timestamp) && !isNull(x, y)) {
-					if (x == -1 && y == -1) {
-						return RelativePosition.noPosition(timestamp);
-					} else if (isValidPosition(x, y)) {
-						return new RelativePosition(timestamp, x, y);
-					}
-				}
-			}
-			return null;
-		}
-
-		private static boolean isValidTimestamp(Long timestamp) {
-			return timestamp != null && timestamp >= 0;
-		}
-
-		private static boolean isValidPosition(Double x, Double y) {
-			return x >= 0.0 && y >= 0.0;
-		}
-
-		private static boolean isNull(Double x, Double y) {
-			return x == null || y == null;
-
-		}
-
-		private static Double toDouble(String val) {
-			try {
-				return Double.valueOf(val);
-			} catch (NumberFormatException e) {
-				return null;
-			}
-		}
-
-		private static Long toLong(String val) {
-			try {
-				return Long.valueOf(val);
-			} catch (NumberFormatException e) {
-				return null;
-			}
-		}
-
 	}
 
 	public void process(LineParser lineParser, InputStream is) throws IOException {
