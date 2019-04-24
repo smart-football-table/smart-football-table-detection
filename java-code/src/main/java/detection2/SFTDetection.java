@@ -8,33 +8,26 @@ import java.util.function.Consumer;
 
 import detection2.data.Message;
 import detection2.data.Table;
-import detection2.data.position.AbsolutePosition;
 import detection2.data.position.RelativePosition;
-import detection2.detector.Detector;
 import detection2.parser.LineParser;
 
 public class SFTDetection {
 
-	public static SFTDetection detectionOn(Table table) {
-		return new SFTDetection(table);
+	public static SFTDetection detectionOn(Table table, Consumer<Message> pub) {
+		return new SFTDetection(table, pub);
 	}
 
 	private final Table table;
-	private Detectors detectorFactory = new Detectors();
-	private Consumer<Message> publisher = m -> {
-	};
+	private Game game;
 
-	private SFTDetection(Table table) {
+	private SFTDetection(Table table, Consumer<Message> publisher) {
 		this.table = table;
+		this.game = new Game(publisher);
 	}
 
-	public SFTDetection publishTo(Consumer<Message> publisher) {
-		this.publisher = publisher;
-		return this;
-	}
-
-	public Detectors getDetectors() {
-		return detectorFactory;
+	@Deprecated
+	public Game getGame() {
+		return game;
 	}
 
 	public void process(LineParser lineParser, InputStream is) throws IOException {
@@ -45,10 +38,7 @@ public class SFTDetection {
 				if (relPos == null) {
 					// TODO log invalid line
 				} else {
-					AbsolutePosition absPos = table.toAbsolute(relPos);
-					for (Detector detector : detectorFactory.detectors(publisher)) {
-						detector.detect(absPos);
-					}
+					game = game.update(table.toAbsolute(relPos));
 				}
 			}
 

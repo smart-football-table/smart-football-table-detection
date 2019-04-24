@@ -1,6 +1,6 @@
 package detection2;
 
-import static detection2.Detectors.ScoreTracker.onScoreChange;
+import static detection2.Game.ScoreTracker.onScoreChange;
 import static detection2.data.Message.message;
 import static detection2.data.unit.DistanceUnit.CENTIMETER;
 import static detection2.data.unit.SpeedUnit.KMH;
@@ -21,12 +21,13 @@ import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
 import detection2.data.Message;
+import detection2.data.position.AbsolutePosition;
 import detection2.data.position.Position;
 import detection2.detector.Detector;
 import detection2.detector.GoalDetector;
 import detection2.detector.GoalDetector.Config;
 
-public final class Detectors {
+public class Game {
 
 	static class ScoreTracker {
 
@@ -129,6 +130,11 @@ public final class Detectors {
 
 	private final GameOverScoreTrackerListener gameOverListener = new GameOverScoreTrackerListener();
 	private Config goalDetectorConfig = new GoalDetector.Config();
+	private Consumer<Message> pub;
+
+	public Game(Consumer<Message> publisher) {
+		this.pub = publisher;
+	}
 
 	public GameOverListener getGameOverListener() {
 		return gameOverListener;
@@ -140,15 +146,18 @@ public final class Detectors {
 
 	private List<Detector> detectors;
 
-	public List<Detector> detectors(Consumer<Message> publisher) {
+	public Game update(AbsolutePosition absPos) {
 		if (detectors == null || gameOverListener.isGameover()) {
 			gameOverListener.gameover = false;
-			detectors = create(publisher);
+			detectors = create();
 		}
-		return detectors;
+		for (Detector detector : detectors) {
+			detector.detect(absPos);
+		}
+		return this;
 	}
 
-	private List<Detector> create(Consumer<Message> pub) {
+	private List<Detector> create() {
 		gameOverListener.gameover = false;
 		ScoreTracker scoreTracker = onScoreChange(multiplexed(publishScoreChanges(pub), gameOverListener));
 		return asList( //

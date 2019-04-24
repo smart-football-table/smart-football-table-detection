@@ -1,5 +1,6 @@
 package detection2;
 
+import static detection2.SFTDetection.detectionOn;
 import static detection2.SFTDetectionTest.StdInBuilder.ball;
 import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.frontOfLeftGoal;
 import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.frontOfRightGoal;
@@ -455,8 +456,7 @@ public class SFTDetectionTest {
 						Message.message("team/scored", 0), //
 						Message.message("game/score/0", 1), //
 						Message.message("team/scored", 0), //
-						Message.message("game/score/0", 2)
-				)));
+						Message.message("game/score/0", 2))));
 	}
 
 	@Test
@@ -516,7 +516,7 @@ public class SFTDetectionTest {
 	}
 
 	private void givenATableOfSize(int width, int height) {
-		this.sut = SFTDetection.detectionOn(new Table(width, height)).publishTo(messageCollector);
+		this.sut = detectionOn(new Table(width, height), messageCollector);
 	}
 
 	private void givenATableOfAnySize() {
@@ -540,7 +540,7 @@ public class SFTDetectionTest {
 	}
 
 	void whenStdInInputWasProcessed() throws IOException {
-		sut.getDetectors().goalDetectorConfig(goalDetectorConfig);
+		sut.getGame().goalDetectorConfig(goalDetectorConfig);
 		sut.process(new RelativeValueParser(), is);
 	}
 
