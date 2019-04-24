@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.function.Consumer;
 
+import detection2.Detectors.GameOverListener;
 import detection2.data.Message;
 import detection2.data.Table;
 import detection2.data.position.AbsolutePosition;
@@ -19,28 +20,8 @@ public class SFTDetection {
 		return new SFTDetection(table);
 	}
 
-	private static class GameOverListener implements ScoreTracker.Listener {
-
-		private boolean gameover;
-
-		@Override
-		public void teamScored(int teamid, int score) {
-		}
-
-		@Override
-		public void won(int teamid) {
-			gameover = true;
-		}
-
-		@Override
-		public void draw(int[] teamids) {
-			gameover = true;
-		}
-	}
-
 	private final Table table;
-	private final GameOverListener gameOverListener = new GameOverListener();
-	private Detectors detectors = new Detectors(gameOverListener);
+	private Detectors detectorFactory = new Detectors();
 	private Consumer<Message> publisher = m -> {
 	};
 
@@ -54,7 +35,7 @@ public class SFTDetection {
 	}
 
 	public Detectors getDetectors() {
-		return detectors;
+		return detectorFactory;
 	}
 
 	public static interface LineParser {
@@ -117,11 +98,11 @@ public class SFTDetection {
 	public void process(LineParser lineParser, InputStream is) throws IOException {
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 			List<Detector> detectors = null;
+			GameOverListener gameOverListener = detectorFactory.getGameOverListener();
 			String line;
 			while ((line = reader.readLine()) != null) {
-				if (detectors == null || gameOverListener.gameover) {
-					gameOverListener.gameover = false;
-					detectors = this.detectors.createNew(publisher);
+				if (detectors == null || gameOverListener.isGameover()) {
+					detectors = detectorFactory.createNew(publisher);
 				}
 				RelativePosition relPos = lineParser.parse(line);
 				if (relPos == null) {

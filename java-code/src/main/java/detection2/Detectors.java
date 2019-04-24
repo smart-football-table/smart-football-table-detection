@@ -27,15 +27,40 @@ import detection2.detector.GoalDetector.Config;
 
 public final class Detectors {
 
-	private final Listener gameOverListener;
-	private Config goalDetectorConfig = new GoalDetector.Config();
-
-	public Detectors(ScoreTracker.Listener gameOverListener) {
-		this.gameOverListener = gameOverListener;
+	public interface GameOverListener {
+		boolean isGameover();
 	}
 
-	public Config getGoalDetectorConfig() {
-		return goalDetectorConfig;
+	private static class GameOverScoreTrackerListener implements ScoreTracker.Listener, GameOverListener {
+
+		private boolean gameover;
+
+		@Override
+		public void teamScored(int teamid, int score) {
+		}
+
+		@Override
+		public void won(int teamid) {
+			gameover = true;
+		}
+
+		@Override
+		public void draw(int[] teamids) {
+			gameover = true;
+		}
+
+		@Override
+		public boolean isGameover() {
+			return gameover;
+		}
+
+	}
+
+	private final GameOverScoreTrackerListener gameOverListener = new GameOverScoreTrackerListener();
+	private Config goalDetectorConfig = new GoalDetector.Config();
+
+	public GameOverListener getGameOverListener() {
+		return gameOverListener;
 	}
 
 	public void goalDetectorConfig(Config goalDetectorConfig) {
@@ -43,6 +68,7 @@ public final class Detectors {
 	}
 
 	public List<Detector> createNew(Consumer<Message> pub) {
+		gameOverListener.gameover = false;
 		ScoreTracker scoreTracker = onScoreChange(multiplexed(publishScoreChanges(pub), gameOverListener));
 		return asList( //
 				onGameStart(() -> pub.accept(message("game/start", ""))), //
