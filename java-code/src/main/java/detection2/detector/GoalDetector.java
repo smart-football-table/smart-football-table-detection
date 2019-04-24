@@ -81,11 +81,14 @@ public class GoalDetector implements Detector {
 			if (pos.isNull()) {
 				return this;
 			}
+			return ballIsInCorner(pos) ? //
+					new RevertGoal(teamid) : //
+					new WaitForBallOnMiddleLine().update(pos);
+		}
+
+		private boolean ballIsInCorner(AbsolutePosition pos) {
 			RelativePosition normalized = pos.getRelativePosition().normalizeX().normalizeY();
-			if (normalized.getX() >= 0.99 && normalized.getY() >= 0.99) {
-				return new RevertGoal(teamid);
-			}
-			return new WaitForBallOnMiddleLine().update(pos);
+			return normalized.getX() >= 0.99 && normalized.getY() >= 0.99;
 		}
 
 	}
@@ -130,7 +133,9 @@ public class GoalDetector implements Detector {
 		@Override
 		public GoalDetector.State update(AbsolutePosition pos) {
 			RelativePosition relPos = pos.getRelativePosition();
-			return isFrontOfGoal(relPos) ? new FrontOfGoal(relPos.isRightHandSide() ? 0 : 1) : this;
+			return isFrontOfGoal(relPos) ? //
+					new FrontOfGoal(relPos.isRightHandSide() ? 0 : 1) : //
+					this;
 		}
 
 		private boolean isFrontOfGoal(RelativePosition relPos) {
@@ -167,7 +172,9 @@ public class GoalDetector implements Detector {
 		@Override
 		public GoalDetector.State update(AbsolutePosition pos) {
 			if (pos.isNull()) {
-				return waitTimeElapsed(pos) ? new Goal(teamid) : this;
+				return waitTimeElapsed(pos) ? //
+						new Goal(teamid) : //
+						this;
 			}
 			return new BallOnTable().update(pos);
 		}

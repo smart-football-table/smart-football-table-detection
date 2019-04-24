@@ -47,8 +47,7 @@ public class IdleDetector implements Detector {
 	}
 
 	private boolean offTable(AbsolutePosition pos) {
-		boolean offTable = pos.isNull();
-		return offTable;
+		return pos.isNull();
 	}
 
 }
