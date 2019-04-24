@@ -4,10 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.List;
 import java.util.function.Consumer;
 
-import detection2.Detectors.GameOverListener;
 import detection2.data.Message;
 import detection2.data.Table;
 import detection2.data.position.AbsolutePosition;
@@ -41,19 +39,14 @@ public class SFTDetection {
 
 	public void process(LineParser lineParser, InputStream is) throws IOException {
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-			List<Detector> detectors = null;
-			GameOverListener gameOverListener = detectorFactory.getGameOverListener();
 			String line;
 			while ((line = reader.readLine()) != null) {
-				if (detectors == null || gameOverListener.isGameover()) {
-					detectors = detectorFactory.createNew(publisher);
-				}
 				RelativePosition relPos = lineParser.parse(line);
 				if (relPos == null) {
 					// TODO log invalid line
 				} else {
 					AbsolutePosition absPos = table.toAbsolute(relPos);
-					for (Detector detector : detectors) {
+					for (Detector detector : detectorFactory.detectors(publisher)) {
 						detector.detect(absPos);
 					}
 				}

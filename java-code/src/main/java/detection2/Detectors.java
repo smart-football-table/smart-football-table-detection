@@ -138,7 +138,17 @@ public final class Detectors {
 		this.goalDetectorConfig = goalDetectorConfig;
 	}
 
-	public List<Detector> createNew(Consumer<Message> pub) {
+	private List<Detector> detectors;
+
+	public List<Detector> detectors(Consumer<Message> publisher) {
+		if (detectors == null || gameOverListener.isGameover()) {
+			gameOverListener.gameover = false;
+			detectors = create(publisher);
+		}
+		return detectors;
+	}
+
+	private List<Detector> create(Consumer<Message> pub) {
 		gameOverListener.gameover = false;
 		ScoreTracker scoreTracker = onScoreChange(multiplexed(publishScoreChanges(pub), gameOverListener));
 		return asList( //
