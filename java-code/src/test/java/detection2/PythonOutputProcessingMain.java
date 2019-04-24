@@ -1,10 +1,12 @@
 package detection2;
 
+import static java.lang.System.arraycopy;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.function.Consumer;
 
 import detection2.data.Message;
@@ -25,12 +27,20 @@ public class PythonOutputProcessingMain {
 			String[] values = line.split("\\|");
 			if (values.length == 3) {
 				String[] secsMillis = values[0].split("\\.");
-				Long timestamp = SECONDS.toMillis(toLong(secsMillis[0])) + toLong(secsMillis[1]);
+				Long timestamp = SECONDS.toMillis(toLong(secsMillis[0])) + toLong(fillRight(secsMillis[1], 2));
 				Double y = toDouble(values[2]);
 				Double x = toDouble(values[1]);
 				return delegate.parse(timestamp + "," + (x == -1 ? -1 : (x / 765)) + "," + (y == -1 ? -1 : y / 640));
 			}
 			return null;
+		}
+
+		private String fillRight(String string, int len) {
+			char[] result = new char[len];
+			Arrays.fill(result, '0');
+			char[] in = string.toCharArray();
+			arraycopy(in, 0, result, 0, in.length);
+			return new String(result);
 		}
 
 		private static Double toDouble(String val) {
