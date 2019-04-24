@@ -21,7 +21,7 @@ public class Movement {
 	public Movement(Position pos1, Position pos2) {
 		this.distance = new Distance(sqrt(pow2(absDiffX(pos1, pos2)) + pow2(absDiffY(pos1, pos2))), CENTIMETER);
 		this.durationInMillis = pos2.getTimestamp() - pos1.getTimestamp();
-		this.velocity = new Velocity(distance, this.durationInMillis);
+		this.velocity = new Velocity(distance, this.durationInMillis, MILLISECONDS);
 	}
 
 	public double distance(DistanceUnit target) {
