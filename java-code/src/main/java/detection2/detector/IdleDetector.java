@@ -39,6 +39,7 @@ public class IdleDetector implements Detector {
 				}
 			}
 		} else {
+			offTableSince = null;
 			if (idle) {
 				listener.idle(false);
 				idle = false;
