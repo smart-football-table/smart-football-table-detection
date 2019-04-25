@@ -8,6 +8,10 @@ public class RelativePosition implements Position {
 	private final double x;
 	private final double y;
 
+	public static RelativePosition noPosition(long timestamp) {
+		return new RelativePosition(timestamp, -1, -1);
+	}
+
 	public RelativePosition(long timestamp, double x, double y) {
 		this.timestamp = timestamp;
 		this.x = x;
@@ -88,10 +92,6 @@ public class RelativePosition implements Position {
 	@Override
 	public String toString() {
 		return "RelativePosition [timestamp=" + timestamp + ", x=" + x + ", y=" + y + "]";
-	}
-
-	public static RelativePosition noPosition(Long timestamp) {
-		return new RelativePosition(timestamp, -1, -1);
 	}
 
 }

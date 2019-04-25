@@ -11,13 +11,15 @@ import static detection2.detector.GoalDetector.onGoal;
 import static detection2.detector.IdleDetector.onIdle;
 import static detection2.detector.MovementDetector.onMovement;
 import static detection2.detector.PositionDetector.onPositionChange;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import detection2.data.Message;
@@ -28,6 +30,21 @@ import detection2.detector.GoalDetector;
 import detection2.detector.GoalDetector.Config;
 
 public class Game {
+
+	private static class DetectorSuppliers {
+
+		private final List<Supplier<Detector>> detectors = new ArrayList<>();
+
+		public DetectorSuppliers add(Supplier<Detector> detector) {
+			this.detectors.add(detector);
+			return this;
+		}
+
+		public List<Detector> build() {
+			return detectors.stream().map(Supplier::get).collect(toList());
+		}
+
+	}
 
 	static class ScoreTracker {
 
@@ -99,11 +116,7 @@ public class Game {
 
 	}
 
-	public interface GameOverListener {
-		boolean isGameover();
-	}
-
-	private static class GameOverScoreTrackerListener implements ScoreTracker.Listener, GameOverListener {
+	private static class GameOverScoreState implements ScoreTracker.Listener {
 
 		private boolean gameover;
 
@@ -121,59 +134,56 @@ public class Game {
 			gameover = true;
 		}
 
-		@Override
-		public boolean isGameover() {
-			return gameover;
-		}
-
 	}
 
-	private final GameOverScoreTrackerListener gameOverListener = new GameOverScoreTrackerListener();
-	private Config goalDetectorConfig = new GoalDetector.Config();
-	private Consumer<Message> pub;
+	private final GameOverScoreState gameOverScoreState = new GameOverScoreState();
+	private final Consumer<Message> publisher;
+	private Config goalDetectorConfig;
 
-	public Game(Consumer<Message> publisher) {
-		this.pub = publisher;
+	private final List<Detector> detectors;
+
+	public Game(Consumer<Message> pub) {
+		this(pub, new GoalDetector.Config());
 	}
 
-	public GameOverListener getGameOverListener() {
-		return gameOverListener;
-	}
-
-	public void goalDetectorConfig(Config goalDetectorConfig) {
+	public Game(Consumer<Message> publisher, Config goalDetectorConfig) {
+		this.publisher = publisher;
 		this.goalDetectorConfig = goalDetectorConfig;
+		this.detectors = create();
 	}
 
-	private List<Detector> detectors;
+	public Game withGoalConfig(Config goalConfig) {
+		return new Game(publisher, goalConfig);
+	}
 
-	public Game update(AbsolutePosition absPos) {
-		if (detectors == null || gameOverListener.isGameover()) {
-			gameOverListener.gameover = false;
-			detectors = create();
-		}
+	public Game update(AbsolutePosition pos) {
 		for (Detector detector : detectors) {
-			detector.detect(absPos);
+			detector.detect(pos);
 		}
-		return this;
+		return isGameover() ? new Game(publisher, goalDetectorConfig) : this;
+	}
+
+	private boolean isGameover() {
+		return gameOverScoreState.gameover;
 	}
 
 	private List<Detector> create() {
-		gameOverListener.gameover = false;
-		ScoreTracker scoreTracker = onScoreChange(multiplexed(publishScoreChanges(pub), gameOverListener));
-		return asList( //
-				onGameStart(() -> pub.accept(message("game/start", ""))), //
-				onPositionChange(p -> {
-					pub.accept(message("ball/position/abs", posPayload(p)));
-					pub.accept(message("ball/position/rel", posPayload(p.getRelativePosition())));
-				}), //
-				onMovement(m -> {
-					pub.accept(message("ball/distance/cm", m.distance(CENTIMETER)));
-					pub.accept(message("ball/velocity/mps", m.velocity(MPS)));
-					pub.accept(message("ball/velocity/kmh", m.velocity(KMH)));
-				}), //
-				onGoal(goalDetectorConfig, inform(scoreTracker)), //
-				onFoul(() -> pub.accept(message("game/foul", ""))),
-				onIdle(s -> pub.accept(message("game/idle", Boolean.toString(s)))));
+		ScoreTracker scoreTracker = onScoreChange(multiplexed(publishScoreChanges(publisher), gameOverScoreState));
+		return new DetectorSuppliers() //
+				.add(() -> onGameStart(() -> publisher.accept(message("game/start", "")))) //
+				.add(() -> onPositionChange(p -> {
+					publisher.accept(message("ball/position/abs", posPayload(p)));
+					publisher.accept(message("ball/position/rel", posPayload(p.getRelativePosition())));
+				})) //
+				.add(() -> onMovement(m -> {
+					publisher.accept(message("ball/distance/cm", m.distance(CENTIMETER)));
+					publisher.accept(message("ball/velocity/mps", m.velocity(MPS)));
+					publisher.accept(message("ball/velocity/kmh", m.velocity(KMH)));
+				})) //
+				.add(() -> onGoal(goalDetectorConfig, inform(scoreTracker))) //
+				.add(() -> onFoul(() -> publisher.accept(message("game/foul", "")))) //
+				.add(() -> onIdle(s -> publisher.accept(message("game/idle", Boolean.toString(s))))) //
+				.build();
 	}
 
 	private String posPayload(Position pos) {

@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 import detection2.data.Message;
 import detection2.data.Table;
 import detection2.data.position.RelativePosition;
+import detection2.detector.GoalDetector;
 import detection2.parser.LineParser;
 
 public class SFTDetection {
@@ -25,9 +26,9 @@ public class SFTDetection {
 		this.game = new Game(publisher);
 	}
 
-	@Deprecated
-	public Game getGame() {
-		return game;
+	public SFTDetection withGoalConfig(GoalDetector.Config goalConfig) {
+		this.game = game.withGoalConfig(goalConfig);
+		return this;
 	}
 
 	public void process(LineParser lineParser, InputStream is) throws IOException {

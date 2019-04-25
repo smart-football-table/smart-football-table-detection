@@ -5,8 +5,11 @@ import static detection2.SFTDetectionTest.StdInBuilder.ball;
 import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.frontOfLeftGoal;
 import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.frontOfRightGoal;
 import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.kickoff;
+import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.lowerRightCorner;
 import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.offTable;
 import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.pos;
+import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.upperLeftCorner;
+import static detection2.data.Message.message;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -29,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.hamcrest.Matcher;
@@ -62,6 +66,14 @@ public class SFTDetectionTest {
 
 			public static BallPosBuilder pos(double x, double y) {
 				return new BallPosBuilder(x, y);
+			}
+
+			public static BallPosBuilder upperLeftCorner() {
+				return pos(0.0, 0.0);
+			}
+
+			public static BallPosBuilder lowerRightCorner() {
+				return pos(1.0, 1.0);
 			}
 
 			private static double centerX() {
@@ -110,7 +122,7 @@ public class SFTDetectionTest {
 		private long timestamp;
 		private final List<String> lines = new ArrayList<>();
 
-		public StdInBuilder(long timestamp) {
+		private StdInBuilder(long timestamp) {
 			this.timestamp = timestamp;
 		}
 
@@ -126,11 +138,11 @@ public class SFTDetectionTest {
 			return 1234;
 		}
 
-		public StdInBuilder then() {
+		private StdInBuilder then() {
 			return this;
 		}
 
-		public StdInBuilder then(BallPosBuilder ballPosBuilder) {
+		private StdInBuilder then(BallPosBuilder ballPosBuilder) {
 			return at(ballPosBuilder);
 		}
 
@@ -139,12 +151,12 @@ public class SFTDetectionTest {
 			return this;
 		}
 
-		StdInBuilder thenAfter(long adjustment, TimeUnit timeUnit) {
+		private StdInBuilder thenAfter(long adjustment, TimeUnit timeUnit) {
 			timestamp += timeUnit.toMillis(adjustment);
 			return this;
 		}
 
-		public StdInBuilder invalidData() {
+		private StdInBuilder invalidData() {
 			lines.add(line(timestamp, "A", "B"));
 			return this;
 		}
@@ -153,15 +165,15 @@ public class SFTDetectionTest {
 			return Arrays.stream(objects).map(String::valueOf).collect(joining(","));
 		}
 
-		public StdInBuilder prepareForLeftGoal() {
+		private StdInBuilder prepareForLeftGoal() {
 			return at(kickoff()).then().at(frontOfLeftGoal());
 		}
 
-		public StdInBuilder prepareForRightGoal() {
+		private StdInBuilder prepareForRightGoal() {
 			return at(kickoff()).then().at(frontOfRightGoal());
 		}
 
-		public StdInBuilder score() {
+		private StdInBuilder score() {
 			return offTableFor(2, SECONDS);
 		}
 
@@ -169,7 +181,7 @@ public class SFTDetectionTest {
 			return at(offTable()).thenAfter(duration, timeUnit).then(offTable());
 		}
 
-		public String[] build() {
+		private String[] build() {
 			return lines.toArray(new String[lines.size()]);
 		}
 
@@ -185,8 +197,8 @@ public class SFTDetectionTest {
 	@Test
 	public void relativeValuesGetsConvertedToAbsolutesAtKickoff() throws IOException {
 		givenATableOfSize(100, 80);
-		givenStdInContains(ball().at(kickoff()));
-		whenStdInInputWasProcessed();
+		givenInputToProcessIs(ball().at(kickoff()));
+		whenInputWasProcessed();
 		thenTheRelativePositionOnTheTableIsPublished(centerX(), centerY());
 		thenTheAbsolutePositionOnTheTableIsPublished(100 / 2, 80 / 2);
 	}
@@ -194,8 +206,8 @@ public class SFTDetectionTest {
 	@Test
 	public void relativeValuesGetsConvertedToAbsolutes() throws IOException {
 		givenATableOfSize(100, 80);
-		givenStdInContains(ball().at(pos(0.0, 1.0)));
-		whenStdInInputWasProcessed();
+		givenInputToProcessIs(ball().at(pos(0.0, 1.0)));
+		whenInputWasProcessed();
 		thenTheRelativePositionOnTheTableIsPublished(0.0, 1.0);
 		thenTheAbsolutePositionOnTheTableIsPublished(0, 80);
 	}
@@ -203,24 +215,24 @@ public class SFTDetectionTest {
 	@Test
 	public void malformedMessageIsRead() throws IOException {
 		givenATableOfAnySize();
-		givenStdInContains(ball().invalidData());
-		whenStdInInputWasProcessed();
+		givenInputToProcessIs(ball().invalidData());
+		whenInputWasProcessed();
 		thenNoMessageIsSent();
 	}
 
 	@Test
 	public void onReadingTheNoPositionMessage_noMessageIsSent() throws IOException {
 		givenATableOfAnySize();
-		givenStdInContains(ball().at(offTable()));
-		whenStdInInputWasProcessed();
+		givenInputToProcessIs(ball().at(offTable()));
+		whenInputWasProcessed();
 		thenNoMessageIsSent();
 	}
 
 	@Test
 	public void whenTwoPositionsAreRead_VelocityGetsPublished() throws IOException {
 		givenATableOfSize(100, 80);
-		givenStdInContains(ball().at(pos(0.0, 0.0)).thenAfter(1, SECONDS).at(pos(1.0, 1.0)));
-		whenStdInInputWasProcessed();
+		givenInputToProcessIs(ball().at(anyCorner()).thenAfter(1, SECONDS).at(lowerRightCorner()));
+		whenInputWasProcessed();
 		thenDistanceInCentimetersAndVelocityArePublished(128.06248474865697, 1.2806248474865697, 4.610249450951652);
 	}
 
@@ -228,8 +240,8 @@ public class SFTDetectionTest {
 	public void canDetectGoalOnRightHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(ball().prepareForRightGoal().then().score());
-		whenStdInInputWasProcessed();
+		givenInputToProcessIs(ball().prepareForRightGoal().then().score());
+		whenInputWasProcessed();
 		thenGoalForTeamIsPublished(0);
 		thenGameScoreForTeamIsPublished(0, 1);
 	}
@@ -238,8 +250,8 @@ public class SFTDetectionTest {
 	public void canDetectGoalOnLeftHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(ball().prepareForLeftGoal().score());
-		whenStdInInputWasProcessed();
+		givenInputToProcessIs(ball().prepareForLeftGoal().score());
+		whenInputWasProcessed();
 		thenGoalForTeamIsPublished(1);
 	}
 
@@ -247,8 +259,8 @@ public class SFTDetectionTest {
 	public void noGoalIfBallWasNotInFrontOfGoalRightHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(ball().prepareForRightGoal().then().at(frontOfRightGoal().left(0.01)).score());
-		whenStdInInputWasProcessed();
+		givenInputToProcessIs(ball().prepareForRightGoal().then().at(frontOfRightGoal().left(0.01)).score());
+		whenInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
 	}
 
@@ -256,20 +268,20 @@ public class SFTDetectionTest {
 	public void noGoalIfBallWasNotInFrontOfGoalLeftHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(ball().prepareForLeftGoal().then().at(frontOfLeftGoal().right(0.01)).score());
-		whenStdInInputWasProcessed();
+		givenInputToProcessIs(ball().prepareForLeftGoal().then().at(frontOfLeftGoal().right(0.01)).score());
+		whenInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
 	}
 
 	@Test
 	public void leftHandSideScoresThreeTimes() throws IOException {
 		givenATableOfAnySize();
-		givenStdInContains(ball() //
+		givenInputToProcessIs(ball() //
 				.prepareForLeftGoal().then().score().then() //
 				.prepareForLeftGoal().then().score().then() //
 				.prepareForLeftGoal().then().score() //
 		);
-		whenStdInInputWasProcessed();
+		whenInputWasProcessed();
 		thenPayloadsWithTopicAre("team/scored", times("1", 3));
 		thenPayloadsWithTopicAre("game/score/1", "1", "2", "3");
 	}
@@ -278,8 +290,8 @@ public class SFTDetectionTest {
 	public void noGoalsIfBallWasNotDetectedAtMiddleLine() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(ball().at(frontOfLeftGoal()).then().score());
-		whenStdInInputWasProcessed();
+		givenInputToProcessIs(ball().at(frontOfLeftGoal()).then().score());
+		whenInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
 	}
 
@@ -290,13 +302,13 @@ public class SFTDetectionTest {
 		long timeout = SECONDS.toMillis(2);
 		givenTimeWithoutBallTilGoal(timeout, MILLISECONDS);
 		long justNotTimeout = timeout - 1;
-		givenStdInContains(ball() //
+		givenInputToProcessIs(ball() //
 				.prepareForLeftGoal().then(offTable()).thenAfter(justNotTimeout, MILLISECONDS).then(offTable()).then() //
 				.prepareForRightGoal().then(offTable()).thenAfter(justNotTimeout, MILLISECONDS).then(offTable()).then() //
 				.prepareForLeftGoal().then(offTable()).thenAfter(justNotTimeout, MILLISECONDS).then(kickoff()).then() //
 				.prepareForRightGoal().then(offTable()).thenAfter(justNotTimeout, MILLISECONDS).then(kickoff()) //
 		);
-		whenStdInInputWasProcessed();
+		whenInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
 	}
 
@@ -305,8 +317,8 @@ public class SFTDetectionTest {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
 		givenTimeWithoutBallTilGoal(0, MILLISECONDS);
-		givenStdInContains(ball().prepareForLeftGoal().then().score());
-		whenStdInInputWasProcessed();
+		givenInputToProcessIs(ball().prepareForLeftGoal().then().score());
+		whenInputWasProcessed();
 		thenGoalForTeamIsPublished(1);
 	}
 
@@ -314,8 +326,8 @@ public class SFTDetectionTest {
 	public void canRevertGoals() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(ball().prepareForLeftGoal().then().score().then(pos(0.0, 0.0)));
-		whenStdInInputWasProcessed();
+		givenInputToProcessIs(ball().prepareForLeftGoal().then().score().then(anyCorner()));
+		whenInputWasProcessed();
 		thenPayloadsWithTopicAre("game/score/1", "1", "0");
 	}
 
@@ -323,7 +335,7 @@ public class SFTDetectionTest {
 	public void doesSendWinner() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(ball() //
+		givenInputToProcessIs(ball() //
 				.prepareForLeftGoal().then().score().then() //
 				.prepareForLeftGoal().then().score().then() //
 				.prepareForLeftGoal().then().score().then() //
@@ -331,15 +343,15 @@ public class SFTDetectionTest {
 				.prepareForLeftGoal().then().score().then() //
 				.prepareForLeftGoal().then().score() //
 		);
-		whenStdInInputWasProcessed();
-		thenPayloadsWithTopicAre("game/gameover", "1");
+		whenInputWasProcessed();
+		thenWinnerAre(1);
 	}
 
 	@Test
 	public void doesSendDrawWinners() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(ball() //
+		givenInputToProcessIs(ball() //
 				.prepareForLeftGoal().score().then() //
 				.prepareForRightGoal().then().score().then() //
 				.prepareForLeftGoal().score().then() //
@@ -351,15 +363,15 @@ public class SFTDetectionTest {
 				.prepareForLeftGoal().score().then() //
 				.prepareForRightGoal().score() //
 		);
-		whenStdInInputWasProcessed();
-		thenPayloadsWithTopicAre("game/gameover", "0,1");
+		whenInputWasProcessed();
+		thenWinnerAre(0, 1);
 	}
 
 	@Test
 	public void doesSendGameStart() throws IOException {
 		givenATableOfAnySize();
-		givenStdInContains(ball().at(kickoff()).at(kickoff()));
-		whenStdInInputWasProcessed();
+		givenInputToProcessIs(ball().at(kickoff()).at(kickoff()));
+		whenInputWasProcessed();
 		assertOneMessageWithPayload(messagesWithTopic("game/start"), is(""));
 	}
 
@@ -367,11 +379,11 @@ public class SFTDetectionTest {
 	public void doesSendFoul() throws IOException {
 		givenATableOfAnySize();
 		BallPosBuilder middlefieldRow = kickoff().left(0.1);
-		givenStdInContains(ball().at(middlefieldRow) //
+		givenInputToProcessIs(ball().at(middlefieldRow) //
 				.thenAfter(10, SECONDS).at(middlefieldRow.up(0.49)) //
 				.thenAfter(5, SECONDS).at(middlefieldRow.down(0.49)) //
 		);
-		whenStdInInputWasProcessed();
+		whenInputWasProcessed();
 		assertOneMessageWithPayload(messagesWithTopic("game/foul"), is(""));
 	}
 
@@ -379,12 +391,12 @@ public class SFTDetectionTest {
 	public void doesNotSendFoul() throws IOException {
 		givenATableOfAnySize();
 		BallPosBuilder middlefieldRow = kickoff().left(0.1);
-		givenStdInContains(ball().at(middlefieldRow) //
+		givenInputToProcessIs(ball().at(middlefieldRow) //
 				.thenAfter(10, SECONDS).at(middlefieldRow.up(0.49)) //
 				.thenAfter(4, SECONDS).at(frontOfLeftGoal()) //
 				.thenAfter(1, SECONDS).at(middlefieldRow.down(0.49)) //
 		);
-		whenStdInInputWasProcessed();
+		whenInputWasProcessed();
 		thenNoMessageWithTopicIsSent("game/foul");
 	}
 
@@ -392,13 +404,13 @@ public class SFTDetectionTest {
 	public void doesSendFoulOnlyOnceUntilFoulIsOver() throws IOException {
 		givenATableOfAnySize();
 		BallPosBuilder middlefieldRow = kickoff().left(0.1);
-		givenStdInContains(ball().at(middlefieldRow.up(0.49)) //
+		givenInputToProcessIs(ball().at(middlefieldRow.up(0.49)) //
 				.thenAfter(15, SECONDS).at(middlefieldRow.down(0.49)) //
 				.thenAfter(100, MILLISECONDS).at(middlefieldRow.down(0.49)) //
 				.thenAfter(100, MILLISECONDS).at(middlefieldRow.down(0.49)) //
 				.thenAfter(100, MILLISECONDS).at(middlefieldRow.down(0.49)) //
 		);
-		whenStdInInputWasProcessed();
+		whenInputWasProcessed();
 		assertOneMessageWithPayload(messagesWithTopic("game/foul"), is(""));
 	}
 
@@ -406,7 +418,7 @@ public class SFTDetectionTest {
 	public void doesRestartAfterGameEnd() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(ball() //
+		givenInputToProcessIs(ball() //
 				.prepareForLeftGoal().score().then() //
 				.prepareForRightGoal().score().then() //
 				.prepareForLeftGoal().score().then() //
@@ -423,67 +435,67 @@ public class SFTDetectionTest {
 				.prepareForRightGoal().score().then() //
 				.prepareForRightGoal().score() //
 		);
-		whenStdInInputWasProcessed();
-		assertThat(collectedMessages.stream().filter(m -> !m.getTopic().startsWith("ball/")).collect(toList()),
+		whenInputWasProcessed();
+		assertThat(collectedMessages(m -> !m.getTopic().startsWith("ball/")).collect(toList()), //
 				is(asList( //
-						Message.message("game/start", ""), //
-						Message.message("team/scored", 1), //
-						Message.message("game/score/1", 1), //
-						Message.message("team/scored", 0), //
-						Message.message("game/score/0", 1), //
-						Message.message("team/scored", 1), //
-						Message.message("game/score/1", 2), //
-						Message.message("team/scored", 0), //
-						Message.message("game/score/0", 2), //
-						Message.message("team/scored", 1), //
-						Message.message("game/score/1", 3), //
-						Message.message("team/scored", 0), //
-						Message.message("game/score/0", 3), //
-						Message.message("team/scored", 1), //
-						Message.message("game/score/1", 4), //
-						Message.message("team/scored", 0), //
-						Message.message("game/score/0", 4), //
-						Message.message("team/scored", 1), //
-						Message.message("game/score/1", 5), //
-						Message.message("team/scored", 0), //
-						Message.message("game/score/0", 5), //
-						Message.message("game/gameover", "0,1"), //
-						Message.message("game/start", ""), //
-						Message.message("team/scored", 1), //
-						Message.message("game/score/1", 1), //
-						Message.message("team/scored", 1), //
-						Message.message("game/score/1", 2), //
-						Message.message("team/scored", 0), //
-						Message.message("game/score/0", 1), //
-						Message.message("team/scored", 0), //
-						Message.message("game/score/0", 2))));
+						message("game/start", ""), //
+						message("team/scored", 1), //
+						message("game/score/1", 1), //
+						message("team/scored", 0), //
+						message("game/score/0", 1), //
+						message("team/scored", 1), //
+						message("game/score/1", 2), //
+						message("team/scored", 0), //
+						message("game/score/0", 2), //
+						message("team/scored", 1), //
+						message("game/score/1", 3), //
+						message("team/scored", 0), //
+						message("game/score/0", 3), //
+						message("team/scored", 1), //
+						message("game/score/1", 4), //
+						message("team/scored", 0), //
+						message("game/score/0", 4), //
+						message("team/scored", 1), //
+						message("game/score/1", 5), //
+						message("team/scored", 0), //
+						message("game/score/0", 5), //
+						message("game/gameover", winners(0, 1)), //
+						message("game/start", ""), //
+						message("team/scored", 1), //
+						message("game/score/1", 1), //
+						message("team/scored", 1), //
+						message("game/score/1", 2), //
+						message("team/scored", 0), //
+						message("game/score/0", 1), //
+						message("team/scored", 0), //
+						message("game/score/0", 2))));
 	}
 
 	@Test
 	public void doesSendIdleOn() throws IOException {
 		givenATableOfAnySize();
-		givenStdInContains(ball().at(kickoff()) //
+		givenInputToProcessIs(ball().at(kickoff()) //
 				.thenAfter(1, SECONDS).at(offTable()) //
 				.thenAfter(1, MINUTES).at(offTable()) //
 				.thenAfter(1, SECONDS).at(offTable()) //
 				.thenAfter(1, SECONDS).at(offTable()) //
 				.thenAfter(1, SECONDS).at(offTable()) //
 		);
-		whenStdInInputWasProcessed();
+		whenInputWasProcessed();
 		thenPayloadsWithTopicAre("game/idle", "true");
 	}
 
 	@Test
 	public void doesSendIdleOff() throws IOException {
 		givenATableOfAnySize();
-		givenStdInContains(ball().at(kickoff()) //
+		givenInputToProcessIs(ball().at(kickoff()) //
 				.thenAfter(1, SECONDS).at(offTable()) //
 				.thenAfter(1, MINUTES).at(offTable()) //
 				.thenAfter(1, SECONDS).at(kickoff()) //
 				.thenAfter(1, SECONDS).at(kickoff()) //
 				.thenAfter(1, SECONDS).at(kickoff()) //
 		);
-		whenStdInInputWasProcessed();
+		whenInputWasProcessed();
 		thenPayloadsWithTopicAre("game/idle", "true", "false");
 	}
 
@@ -492,13 +504,13 @@ public class SFTDetectionTest {
 	public void canResetAgameInPlay() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenStdInContains(ball() //
+		givenInputToProcessIs(ball() //
 				.prepareForLeftGoal().score().then() //
 				.prepareForRightGoal().score() //
 		);
-		whenStdInInputWasProcessed();
-		thenPayloadsWithTopicAre("game/start", "", "");
-		thenPayloadsWithTopicAre("game/gameover", "");
+		whenInputWasProcessed();
+		thenPayloadsWithTopicAre("game/gameover", "xxx");
+		thenPayloadsWithTopicAre("game/start", "", "yyy");
 	}
 
 	private void thenDistanceInCentimetersAndVelocityArePublished(double centimeters, double mps, double kmh) {
@@ -527,7 +539,7 @@ public class SFTDetectionTest {
 		is = new ByteArrayInputStream(Arrays.stream(messages).collect(joining("\n")).getBytes());
 	}
 
-	private void givenStdInContains(StdInBuilder builder) {
+	private void givenInputToProcessIs(StdInBuilder builder) {
 		givenStdInContains(builder.build());
 	}
 
@@ -539,8 +551,8 @@ public class SFTDetectionTest {
 		this.goalDetectorConfig.timeWithoutBallTilGoal(duration, timeUnit);
 	}
 
-	void whenStdInInputWasProcessed() throws IOException {
-		sut.getGame().goalDetectorConfig(goalDetectorConfig);
+	void whenInputWasProcessed() throws IOException {
+		sut = sut.withGoalConfig(goalDetectorConfig);
 		sut.process(new RelativeValueParser(), is);
 	}
 
@@ -573,11 +585,23 @@ public class SFTDetectionTest {
 	}
 
 	private void thenNoMessageIsSent(Predicate<Message> predicate) {
-		assertThat(collectedMessages.stream().filter(predicate).collect(toList()), is(emptyList()));
+		assertThat(collectedMessages(predicate).collect(toList()), is(emptyList()));
+	}
+
+	private Stream<Message> collectedMessages(Predicate<Message> predicate) {
+		return collectedMessages.stream().filter(predicate);
 	}
 
 	private void thenPayloadsWithTopicAre(String topic, String... payloads) {
 		assertThat(payloads(messagesWithTopic(topic)), is(asList(payloads)));
+	}
+
+	private void thenWinnerAre(int... winners) {
+		thenPayloadsWithTopicAre("game/gameover", winners(winners));
+	}
+
+	private String winners(int... winners) {
+		return IntStream.of(winners).mapToObj(String::valueOf).collect(joining(","));
 	}
 
 	private List<String> payloads(Stream<Message> messages) {
@@ -594,6 +618,10 @@ public class SFTDetectionTest {
 
 	private Stream<Message> messagesWithTopic(String topic) {
 		return collectedMessages.stream().filter(m -> m.getTopic().equals(topic));
+	}
+
+	private BallPosBuilder anyCorner() {
+		return upperLeftCorner();
 	}
 
 	private static <T> T onlyElement(Stream<T> stream) {

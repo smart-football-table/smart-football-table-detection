@@ -69,9 +69,9 @@ public class PythonOutputProcessingMain {
 //			}
 //		};
 
-		SFTDetection detection = SFTDetection.detectionOn(new Table(160, 80), sysout);
-		detection.getGame().goalDetectorConfig(new GoalDetector.Config().frontOfGoalPercentage(40));
-		detection.process(new AbsValueParser(), new FileInputStream(new File("python_output_opencv.txt")));
+		SFTDetection.detectionOn(new Table(160, 80), sysout)
+				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40))
+				.process(new AbsValueParser(), new FileInputStream(new File("python_output_opencv.txt")));
 	}
 
 }
