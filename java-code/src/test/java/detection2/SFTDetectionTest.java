@@ -44,6 +44,7 @@ import detection2.data.Message;
 import detection2.data.Table;
 import detection2.data.position.RelativePosition;
 import detection2.detector.GoalDetector;
+import detection2.input.InputStreamPositionProvider;
 import detection2.parser.RelativeValueParser;
 
 public class SFTDetectionTest {
@@ -553,7 +554,7 @@ public class SFTDetectionTest {
 
 	void whenInputWasProcessed() throws IOException {
 		sut = sut.withGoalConfig(goalDetectorConfig);
-		sut.process(new RelativeValueParser(), is);
+		sut.process(new InputStreamPositionProvider(is, new RelativeValueParser()));
 	}
 
 	private void thenTheRelativePositionOnTheTableIsPublished(double x, double y) {

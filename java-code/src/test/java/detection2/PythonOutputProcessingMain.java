@@ -6,6 +6,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
@@ -13,6 +14,7 @@ import detection2.data.Message;
 import detection2.data.Table;
 import detection2.data.position.RelativePosition;
 import detection2.detector.GoalDetector;
+import detection2.input.InputStreamPositionProvider;
 import detection2.parser.LineParser;
 import detection2.parser.RelativeValueParser;
 
@@ -63,15 +65,16 @@ public class PythonOutputProcessingMain {
 
 	public static void main(String[] args) throws IOException {
 		Consumer<Message> sysout = System.out::println;
-//		Consumer<Message> publisher = t -> {
-//			if (t.getTopic().contains("score")) {
-//				sysout.accept(t);
-//			}
-//		};
-
+		// Consumer<Message> publisher = t -> {
+		// if (t.getTopic().contains("score")) {
+		// sysout.accept(t);
+		// }
+		// };
+		
 		SFTDetection.detectionOn(new Table(160, 80), sysout)
 				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40))
-				.process(new AbsValueParser(), new FileInputStream(new File("python_output_opencv.txt")));
+				.process(new InputStreamPositionProvider(new FileInputStream(new File("python_output_opencv.txt")),
+						new AbsValueParser()));
 	}
 
 }

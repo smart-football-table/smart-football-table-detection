@@ -1,16 +1,13 @@
 package detection2;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.function.Consumer;
 
 import detection2.data.Message;
 import detection2.data.Table;
 import detection2.data.position.RelativePosition;
 import detection2.detector.GoalDetector;
-import detection2.parser.LineParser;
+import detection2.input.PositionProvider;
 
 public class SFTDetection {
 
@@ -31,18 +28,10 @@ public class SFTDetection {
 		return this;
 	}
 
-	public void process(LineParser lineParser, InputStream is) throws IOException {
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-			String line;
-			while ((line = reader.readLine()) != null) {
-				RelativePosition relPos = lineParser.parse(line);
-				if (relPos == null) {
-					// TODO log invalid line
-				} else {
-					game = game.update(table.toAbsolute(relPos));
-				}
-			}
-
+	public void process(PositionProvider positionProvider) throws IOException {
+		RelativePosition relPos;
+		while ((relPos = positionProvider.next()) != null) {
+			game = game.update(table.toAbsolute(relPos));
 		}
 	}
 
