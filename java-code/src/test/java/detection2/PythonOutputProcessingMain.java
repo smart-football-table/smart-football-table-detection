@@ -6,7 +6,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
@@ -70,8 +69,8 @@ public class PythonOutputProcessingMain {
 		// sysout.accept(t);
 		// }
 		// };
-		
-		SFTDetection.detectionOn(new Table(160, 80), sysout)
+
+		SFTDetection.detectionOn(new Table(120, 68), sysout)
 				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40))
 				.process(new InputStreamPositionProvider(new FileInputStream(new File("python_output_opencv.txt")),
 						new AbsValueParser()));
