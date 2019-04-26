@@ -29,9 +29,11 @@ public class SFTDetection {
 	}
 
 	public void process(PositionProvider positionProvider) throws IOException {
-		RelativePosition relPos;
-		while ((relPos = positionProvider.next()) != null) {
-			game = game.update(table.toAbsolute(relPos));
+		RelativePosition pos;
+		while ((pos = positionProvider.next()) != null) {
+			if (pos.isNull() || !pos.isNull()) {
+				game = game.update(table.toAbsolute(pos));
+			}
 		}
 	}
 

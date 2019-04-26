@@ -43,6 +43,12 @@ public class OpenCVHandler {
 
 	private final Map<PythonArg, String> pythonArgs = new EnumMap<>(PythonArg.class);
 
+	private final Consumer<Message> consumer;
+
+	public OpenCVHandler(Consumer<Message> consumer) throws IOException {
+		this.consumer = consumer;
+	}
+
 	public void startPythonModule() throws IOException {
 		runDetection(startProcess("python", "-u", pythonModule()));
 	}
@@ -52,7 +58,7 @@ public class OpenCVHandler {
 	}
 
 	private void runDetection(InputStream is) throws IOException {
-		SFTDetection.detectionOn(new Table(120, 68), mqtt())
+		SFTDetection.detectionOn(new Table(120, 68), consumer)
 				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40))
 				.process(new InputStreamPositionProvider(is, parser()));
 	}
@@ -71,11 +77,6 @@ public class OpenCVHandler {
 			args.addAll(asList(entry.getKey().pythonSwitch, entry.getValue()));
 		}
 		return args.toArray(new String[args.size()]);
-	}
-
-	private Consumer<Message> mqtt() {
-		// TODO PF
-		return System.out::println;
 	}
 
 	private LineParser parser() {
