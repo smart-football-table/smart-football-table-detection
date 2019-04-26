@@ -145,7 +145,7 @@ public class OpenCVHandler {
 		setPythonArg(RECORD_PATH, value);
 	}
 
-	private void setPythonArg(PythonArg pythonArg, String value) {
+	public void setPythonArg(PythonArg pythonArg, String value) {
 		this.pythonArgs.put(pythonArg, value);
 	}
 
