@@ -48,15 +48,18 @@ public class OpenCVHandler {
 	public void startPythonModule(String pythonModule) throws IOException {
 		String path = System.getProperty("user.dir").replace('\\', '/');
 
-		List<String> args = new ArrayList<>(asList("python", "-u", path + "/" + pythonModule));
-		for (Entry<PythonArg, String> entry : pythonArgs.entrySet()) {
-			args.addAll(asList(entry.getKey().pythonSwitch, entry.getValue()));
-		}
-
-		ProcessBuilder pb = new ProcessBuilder(args.toArray(new String[args.size()]));
+		List<String> pythonCommand = new ArrayList<>(asList("python", "-u", path + "/" + pythonModule));
+		ProcessBuilder pb = new ProcessBuilder(appendArgs(pythonCommand));
 		pb.redirectOutput();
 		pb.redirectError();
 		pb.start();
+	}
+
+	private String[] appendArgs(List<String> args) {
+		for (Entry<PythonArg, String> entry : pythonArgs.entrySet()) {
+			args.addAll(asList(entry.getKey().pythonSwitch, entry.getValue()));
+		}
+		return args.toArray(new String[args.size()]);
 	}
 
 	public void handleWithOpenCVOutput() throws MqttSecurityException, MqttException, IOException {
