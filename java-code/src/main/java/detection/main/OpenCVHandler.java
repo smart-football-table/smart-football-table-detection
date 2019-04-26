@@ -9,9 +9,8 @@ import static java.lang.System.arraycopy;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -19,9 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
-
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
 import detection2.SFTDetection;
 import detection2.data.Message;
@@ -43,16 +39,31 @@ public class OpenCVHandler {
 		}
 	}
 
-	private Map<PythonArg, String> pythonArgs = new EnumMap<>(PythonArg.class);
+	private static final String PYTHON_MODULE = "darknet_video.py";
 
-	public void startPythonModule(String pythonModule) throws IOException {
-		String path = System.getProperty("user.dir").replace('\\', '/');
+	private final Map<PythonArg, String> pythonArgs = new EnumMap<>(PythonArg.class);
 
-		List<String> pythonCommand = new ArrayList<>(asList("python", "-u", path + "/" + pythonModule));
-		ProcessBuilder pb = new ProcessBuilder(appendArgs(pythonCommand));
-		pb.redirectOutput();
-		pb.redirectError();
-		pb.start();
+	public void startPythonModule() throws IOException {
+		runDetection(startProcess("python", "-u", pythonModule()));
+	}
+
+	private void runDetection(Process process) throws IOException {
+		runDetection(process.getInputStream());
+	}
+
+	private void runDetection(InputStream is) throws IOException {
+		SFTDetection.detectionOn(new Table(120, 68), mqtt())
+				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40))
+				.process(new InputStreamPositionProvider(is, parser()));
+	}
+
+	private String pythonModule() {
+		// TODO do not depend on user home
+		return System.getProperty("user.dir") + "/" + PYTHON_MODULE;
+	}
+
+	private Process startProcess(String... pythonCommand) throws IOException {
+		return new ProcessBuilder(appendArgs(new ArrayList<>(asList(pythonCommand)))).start();
 	}
 
 	private String[] appendArgs(List<String> args) {
@@ -62,18 +73,9 @@ public class OpenCVHandler {
 		return args.toArray(new String[args.size()]);
 	}
 
-	public void handleWithOpenCVOutput() throws MqttSecurityException, MqttException, IOException {
-		SFTDetection.detectionOn(new Table(160, 80), mqtt())
-				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40))
-				.process(new InputStreamPositionProvider(new FileInputStream(new File("python_output_opencv.txt")),
-						parser()));
-
-	}
-
 	private Consumer<Message> mqtt() {
 		// TODO PF
-		return m -> {
-		};
+		return System.out::println;
 	}
 
 	private LineParser parser() {
@@ -122,31 +124,32 @@ public class OpenCVHandler {
 
 	@Deprecated // use setPythonArg directly
 	public void setPythonArgumentVideoPath(String value) {
-		setPythonArg(VIDEO_PATH, value);
+		addPythonArg(VIDEO_PATH, value);
 	}
 
 	@Deprecated // use setPythonArg directly
 	public void setPythonArgumentColor(String value) {
-		setPythonArg(COLOR, value);
+		addPythonArg(COLOR, value);
 	}
 
 	@Deprecated // use setPythonArg directly
 	public void setPythonArgumentCamIndex(String value) {
-		setPythonArg(CAM_INDEX, value);
+		addPythonArg(CAM_INDEX, value);
 	}
 
 	@Deprecated // use setPythonArg directly
 	public void setPythonArgumentBufferSize(String value) {
-		setPythonArg(BUFFER_SIZE, value);
+		addPythonArg(BUFFER_SIZE, value);
 	}
 
 	@Deprecated // use setPythonArg directly
 	public void setPythonArgumentRecordPath(String value) {
-		setPythonArg(RECORD_PATH, value);
+		addPythonArg(RECORD_PATH, value);
 	}
 
-	public void setPythonArg(PythonArg pythonArg, String value) {
+	public OpenCVHandler addPythonArg(PythonArg pythonArg, String value) {
 		this.pythonArgs.put(pythonArg, value);
+		return this;
 	}
 
 }
