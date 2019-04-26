@@ -11,7 +11,7 @@ import detection2.parser.LineParser;
 public final class InputStreamPositionProvider implements PositionProvider {
 
 	private final LineParser lineParser;
-	private BufferedReader reader;
+	private final BufferedReader reader;
 
 	public InputStreamPositionProvider(InputStream is, LineParser lineParser) {
 		this.lineParser = lineParser;

@@ -17,7 +17,7 @@ public class RelativeValueParser implements LineParser {
 				if (x == -1 && y == -1) {
 					return RelativePosition.noPosition(timestamp);
 				} else if (isValidPosition(x, y)) {
-					return new RelativePosition(timestamp, x, y);
+					return RelativePosition.create(timestamp, x, y);
 				}
 			}
 		}

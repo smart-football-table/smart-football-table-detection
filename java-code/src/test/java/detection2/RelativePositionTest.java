@@ -13,13 +13,13 @@ public class RelativePositionTest {
 	public void normalizeLeftHandSide() {
 		double x = 0.1;
 		double y = 0.2;
-		RelativePosition pos = new RelativePosition(anyTimestamp(), x, y);
-		assertThat(pos.normalizeX(), is(new RelativePosition(pos.getTimestamp(), 1.0 - x, y)));
+		RelativePosition pos = RelativePosition.create(anyTimestamp(), x, y);
+		assertThat(pos.normalizeX(), is(RelativePosition.create(pos.getTimestamp(), 1.0 - x, y)));
 	}
 
 	@Test
 	public void normalizeRightHandSide() {
-		RelativePosition pos = new RelativePosition(anyTimestamp(), 0.9, 0.2);
+		RelativePosition pos = RelativePosition.create(anyTimestamp(), 0.9, 0.2);
 		assertThat(pos.normalizeX(), is(pos));
 	}
 
@@ -27,13 +27,13 @@ public class RelativePositionTest {
 	public void normalizeTop() {
 		double x = 0.2;
 		double y = 0.1;
-		RelativePosition pos = new RelativePosition(anyTimestamp(), x, y);
-		assertThat(pos.normalizeY(), is(new RelativePosition(pos.getTimestamp(), x, 1.0 - y)));
+		RelativePosition pos = RelativePosition.create(anyTimestamp(), x, y);
+		assertThat(pos.normalizeY(), is(RelativePosition.create(pos.getTimestamp(), x, 1.0 - y)));
 	}
 
 	@Test
 	public void normalizeBottom() {
-		RelativePosition pos = new RelativePosition(anyTimestamp(), 0.2, 0.9);
+		RelativePosition pos = RelativePosition.create(anyTimestamp(), 0.2, 0.9);
 		assertThat(pos.normalizeY(), is(pos));
 	}
 

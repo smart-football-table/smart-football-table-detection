@@ -9,10 +9,15 @@ public class RelativePosition implements Position {
 	private final double y;
 
 	public static RelativePosition noPosition(long timestamp) {
-		return new RelativePosition(timestamp, -1, -1);
+		return create(timestamp, -1, -1);
 	}
 
-	public RelativePosition(long timestamp, double x, double y) {
+	// TODO create two subclasses absent/pressent
+	public static RelativePosition create(long timestamp, double x, double y) {
+		return new RelativePosition(timestamp, x, y);
+	}
+
+	private RelativePosition(long timestamp, double x, double y) {
 		this.timestamp = timestamp;
 		this.x = x;
 		this.y = y;
@@ -39,11 +44,11 @@ public class RelativePosition implements Position {
 	}
 
 	public RelativePosition normalizeX() {
-		return new RelativePosition(timestamp, centerX() + abs(centerX() - x), y);
+		return create(timestamp, centerX() + abs(centerX() - x), y);
 	}
 
 	public RelativePosition normalizeY() {
-		return new RelativePosition(timestamp, x, centerY() + abs(centerY() - y));
+		return create(timestamp, x, centerY() + abs(centerY() - y));
 	}
 
 	public boolean isRightHandSide() {
