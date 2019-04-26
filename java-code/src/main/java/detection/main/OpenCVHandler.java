@@ -1,12 +1,23 @@
 package detection.main;
 
+import static detection.main.OpenCVHandler.PythonArg.BUFFER_SIZE;
+import static detection.main.OpenCVHandler.PythonArg.CAM_INDEX;
+import static detection.main.OpenCVHandler.PythonArg.COLOR;
+import static detection.main.OpenCVHandler.PythonArg.RECORD_PATH;
+import static detection.main.OpenCVHandler.PythonArg.VIDEO_PATH;
 import static java.lang.System.arraycopy;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Consumer;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -23,18 +34,26 @@ import detection2.parser.RelativeValueParser;
 
 public class OpenCVHandler {
 
-	private String pythonModule = "";
-	private String pythonArgumentVideoPath = "empty";
-	private String pythonArgumentRecordPath = "empty";
-	private String pythonArgumentColor = "0,0,0,0,0,0";
-	private String pythonArgumentCamIndex = "0";
-	private String pythonArgumentBufferSize = "64";
+	public enum PythonArg {
+		VIDEO_PATH("-v"), RECORD_PATH("-r"), COLOR("-c"), CAM_INDEX("-i"), BUFFER_SIZE("-b");
+		private String pythonSwitch;
 
-	public void startPythonModule() throws IOException {
+		private PythonArg(String pythonSwitch) {
+			this.pythonSwitch = pythonSwitch;
+		}
+	}
+
+	private Map<PythonArg, String> pythonArgs = new EnumMap<>(PythonArg.class);
+
+	public void startPythonModule(String pythonModule) throws IOException {
 		String path = System.getProperty("user.dir").replace('\\', '/');
-		ProcessBuilder pb = new ProcessBuilder("python", "-u", path + "/" + pythonModule, "-v", pythonArgumentVideoPath,
-				"-c", pythonArgumentColor, "-i", pythonArgumentCamIndex, "-b", pythonArgumentBufferSize, "-r",
-				pythonArgumentRecordPath);
+
+		List<String> args = new ArrayList<>(asList("python", "-u", path + "/" + pythonModule));
+		for (Entry<PythonArg, String> entry : pythonArgs.entrySet()) {
+			args.addAll(asList(entry.getKey().pythonSwitch, entry.getValue()));
+		}
+
+		ProcessBuilder pb = new ProcessBuilder(args.toArray(new String[args.size()]));
 		pb.redirectOutput();
 		pb.redirectError();
 		pb.start();
@@ -98,48 +117,33 @@ public class OpenCVHandler {
 		};
 	}
 
-	public void setPythonModule(String string) {
-		pythonModule = string;
+	@Deprecated // use setPythonArg directly
+	public void setPythonArgumentVideoPath(String value) {
+		setPythonArg(VIDEO_PATH, value);
 	}
 
-	public String getPythonArgumentVideoPath() {
-		return pythonArgumentVideoPath;
+	@Deprecated // use setPythonArg directly
+	public void setPythonArgumentColor(String value) {
+		setPythonArg(COLOR, value);
 	}
 
-	public void setPythonArgumentVideoPath(String pythonArgumentVideoPath) {
-		this.pythonArgumentVideoPath = pythonArgumentVideoPath;
+	@Deprecated // use setPythonArg directly
+	public void setPythonArgumentCamIndex(String value) {
+		setPythonArg(CAM_INDEX, value);
 	}
 
-	public String getPythonArgumentColor() {
-		return pythonArgumentColor;
+	@Deprecated // use setPythonArg directly
+	public void setPythonArgumentBufferSize(String value) {
+		setPythonArg(BUFFER_SIZE, value);
 	}
 
-	public void setPythonArgumentColor(String pythonArgumentColor) {
-		this.pythonArgumentColor = pythonArgumentColor;
+	@Deprecated // use setPythonArg directly
+	public void setPythonArgumentRecordPath(String value) {
+		setPythonArg(RECORD_PATH, value);
 	}
 
-	public String getPythonArgumentCamIndex() {
-		return pythonArgumentCamIndex;
-	}
-
-	public void setPythonArgumentCamIndex(String pythonArgumentCamIndex) {
-		this.pythonArgumentCamIndex = pythonArgumentCamIndex;
-	}
-
-	public String getPythonArgumentBufferSize() {
-		return pythonArgumentBufferSize;
-	}
-
-	public void setPythonArgumentBufferSize(String pythonArgumentBufferSize) {
-		this.pythonArgumentBufferSize = pythonArgumentBufferSize;
-	}
-
-	public String getPythonArgumentRecordPath() {
-		return pythonArgumentRecordPath;
-	}
-
-	public void setPythonArgumentRecordPath(String pythonArgumentRecordPath) {
-		this.pythonArgumentRecordPath = pythonArgumentRecordPath;
+	private void setPythonArg(PythonArg pythonArg, String value) {
+		this.pythonArgs.put(pythonArg, value);
 	}
 
 }
