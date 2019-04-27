@@ -155,8 +155,12 @@ public class SFTDetectionTest {
 			return this;
 		}
 
-		private StdInBuilder thenAfter(long adjustment, TimeUnit timeUnit) {
-			timestamp += timeUnit.toMillis(adjustment);
+		private StdInBuilder thenAfterMillis(long duration) {
+			return thenAfter(duration, MILLISECONDS);
+		}
+
+		private StdInBuilder thenAfter(long duration, TimeUnit timeUnit) {
+			timestamp += timeUnit.toMillis(duration);
 			return this;
 		}
 
@@ -331,12 +335,12 @@ public class SFTDetectionTest {
 		givenFrontOfGoalPercentage(20);
 		long timeout = SECONDS.toMillis(2);
 		givenTimeWithoutBallTilGoal(timeout, MILLISECONDS);
-		long justNotTimeout = timeout - 1;
+		long oneMsMeforeTimeout = timeout - 1;
 		givenInputToProcessIs(ball() //
-				.prepareForLeftGoal().then(offTable()).thenAfter(justNotTimeout, MILLISECONDS).then(offTable()).then() //
-				.prepareForRightGoal().then(offTable()).thenAfter(justNotTimeout, MILLISECONDS).then(offTable()).then() //
-				.prepareForLeftGoal().then(offTable()).thenAfter(justNotTimeout, MILLISECONDS).then(kickoff()).then() //
-				.prepareForRightGoal().then(offTable()).thenAfter(justNotTimeout, MILLISECONDS).then(kickoff()) //
+				.prepareForLeftGoal().then(offTable()).thenAfterMillis(oneMsMeforeTimeout).then(offTable()).then() //
+				.prepareForRightGoal().then(offTable()).thenAfterMillis(oneMsMeforeTimeout).then(offTable()).then() //
+				.prepareForLeftGoal().then(offTable()).thenAfterMillis(oneMsMeforeTimeout).then(kickoff()).then() //
+				.prepareForRightGoal().then(offTable()).thenAfterMillis(oneMsMeforeTimeout).then(kickoff()) //
 		);
 		whenInputWasProcessed();
 		thenNoMessageWithTopicIsSent("team/scored");
