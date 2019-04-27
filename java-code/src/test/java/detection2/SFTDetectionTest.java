@@ -10,7 +10,6 @@ import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.offTable;
 import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.pos;
 import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.upperLeftCorner;
 import static detection2.data.Message.message;
-import static detection2.data.position.RelativePosition.create;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -152,7 +151,7 @@ public class SFTDetectionTest {
 		}
 
 		private StdInBuilder at(BallPosBuilder ballPosBuilder) {
-			lines.add(line(timestamp, 0.0 + ballPosBuilder.x, ballPosBuilder.y));
+			lines.add(line(timestamp, ballPosBuilder.x, ballPosBuilder.y));
 			return this;
 		}
 
@@ -188,6 +187,26 @@ public class SFTDetectionTest {
 
 		private StdInBuilder offTableFor(int duration, TimeUnit timeUnit) {
 			return at(offTable()).thenAfter(duration, timeUnit).then(offTable());
+		}
+
+		public StdInBuilder thenCall(Consumer<Consumer<RelativePosition>> setter, Consumer<RelativePosition> c) {
+			setter.accept(new Consumer<RelativePosition>() {
+				long timestampNow = timestamp;
+				private boolean processed;
+				private boolean called;
+
+				@Override
+				public void accept(RelativePosition pos) {
+					if (processed && !called) {
+						c.accept(pos);
+						called = true;
+					}
+					if (pos.getTimestamp() == timestampNow) {
+						processed = true;
+					}
+				}
+			});
+			return this;
 		}
 
 		private String[] build() {
@@ -517,34 +536,19 @@ public class SFTDetectionTest {
 
 		givenInputToProcessIs(ball(MINUTES.toMillis(15)) //
 				.prepareForLeftGoal().score().thenAfter(5, SECONDS) //
-				.prepareForLeftGoal().score() //
+				.prepareForLeftGoal().score().thenCall(this::setInProgressConsumer, p -> resetGameAndClearMessages()) //
 				.prepareForRightGoal().score().thenAfter(5, SECONDS) //
 				.prepareForRightGoal().score() //
 		);
 
-		callAfterProcessed(create(909200, kickoff().x, kickoff().y), p -> resetGameAndClearMessages());
 		whenInputWasProcessed();
 		thenPayloadsWithTopicAre("game/start", "");
 		thenPayloadsWithTopicAre("game/score/0", "1", "2");
 		thenNoMessageWithTopicIsSent("game/score/1");
 	}
 
-	private void callAfterProcessed(RelativePosition compareTo, Consumer<RelativePosition> c) {
-		inProgressConsumer = new Consumer<RelativePosition>() {
-			private boolean processed;
-			private boolean called;
-
-			@Override
-			public void accept(RelativePosition pos) {
-				if (processed && !called) {
-					c.accept(pos);
-					called = true;
-				}
-				if (compareTo.equals(pos)) {
-					processed = true;
-				}
-			}
-		};
+	public void setInProgressConsumer(Consumer<RelativePosition> inProgressConsumer) {
+		this.inProgressConsumer = inProgressConsumer;
 	}
 
 	private void thenDistanceInCentimetersAndVelocityArePublished(double centimeters, double mps, double kmh) {
