@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -44,7 +45,7 @@ import detection2.data.Message;
 import detection2.data.Table;
 import detection2.data.position.RelativePosition;
 import detection2.detector.GoalDetector;
-import detection2.input.InputStreamPositionProvider;
+import detection2.input.ReaderPositionProvider;
 import detection2.parser.RelativeValueParser;
 
 public class SFTDetectionTest {
@@ -554,7 +555,7 @@ public class SFTDetectionTest {
 
 	void whenInputWasProcessed() throws IOException {
 		sut = sut.withGoalConfig(goalDetectorConfig);
-		sut.process(new InputStreamPositionProvider(is, new RelativeValueParser()));
+		sut.process(new ReaderPositionProvider(new InputStreamReader(is), new RelativeValueParser()));
 	}
 
 	private void thenTheRelativePositionOnTheTableIsPublished(double x, double y) {

@@ -11,6 +11,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -24,7 +25,7 @@ import detection2.data.Message;
 import detection2.data.Table;
 import detection2.data.position.RelativePosition;
 import detection2.detector.GoalDetector;
-import detection2.input.InputStreamPositionProvider;
+import detection2.input.ReaderPositionProvider;
 import detection2.parser.LineParser;
 import detection2.parser.RelativeValueParser;
 
@@ -60,7 +61,7 @@ public class OpenCVHandler {
 	private void runDetection(InputStream is) throws IOException {
 		SFTDetection.detectionOn(new Table(120, 68), consumer)
 				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40))
-				.process(new InputStreamPositionProvider(is, parser()));
+				.process(new ReaderPositionProvider(new InputStreamReader(is), parser()));
 	}
 
 	private String pythonModule() {
