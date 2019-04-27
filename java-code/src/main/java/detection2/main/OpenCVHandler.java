@@ -1,10 +1,10 @@
-package detection.main;
+package detection2.main;
 
-import static detection.main.OpenCVHandler.PythonArg.BUFFER_SIZE;
-import static detection.main.OpenCVHandler.PythonArg.CAM_INDEX;
-import static detection.main.OpenCVHandler.PythonArg.COLOR;
-import static detection.main.OpenCVHandler.PythonArg.RECORD_PATH;
-import static detection.main.OpenCVHandler.PythonArg.VIDEO_PATH;
+import static detection2.main.OpenCVHandler.PythonArg.BUFFER_SIZE;
+import static detection2.main.OpenCVHandler.PythonArg.CAM_INDEX;
+import static detection2.main.OpenCVHandler.PythonArg.COLOR;
+import static detection2.main.OpenCVHandler.PythonArg.RECORD_PATH;
+import static detection2.main.OpenCVHandler.PythonArg.VIDEO_PATH;
 import static java.lang.System.arraycopy;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;

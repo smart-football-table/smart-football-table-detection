@@ -1,4 +1,4 @@
-package detection.main;
+package detection2.main;
 
 import java.io.IOException;
 import java.util.function.Consumer;
