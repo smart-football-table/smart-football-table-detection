@@ -27,13 +27,13 @@ public class SFTDetection {
 	private final Table table;
 	private Game game;
 
-	private SFTDetection(Table table, Consumer<Message> publisher) {
+	private SFTDetection(Table table, Consumer<Message> consumer) {
 		this.table = table;
-		MessageSender sender = new MessageSender(publisher);
-		this.game = Game.newGame(detectors(sender)).withScoreTracker(scoreTracker(sender));
+		MessagePublisher publisher = new MessagePublisher(consumer);
+		this.game = Game.newGame(detectors(publisher)).withScoreTracker(scoreTracker(publisher));
 	}
 
-	private ScoreTracker.Listener scoreTracker(MessageSender sender) {
+	private ScoreTracker.Listener scoreTracker(MessagePublisher sender) {
 		return new ScoreTracker.Listener() {
 
 			@Override
@@ -54,13 +54,13 @@ public class SFTDetection {
 		};
 	}
 
-	private List<Detector> detectors(MessageSender s) {
+	private List<Detector> detectors(MessagePublisher publisher) {
 		return asList( //
-				onGameStart(() -> s.gameStart()), //
-				onPositionChange(p -> s.pos(p)), //
-				onMovement(m -> s.movement(m)), //
-				onFoul(() -> s.foul()), //
-				onIdle(b -> s.idle(b)) //
+				onGameStart(() -> publisher.gameStart()), //
+				onPositionChange(p -> publisher.pos(p)), //
+				onMovement(m -> publisher.movement(m)), //
+				onFoul(() -> publisher.foul()), //
+				onIdle(b -> publisher.idle(b)) //
 		);
 	}
 

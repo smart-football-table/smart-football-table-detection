@@ -14,11 +14,11 @@ import detection2.data.Movement;
 import detection2.data.position.AbsolutePosition;
 import detection2.data.position.Position;
 
-public class MessageSender {
+public class MessagePublisher {
 
 	private final Consumer<Message> publisher;
 
-	public MessageSender(Consumer<Message> publisher) {
+	public MessagePublisher(Consumer<Message> publisher) {
 		this.publisher = publisher;
 	}
 

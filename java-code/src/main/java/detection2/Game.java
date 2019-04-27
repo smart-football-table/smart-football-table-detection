@@ -18,7 +18,7 @@ import detection2.detector.GoalDetector.Config;
 public abstract class Game {
 
 	protected final List<Detector> detectors;
-	protected final List<ScoreTracker.Listener> scoreTrackerListeners;
+	protected final List<ScoreTracker.Listener> scoreTrackerListeners = new ArrayList<>();
 	protected GoalDetector.Config goalDetectorConfig;
 
 	private static class DefaultScoreTracker implements ScoreTracker {
@@ -85,7 +85,7 @@ public abstract class Game {
 			List<ScoreTracker.Listener> scoreTrackerListeners) {
 		this.detectors = detectors;
 		this.goalDetectorConfig = goalDetectorConfig;
-		this.scoreTrackerListeners = scoreTrackerListeners;
+		this.scoreTrackerListeners.addAll(scoreTrackerListeners);
 	}
 
 	public abstract Game update(AbsolutePosition pos);
