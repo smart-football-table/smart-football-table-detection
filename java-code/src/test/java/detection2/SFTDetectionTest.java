@@ -21,7 +21,10 @@ import static java.util.stream.IntStream.range;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -45,6 +48,7 @@ import detection2.data.Table;
 import detection2.data.position.RelativePosition;
 import detection2.detector.GoalDetector;
 import detection2.input.ReaderPositionProvider;
+import detection2.parser.LineParser;
 import detection2.parser.RelativeValueParser;
 
 public class SFTDetectionTest {
@@ -128,7 +132,11 @@ public class SFTDetectionTest {
 		}
 
 		public static StdInBuilder ball() {
-			return messagesStartingAt(anyTimestamp());
+			return ball(anyTimestamp());
+		}
+
+		public static StdInBuilder ball(long timestamp) {
+			return messagesStartingAt(timestamp);
 		}
 
 		private static StdInBuilder messagesStartingAt(long timestamp) {
@@ -167,11 +175,15 @@ public class SFTDetectionTest {
 		}
 
 		private StdInBuilder prepareForLeftGoal() {
-			return at(kickoff()).then().at(frontOfLeftGoal());
+			return prepateForGoal().at(frontOfLeftGoal());
 		}
 
 		private StdInBuilder prepareForRightGoal() {
-			return at(kickoff()).then().at(frontOfRightGoal());
+			return prepateForGoal().at(frontOfRightGoal());
+		}
+
+		private StdInBuilder prepateForGoal() {
+			return at(kickoff()).thenAfter(100, MILLISECONDS);
 		}
 
 		private StdInBuilder score() {
@@ -191,9 +203,11 @@ public class SFTDetectionTest {
 	private final List<Message> collectedMessages = new ArrayList<>();
 	private final Consumer<Message> messageCollector = collectedMessages::add;
 	private final GoalDetector.Config goalDetectorConfig = new GoalDetector.Config();
+	private Consumer<RelativePosition> inProgressConsumer = p -> {
+	};
 
 	private SFTDetection sut;
-	private Reader reader;
+	private String inputString = "";
 
 	@Test
 	public void relativeValuesGetsConvertedToAbsolutesAtKickoff() throws IOException {
@@ -505,10 +519,17 @@ public class SFTDetectionTest {
 	public void canResetAgameInPlay() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
-		givenInputToProcessIs(ball() //
-				.prepareForLeftGoal().score().then() //
+
+		givenInputToProcessIs(ball(MINUTES.toMillis(15)) //
+				.prepareForLeftGoal().score().thenAfter(5, SECONDS) //
 				.prepareForRightGoal().score() //
 		);
+		inProgressConsumer = new Consumer<RelativePosition>() {
+			@Override
+			public void accept(RelativePosition pos) {
+				System.out.println(pos);
+			}
+		};
 		whenInputWasProcessed();
 		thenPayloadsWithTopicAre("game/gameover", "xxx");
 		thenPayloadsWithTopicAre("game/start", "", "yyy");
@@ -536,12 +557,12 @@ public class SFTDetectionTest {
 		givenATableOfSize(123, 45);
 	}
 
-	private void givenStdInContains(String... messages) {
-		reader = new StringReader(Arrays.stream(messages).collect(joining("\n")));
+	private void givenInputToProcessIs(String... messages) {
+		inputString = inputString.concat(Arrays.stream(messages).collect(joining("\n")));
 	}
 
 	private void givenInputToProcessIs(StdInBuilder builder) {
-		givenStdInContains(builder.build());
+		givenInputToProcessIs(builder.build());
 	}
 
 	private void givenFrontOfGoalPercentage(int frontOfGoalPercentage) {
@@ -554,7 +575,18 @@ public class SFTDetectionTest {
 
 	void whenInputWasProcessed() throws IOException {
 		sut = sut.withGoalConfig(goalDetectorConfig);
-		sut.process(new ReaderPositionProvider(reader, new RelativeValueParser()));
+		sut.process(new ReaderPositionProvider(new StringReader(inputString), adapt(new RelativeValueParser())));
+	}
+
+	private LineParser adapt(RelativeValueParser delegate) {
+		return new LineParser() {
+			@Override
+			public RelativePosition parse(String line) {
+				RelativePosition pos = delegate.parse(line);
+				inProgressConsumer.accept(pos);
+				return pos;
+			}
+		};
 	}
 
 	private void thenTheRelativePositionOnTheTableIsPublished(double x, double y) {
