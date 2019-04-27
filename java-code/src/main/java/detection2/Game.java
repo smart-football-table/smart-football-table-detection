@@ -22,9 +22,9 @@ public abstract class Game {
 
 		private static final int MAX_BALLS = 10;
 
-		private final DefaultScoreTracker.Listener listener;
+		private final ScoreTracker.Listener listener;
 
-		private DefaultScoreTracker(DefaultScoreTracker.Listener listener) {
+		private DefaultScoreTracker(ScoreTracker.Listener listener) {
 			this.listener = listener;
 		}
 
@@ -84,13 +84,13 @@ public abstract class Game {
 
 	public abstract Game update(AbsolutePosition pos);
 
-	public static Game newGame(List<Detector> detectors, DefaultScoreTracker.Listener listener) {
+	public static Game newGame(List<Detector> detectors, ScoreTracker.Listener listener) {
 		return new GameoverGame(detectors, new GoalDetector.Config(), listener);
 	}
 
 	private static class InGameGame extends Game {
 
-		private static class GameOverScoreState implements DefaultScoreTracker.Listener {
+		private static class GameOverScoreState implements ScoreTracker.Listener {
 
 			private boolean gameover;
 
@@ -136,33 +136,32 @@ public abstract class Game {
 			return gameOverScoreState.gameover;
 		}
 
-		private List<Detector> addOnGoalDetector(List<Detector> detectors,
-				DefaultScoreTracker.Listener scoreTrackerListener) {
+		private List<Detector> addOnGoalDetector(List<Detector> detectors, ScoreTracker.Listener scoreTrackerListener) {
 			List<Detector> result = new ArrayList<>(detectors);
 			result.add(onGoal(goalDetectorConfig,
 					inform(new DefaultScoreTracker(multiplexed(scoreTrackerListener, gameOverScoreState)))));
 			return result;
 		}
 
-		private DefaultScoreTracker.Listener multiplexed(ScoreTracker.Listener... listeners) {
-			return new DefaultScoreTracker.Listener() {
+		private ScoreTracker.Listener multiplexed(ScoreTracker.Listener... listeners) {
+			return new ScoreTracker.Listener() {
 				@Override
 				public void teamScored(int teamid, int score) {
-					for (DefaultScoreTracker.Listener listener : listeners) {
+					for (ScoreTracker.Listener listener : listeners) {
 						listener.teamScored(teamid, score);
 					}
 				}
 
 				@Override
 				public void won(int teamid) {
-					for (DefaultScoreTracker.Listener listener : listeners) {
+					for (ScoreTracker.Listener listener : listeners) {
 						listener.won(teamid);
 					}
 				}
 
 				@Override
 				public void draw(int[] teamids) {
-					for (DefaultScoreTracker.Listener listener : listeners) {
+					for (ScoreTracker.Listener listener : listeners) {
 						listener.draw(teamids);
 					}
 				}
@@ -191,7 +190,7 @@ public abstract class Game {
 		private final ScoreTracker.Listener scoreTrackerListener;
 
 		public GameoverGame(List<Detector> detectors, Config goalDetectorConfig,
-				DefaultScoreTracker.Listener scoreTrackerListener) {
+				ScoreTracker.Listener scoreTrackerListener) {
 			super(goalDetectorConfig);
 			this.detectors = detectors;
 			this.scoreTrackerListener = scoreTrackerListener;
