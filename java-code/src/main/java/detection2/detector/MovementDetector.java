@@ -10,6 +10,11 @@ public class MovementDetector implements Detector {
 		return new MovementDetector(listener);
 	}
 
+	@Override
+	public MovementDetector newInstance() {
+		return new MovementDetector(listener);
+	}
+
 	private final MovementDetector.Listener listener;
 
 	public static interface Listener {

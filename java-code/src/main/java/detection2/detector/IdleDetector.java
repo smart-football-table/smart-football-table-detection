@@ -10,6 +10,11 @@ public class IdleDetector implements Detector {
 		return new IdleDetector(listener);
 	}
 
+	@Override
+	public IdleDetector newInstance() {
+		return new IdleDetector(listener);
+	}
+
 	private final long idleWhen = MINUTES.toMillis(1);
 
 	public static interface Listener {

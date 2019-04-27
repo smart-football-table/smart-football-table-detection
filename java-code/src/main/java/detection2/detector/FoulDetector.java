@@ -17,6 +17,11 @@ public class FoulDetector implements Detector {
 	public static FoulDetector onFoul(Listener listener) {
 		return new FoulDetector(listener);
 	}
+	
+	@Override
+	public FoulDetector newInstance() {
+		return new FoulDetector(listener);
+	}
 
 	private final FoulDetector.Listener listener;
 

@@ -8,6 +8,11 @@ public class PositionDetector implements Detector {
 		return new PositionDetector(listener);
 	}
 
+	@Override
+	public PositionDetector newInstance() {
+		return new PositionDetector(listener);
+	}
+
 	private final PositionDetector.Listener listener;
 
 	public static interface Listener {

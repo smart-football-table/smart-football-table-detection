@@ -12,6 +12,11 @@ public class GameStartDetector implements Detector {
 		return new GameStartDetector(listener);
 	}
 
+	@Override
+	public GameStartDetector newInstance() {
+		return new GameStartDetector(listener);
+	}
+
 	private final GameStartDetector.Listener listener;
 
 	private GameStartDetector(GameStartDetector.Listener listener) {

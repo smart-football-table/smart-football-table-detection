@@ -47,6 +47,11 @@ public class GoalDetector implements Detector {
 		return new GoalDetector(config, listener);
 	}
 
+	@Override
+	public GoalDetector newInstance() {
+		return new GoalDetector(frontOfGoal, millisTilGoal, listener);
+	}
+
 	private final double frontOfGoal;
 	private final long millisTilGoal;
 	private GoalDetector.State state = new WaitForBallOnMiddleLine();
@@ -59,8 +64,12 @@ public class GoalDetector implements Detector {
 	}
 
 	private GoalDetector(GoalDetector.Config config, GoalDetector.Listener listener) {
-		this.frontOfGoal = 1 - ((double) config.getFrontOfGoalPercentage()) / 100;
-		this.millisTilGoal = config.getGoalTimeout(MILLISECONDS);
+		this(1 - ((double) config.getFrontOfGoalPercentage()) / 100, config.getGoalTimeout(MILLISECONDS), listener);
+	}
+
+	private GoalDetector(double frontOfGoal, long millisTilGoal, Listener listener) {
+		this.frontOfGoal = frontOfGoal;
+		this.millisTilGoal = millisTilGoal;
 		this.listener = listener;
 	}
 
