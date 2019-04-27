@@ -4,6 +4,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -43,6 +45,26 @@ public class MqttConsumer implements Consumer<Message>, Closeable {
 		} catch (MqttException e) {
 			throw new IOException(e);
 		}
+	}
+
+	public void setCallback(Consumer<Message> c) throws MqttException {
+		mqttClient.setCallback(new MqttCallback() {
+			@Override
+			public void messageArrived(String topic, MqttMessage message) throws Exception {
+				c.accept(Message.message(topic, new String(message.getPayload())));
+			}
+
+			@Override
+			public void deliveryComplete(IMqttDeliveryToken token) {
+			}
+
+			@Override
+			public void connectionLost(Throwable cause) {
+
+			}
+		});
+		mqttClient.subscribe("#");
+
 	}
 
 }

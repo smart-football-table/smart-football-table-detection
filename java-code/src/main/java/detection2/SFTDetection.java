@@ -9,11 +9,16 @@ import static detection2.detector.PositionDetector.onPositionChange;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+import javax.management.RuntimeErrorException;
+
+import org.eclipse.paho.client.mqttv3.MqttException;
+
 import detection2.data.Message;
 import detection2.data.Table;
 import detection2.data.position.RelativePosition;
 import detection2.detector.GoalDetector;
 import detection2.input.PositionProvider;
+import detection2.mqtt.MqttConsumer;
 
 public class SFTDetection {
 
@@ -23,8 +28,22 @@ public class SFTDetection {
 
 	private final Table table;
 	private Game game;
+	private boolean reset;
 
 	private SFTDetection(Table table, Consumer<Message> consumer) {
+		if (consumer instanceof MqttConsumer) {
+			MqttConsumer mqttConsumer = (MqttConsumer) consumer;
+			try {
+				mqttConsumer.setCallback(m -> {
+					if (m.getTopic().equals("game/reset")) {
+						resetGame();
+					}
+				});
+			} catch (MqttException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
 		this.table = table;
 		MessagePublisher publisher = new MessagePublisher(consumer);
 		this.game = Game.newGame( //
@@ -65,6 +84,10 @@ public class SFTDetection {
 	public void process(PositionProvider positionProvider) throws IOException {
 		RelativePosition pos;
 		while ((pos = positionProvider.next()) != null) {
+			if (reset) {
+				game = game.reset();
+				reset = false;
+			}
 			if (pos.isNull() || !pos.isNull()) {
 				game = game.update(table.toAbsolute(pos));
 			}
@@ -72,7 +95,7 @@ public class SFTDetection {
 	}
 
 	public void resetGame() {
-		game = game.reset();
+		this.reset = true;
 	}
 
 }

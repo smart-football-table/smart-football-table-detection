@@ -6,14 +6,14 @@ import static io.moquette.BrokerConstants.HOST_PROPERTY_NAME;
 import static io.moquette.BrokerConstants.PORT_PROPERTY_NAME;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -21,6 +21,7 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.junit.Before;
@@ -41,17 +42,19 @@ public class OpenCVHandlerTestIT {
 	private static final String LOCALHOST = "localhost";
 
 	private int brokerPort;
-	private Server server;
-	private MqttConsumer mqttConsumer;
 	private IMqttClient secondClient;
 	private List<Message> messagesReceived = new ArrayList<>();
+
+	private SFTDetection sut;
 
 	@Before
 	public void setup() throws IOException, MqttException {
 		brokerPort = randomPort();
-		server = newMqttServer(LOCALHOST, brokerPort);
+		newMqttServer(LOCALHOST, brokerPort);
 		secondClient = newMqttClient(LOCALHOST, brokerPort, "client2");
-		mqttConsumer = new MqttConsumer(LOCALHOST, brokerPort);
+		sut = SFTDetection.detectionOn(new Table(120, 68), new MqttConsumer(LOCALHOST, brokerPort))
+				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40));
+
 	}
 
 	private int randomPort() throws IOException {
@@ -76,39 +79,41 @@ public class OpenCVHandlerTestIT {
 
 			@Override
 			public void messageArrived(String topic, MqttMessage message) throws Exception {
-				System.out.println(topic + " " + message);
 				messagesReceived.add(message(topic, new String(message.getPayload())));
 			}
 
 			@Override
 			public void deliveryComplete(IMqttDeliveryToken token) {
-				// TODO Auto-generated method stub
-
 			}
 
 			@Override
 			public void connectionLost(Throwable cause) {
-				// TODO Auto-generated method stub
-
 			}
+
 		});
 		client.subscribe("#");
 		return client;
 	}
 
 	@Test
-	public void canReset() throws IOException {
-		SFTDetection.detectionOn(new Table(120, 68), new MqttConsumer(LOCALHOST, brokerPort))
-				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40)).process(positionProvider());
+	public void canReset() throws IOException, MqttPersistenceException, MqttException, InterruptedException {
+		sut.process(positionProvider(1));
+		sendReset();
+		sut.process(positionProvider(1));
+		assertThat(messagesReceived.stream().filter(m -> m.getTopic().equals("game/start")).count(), is(2L));
 	}
 
-	private PositionProvider positionProvider() {
+	private void sendReset() throws MqttException, MqttPersistenceException {
+		secondClient.publish("game/reset", new MqttMessage("".getBytes()));
+	}
+
+	private PositionProvider positionProvider(int count) {
 		return new PositionProvider() {
 			private int i;
 
 			@Override
 			public RelativePosition next() throws IOException {
-				if (i++ > 1_000) {
+				if (i++ > count) {
 					return null;
 				}
 				try {
@@ -116,6 +121,10 @@ public class OpenCVHandlerTestIT {
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 				}
+				return rand();
+			}
+
+			private RelativePosition rand() {
 				return create(currentTimeMillis(), 0.2, 0.3);
 			}
 		};
