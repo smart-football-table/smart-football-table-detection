@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
 
-import detection2.Game.ScoreTracker;
 import detection2.data.Message;
 import detection2.data.Table;
 import detection2.data.position.RelativePosition;

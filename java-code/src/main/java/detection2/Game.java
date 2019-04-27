@@ -1,6 +1,5 @@
 package detection2;
 
-import static detection2.Game.ScoreTracker.onScoreChange;
 import static detection2.detector.GoalDetector.onGoal;
 import static java.util.stream.Collectors.toList;
 
@@ -10,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
-import detection2.Game.ScoreTracker.Listener;
 import detection2.data.position.AbsolutePosition;
 import detection2.detector.Detector;
 import detection2.detector.GoalDetector;
@@ -20,34 +18,24 @@ public abstract class Game {
 
 	protected GoalDetector.Config goalDetectorConfig;
 
-	static class ScoreTracker {
-
-		public static interface Listener {
-			void teamScored(int teamid, int score);
-
-			void won(int teamid);
-
-			void draw(int[] teamids);
-		}
+	private static class DefaultScoreTracker implements ScoreTracker {
 
 		private static final int MAX_BALLS = 10;
 
-		public static ScoreTracker onScoreChange(ScoreTracker.Listener listener) {
-			return new ScoreTracker(listener);
-		}
+		private final DefaultScoreTracker.Listener listener;
 
-		private final ScoreTracker.Listener listener;
-
-		private ScoreTracker(ScoreTracker.Listener listener) {
+		private DefaultScoreTracker(DefaultScoreTracker.Listener listener) {
 			this.listener = listener;
 		}
 
 		private final Map<Integer, Integer> scores = new HashMap<>();
 
+		@Override
 		public int teamScored(int teamid) {
 			return changeScore(teamid, +1);
 		}
 
+		@Override
 		public int revertGoal(int teamid) {
 			return changeScore(teamid, -1);
 		}
@@ -96,13 +84,13 @@ public abstract class Game {
 
 	public abstract Game update(AbsolutePosition pos);
 
-	public static Game newGame(List<Detector> detectors, ScoreTracker.Listener listener) {
+	public static Game newGame(List<Detector> detectors, DefaultScoreTracker.Listener listener) {
 		return new GameoverGame(detectors, new GoalDetector.Config(), listener);
 	}
 
 	private static class InGameGame extends Game {
 
-		private static class GameOverScoreState implements ScoreTracker.Listener {
+		private static class GameOverScoreState implements DefaultScoreTracker.Listener {
 
 			private boolean gameover;
 
@@ -125,13 +113,13 @@ public abstract class Game {
 		private final GameOverScoreState gameOverScoreState = new GameOverScoreState();
 		private final List<Detector> detectors;
 		private final List<Detector> origDetectors;
-		private Listener scoreTrackerListener;
+		private ScoreTracker.Listener scoreTrackerListener;
 
 		public InGameGame(List<Detector> detectors, Config goalDetectorConfig,
 				ScoreTracker.Listener scoreTrackerListener) {
 			super(goalDetectorConfig);
 			this.origDetectors = detectors;
-			this.detectors = create(detectors, scoreTrackerListener);
+			this.detectors = addOnGoalDetector(detectors, scoreTrackerListener);
 			this.goalDetectorConfig = goalDetectorConfig;
 			this.scoreTrackerListener = scoreTrackerListener;
 		}
@@ -148,34 +136,33 @@ public abstract class Game {
 			return gameOverScoreState.gameover;
 		}
 
-		private List<Detector> create(List<Detector> detectors, ScoreTracker.Listener scoreTrackerListener) {
-			ScoreTracker.Listener scoreTrackerMultiplexer = multiplex(scoreTrackerListener, gameOverScoreState);
-
-			ScoreTracker scoreTracker = onScoreChange(scoreTrackerMultiplexer);
-			List<Detector> detectorsByCaller = new ArrayList<>(detectors);
-			detectorsByCaller.add(onGoal(goalDetectorConfig, inform(scoreTracker)));
-			return detectorsByCaller;
+		private List<Detector> addOnGoalDetector(List<Detector> detectors,
+				DefaultScoreTracker.Listener scoreTrackerListener) {
+			List<Detector> result = new ArrayList<>(detectors);
+			result.add(onGoal(goalDetectorConfig,
+					inform(new DefaultScoreTracker(multiplexed(scoreTrackerListener, gameOverScoreState)))));
+			return result;
 		}
 
-		private ScoreTracker.Listener multiplex(Listener... listeners) {
-			return new ScoreTracker.Listener() {
+		private DefaultScoreTracker.Listener multiplexed(ScoreTracker.Listener... listeners) {
+			return new DefaultScoreTracker.Listener() {
 				@Override
 				public void teamScored(int teamid, int score) {
-					for (ScoreTracker.Listener listener : listeners) {
+					for (DefaultScoreTracker.Listener listener : listeners) {
 						listener.teamScored(teamid, score);
 					}
 				}
 
 				@Override
 				public void won(int teamid) {
-					for (ScoreTracker.Listener listener : listeners) {
+					for (DefaultScoreTracker.Listener listener : listeners) {
 						listener.won(teamid);
 					}
 				}
 
 				@Override
 				public void draw(int[] teamids) {
-					for (ScoreTracker.Listener listener : listeners) {
+					for (DefaultScoreTracker.Listener listener : listeners) {
 						listener.draw(teamids);
 					}
 				}
@@ -201,10 +188,10 @@ public abstract class Game {
 	private static class GameoverGame extends Game {
 
 		private final List<Detector> detectors;
-		private final Listener scoreTrackerListener;
+		private final ScoreTracker.Listener scoreTrackerListener;
 
 		public GameoverGame(List<Detector> detectors, Config goalDetectorConfig,
-				ScoreTracker.Listener scoreTrackerListener) {
+				DefaultScoreTracker.Listener scoreTrackerListener) {
 			super(goalDetectorConfig);
 			this.detectors = detectors;
 			this.scoreTrackerListener = scoreTrackerListener;
