@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
+import detection2.ScoreTracker.Listener;
 import detection2.data.position.AbsolutePosition;
 import detection2.detector.Detector;
 import detection2.detector.GoalDetector;
@@ -17,6 +18,7 @@ import detection2.detector.GoalDetector.Config;
 public abstract class Game {
 
 	protected final List<Detector> detectors;
+	protected final List<ScoreTracker.Listener> scoreTrackerListeners;
 	protected GoalDetector.Config goalDetectorConfig;
 
 	private static class DefaultScoreTracker implements ScoreTracker {
@@ -79,15 +81,17 @@ public abstract class Game {
 
 	}
 
-	protected Game(List<Detector> detectors, Config goalDetectorConfig) {
+	protected Game(List<Detector> detectors, Config goalDetectorConfig,
+			List<ScoreTracker.Listener> scoreTrackerListeners) {
 		this.detectors = detectors;
 		this.goalDetectorConfig = goalDetectorConfig;
+		this.scoreTrackerListeners = scoreTrackerListeners;
 	}
 
 	public abstract Game update(AbsolutePosition pos);
 
-	public static Game newGame(List<Detector> detectors, ScoreTracker.Listener listener) {
-		return new GameoverGame(detectors, new GoalDetector.Config(), listener);
+	public static Game newGame(List<Detector> detectors) {
+		return new GameoverGame(detectors, new GoalDetector.Config(), new ArrayList<>());
 	}
 
 	private static class InGameGame extends Game {
@@ -114,14 +118,12 @@ public abstract class Game {
 
 		private final GameOverScoreState gameOverScoreState = new GameOverScoreState();
 		private final List<Detector> detectorsWithGoalDetector;
-		private ScoreTracker.Listener scoreTrackerListener;
 
 		public InGameGame(List<Detector> detectors, Config goalDetectorConfig,
-				ScoreTracker.Listener scoreTrackerListener) {
-			super(detectors, goalDetectorConfig);
-			this.detectorsWithGoalDetector = addOnGoalDetector(detectors, scoreTrackerListener);
+				List<ScoreTracker.Listener> scoreTrackerListeners) {
+			super(detectors, goalDetectorConfig, scoreTrackerListeners);
+			this.detectorsWithGoalDetector = addOnGoalDetector(detectors, scoreTrackerListeners);
 			this.goalDetectorConfig = goalDetectorConfig;
-			this.scoreTrackerListener = scoreTrackerListener;
 		}
 
 		@Override
@@ -129,18 +131,25 @@ public abstract class Game {
 			for (Detector detector : detectorsWithGoalDetector) {
 				detector.detect(pos);
 			}
-			return isGameover() ? new GameoverGame(detectors, goalDetectorConfig, scoreTrackerListener) : this;
+			return isGameover() ? new GameoverGame(detectors, goalDetectorConfig, scoreTrackerListeners) : this;
 		}
 
 		private boolean isGameover() {
 			return gameOverScoreState.gameover;
 		}
 
-		private List<Detector> addOnGoalDetector(List<Detector> detectors, ScoreTracker.Listener scoreTrackerListener) {
+		private List<Detector> addOnGoalDetector(List<Detector> detectors,
+				List<ScoreTracker.Listener> scoreTrackerListeners) {
 			List<Detector> result = new ArrayList<>(detectors);
 			result.add(onGoal(goalDetectorConfig,
-					inform(new DefaultScoreTracker(multiplexed(scoreTrackerListener, gameOverScoreState)))));
+					inform(new DefaultScoreTracker(multiplexed(addGameOverState(scoreTrackerListeners))))));
 			return result;
+		}
+
+		private Listener[] addGameOverState(List<ScoreTracker.Listener> scoreTrackerListeners) {
+			List<ScoreTracker.Listener> listeners = new ArrayList<>(scoreTrackerListeners);
+			listeners.add(gameOverScoreState);
+			return listeners.toArray(new ScoreTracker.Listener[listeners.size()]);
 		}
 
 		private ScoreTracker.Listener multiplexed(ScoreTracker.Listener... listeners) {
@@ -186,24 +195,26 @@ public abstract class Game {
 
 	private static class GameoverGame extends Game {
 
-		private final ScoreTracker.Listener scoreTrackerListener;
-
 		public GameoverGame(List<Detector> detectors, Config goalDetectorConfig,
-				ScoreTracker.Listener scoreTrackerListener) {
-			super(detectors, goalDetectorConfig);
-			this.scoreTrackerListener = scoreTrackerListener;
+				List<ScoreTracker.Listener> scoreTrackerListeners) {
+			super(detectors, goalDetectorConfig, scoreTrackerListeners);
 		}
 
 		@Override
 		public Game update(AbsolutePosition pos) {
 			return new InGameGame(detectors.stream().map(Detector::newInstance).collect(toList()), goalDetectorConfig,
-					scoreTrackerListener).update(pos);
+					scoreTrackerListeners).update(pos);
 		}
 
 	}
 
 	public Game withGoalConfig(Config goalDetectorConfig) {
 		this.goalDetectorConfig = goalDetectorConfig;
+		return this;
+	}
+
+	public Game withScoreTracker(ScoreTracker.Listener scoreTracker) {
+		this.scoreTrackerListeners.add(scoreTracker);
 		return this;
 	}
 
