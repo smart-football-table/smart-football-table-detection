@@ -2,12 +2,12 @@ package detection2;
 
 import static detection2.Game.ScoreTracker.onScoreChange;
 import static detection2.detector.GoalDetector.onGoal;
+import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import detection2.Game.ScoreTracker.Listener;
@@ -212,8 +212,8 @@ public abstract class Game {
 
 		@Override
 		public Game update(AbsolutePosition pos) {
-			return new InGameGame(detectors.stream().map(Detector::newInstance).collect(Collectors.toList()),
-					goalDetectorConfig, scoreTrackerListener).update(pos);
+			return new InGameGame(detectors.stream().map(Detector::newInstance).collect(toList()), goalDetectorConfig,
+					scoreTrackerListener).update(pos);
 		}
 
 	}

@@ -5,9 +5,9 @@ import static detection2.detector.GameStartDetector.onGameStart;
 import static detection2.detector.IdleDetector.onIdle;
 import static detection2.detector.MovementDetector.onMovement;
 import static detection2.detector.PositionDetector.onPositionChange;
+import static java.util.Arrays.asList;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -55,14 +55,14 @@ public class SFTDetection {
 		};
 	}
 
-	private List<Detector> detectors(MessageSender sender) {
-		List<Detector> detectors = new ArrayList<>();
-		detectors.add(onGameStart(() -> sender.gameStart()));
-		detectors.add(onPositionChange(p -> sender.pos(p)));
-		detectors.add(onMovement(m -> sender.movement(m)));
-		detectors.add(onFoul(() -> sender.foul()));
-		detectors.add(onIdle(b -> sender.idle(b)));
-		return detectors;
+	private List<Detector> detectors(MessageSender s) {
+		return asList( //
+				onGameStart(() -> s.gameStart()), //
+				onPositionChange(p -> s.pos(p)), //
+				onMovement(m -> s.movement(m)), //
+				onFoul(() -> s.foul()), //
+				onIdle(b -> s.idle(b)) //
+		);
 	}
 
 	public SFTDetection withGoalConfig(GoalDetector.Config goalConfig) {
