@@ -1,8 +1,10 @@
 package detection2.main;
 
 import static detection2.data.Message.message;
+import static detection2.data.position.RelativePosition.create;
 import static io.moquette.BrokerConstants.HOST_PROPERTY_NAME;
 import static io.moquette.BrokerConstants.PORT_PROPERTY_NAME;
+import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import java.io.IOException;
@@ -74,6 +76,7 @@ public class OpenCVHandlerTestIT {
 
 			@Override
 			public void messageArrived(String topic, MqttMessage message) throws Exception {
+				System.out.println(topic + " " + message);
 				messagesReceived.add(message(topic, new String(message.getPayload())));
 			}
 
@@ -94,7 +97,7 @@ public class OpenCVHandlerTestIT {
 	}
 
 	@Test
-	public void test() throws IOException {
+	public void canReset() throws IOException {
 		SFTDetection.detectionOn(new Table(120, 68), new MqttConsumer(LOCALHOST, brokerPort))
 				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40)).process(positionProvider());
 	}
@@ -113,7 +116,7 @@ public class OpenCVHandlerTestIT {
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 				}
-				return RelativePosition.create(1, 2, 3);
+				return create(currentTimeMillis(), 0.2, 0.3);
 			}
 		};
 	}
