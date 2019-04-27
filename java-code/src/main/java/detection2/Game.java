@@ -4,12 +4,12 @@ import static detection2.detector.GoalDetector.onGoal;
 import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
-import detection2.ScoreTracker.Listener;
 import detection2.data.position.AbsolutePosition;
 import detection2.detector.Detector;
 import detection2.detector.GoalDetector;
@@ -140,19 +140,17 @@ public abstract class Game {
 
 		private List<Detector> addOnGoalDetector(List<Detector> detectors,
 				List<ScoreTracker.Listener> scoreTrackerListeners) {
-			List<Detector> result = new ArrayList<>(detectors);
-			result.add(onGoal(goalDetectorConfig,
-					inform(new DefaultScoreTracker(multiplexed(addGameOverState(scoreTrackerListeners))))));
+			return add(detectors, onGoal(goalDetectorConfig,
+					inform(new DefaultScoreTracker(multiplexed(add(scoreTrackerListeners, gameOverScoreState))))));
+		}
+
+		private static <T> List<T> add(Collection<T> ts, T t) {
+			List<T> result = new ArrayList<>(ts);
+			result.add(t);
 			return result;
 		}
 
-		private Listener[] addGameOverState(List<ScoreTracker.Listener> scoreTrackerListeners) {
-			List<ScoreTracker.Listener> listeners = new ArrayList<>(scoreTrackerListeners);
-			listeners.add(gameOverScoreState);
-			return listeners.toArray(new ScoreTracker.Listener[listeners.size()]);
-		}
-
-		private ScoreTracker.Listener multiplexed(ScoreTracker.Listener... listeners) {
+		private ScoreTracker.Listener multiplexed(List<ScoreTracker.Listener> listeners) {
 			return new ScoreTracker.Listener() {
 				@Override
 				public void teamScored(int teamid, int score) {
