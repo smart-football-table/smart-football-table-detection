@@ -4,7 +4,9 @@ import static detection2.detector.GoalDetector.onGoal;
 import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,8 +92,12 @@ public abstract class Game {
 
 	public abstract Game update(AbsolutePosition pos);
 
+	public static Game newGame(Detector... detectors) {
+		return newGame(Arrays.asList(detectors));
+	}
+
 	public static Game newGame(List<Detector> detectors) {
-		return new GameoverGame(detectors, new GoalDetector.Config(), new ArrayList<>());
+		return new GameoverGame(detectors, new GoalDetector.Config(), Collections.emptyList());
 	}
 
 	private static class InGameGame extends Game {

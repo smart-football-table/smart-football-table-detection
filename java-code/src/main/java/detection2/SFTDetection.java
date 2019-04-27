@@ -5,16 +5,13 @@ import static detection2.detector.GameStartDetector.onGameStart;
 import static detection2.detector.IdleDetector.onIdle;
 import static detection2.detector.MovementDetector.onMovement;
 import static detection2.detector.PositionDetector.onPositionChange;
-import static java.util.Arrays.asList;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.function.Consumer;
 
 import detection2.data.Message;
 import detection2.data.Table;
 import detection2.data.position.RelativePosition;
-import detection2.detector.Detector;
 import detection2.detector.GoalDetector;
 import detection2.input.PositionProvider;
 
@@ -30,7 +27,13 @@ public class SFTDetection {
 	private SFTDetection(Table table, Consumer<Message> consumer) {
 		this.table = table;
 		MessagePublisher publisher = new MessagePublisher(consumer);
-		this.game = Game.newGame(detectors(publisher)).addScoreTracker(scoreTracker(publisher));
+		this.game = Game.newGame( //
+				onGameStart(() -> publisher.gameStart()), //
+				onPositionChange(p -> publisher.pos(p)), //
+				onMovement(m -> publisher.movement(m)), //
+				onFoul(() -> publisher.foul()), //
+				onIdle(b -> publisher.idle(b)) //
+		).addScoreTracker(scoreTracker(publisher));
 	}
 
 	private ScoreTracker.Listener scoreTracker(MessagePublisher sender) {
@@ -52,16 +55,6 @@ public class SFTDetection {
 			}
 
 		};
-	}
-
-	private List<Detector> detectors(MessagePublisher publisher) {
-		return asList( //
-				onGameStart(() -> publisher.gameStart()), //
-				onPositionChange(p -> publisher.pos(p)), //
-				onMovement(m -> publisher.movement(m)), //
-				onFoul(() -> publisher.foul()), //
-				onIdle(b -> publisher.idle(b)) //
-		);
 	}
 
 	public SFTDetection withGoalConfig(GoalDetector.Config goalConfig) {
