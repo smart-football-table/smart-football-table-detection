@@ -9,8 +9,6 @@ import static detection2.detector.PositionDetector.onPositionChange;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-import javax.management.RuntimeErrorException;
-
 import org.eclipse.paho.client.mqttv3.MqttException;
 
 import detection2.data.Message;
@@ -22,8 +20,8 @@ import detection2.mqtt.MqttConsumer;
 
 public class SFTDetection {
 
-	public static SFTDetection detectionOn(Table table, Consumer<Message> pub) {
-		return new SFTDetection(table, pub);
+	public static SFTDetection detectionOn(Table table, Consumer<Message> consumer) {
+		return new SFTDetection(table, consumer);
 	}
 
 	private final Table table;
@@ -31,6 +29,18 @@ public class SFTDetection {
 	private boolean reset;
 
 	private SFTDetection(Table table, Consumer<Message> consumer) {
+		this.table = table;
+		MessagePublisher publisher = new MessagePublisher(consumer);
+		this.game = Game.newGame( //
+				onGameStart(() -> publisher.gameStart()), //
+				onPositionChange(p -> publisher.pos(p)), //
+				onMovement(m -> publisher.movement(m)), //
+				onFoul(() -> publisher.foul()), //
+				onIdle(b -> publisher.idle(b)) //
+		).addScoreTracker(scoreTracker(publisher));
+	}
+
+	public SFTDetection receiver(Consumer<Message> consumer) {
 		if (consumer instanceof MqttConsumer) {
 			MqttConsumer mqttConsumer = (MqttConsumer) consumer;
 			try {
@@ -43,16 +53,7 @@ public class SFTDetection {
 				throw new RuntimeException(e);
 			}
 		}
-
-		this.table = table;
-		MessagePublisher publisher = new MessagePublisher(consumer);
-		this.game = Game.newGame( //
-				onGameStart(() -> publisher.gameStart()), //
-				onPositionChange(p -> publisher.pos(p)), //
-				onMovement(m -> publisher.movement(m)), //
-				onFoul(() -> publisher.foul()), //
-				onIdle(b -> publisher.idle(b)) //
-		).addScoreTracker(scoreTracker(publisher));
+		return this;
 	}
 
 	private ScoreTracker.Listener scoreTracker(MessagePublisher sender) {

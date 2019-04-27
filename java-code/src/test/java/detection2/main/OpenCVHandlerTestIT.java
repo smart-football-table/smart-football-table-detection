@@ -52,7 +52,9 @@ public class OpenCVHandlerTestIT {
 		brokerPort = randomPort();
 		newMqttServer(LOCALHOST, brokerPort);
 		secondClient = newMqttClient(LOCALHOST, brokerPort, "client2");
-		sut = SFTDetection.detectionOn(new Table(120, 68), new MqttConsumer(LOCALHOST, brokerPort))
+		MqttConsumer mqttConsumer = new MqttConsumer(LOCALHOST, brokerPort);
+		sut = SFTDetection.detectionOn(new Table(120, 68), mqttConsumer) //
+				.receiver(mqttConsumer) //
 				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40));
 
 	}
