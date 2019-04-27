@@ -21,10 +21,9 @@ import static java.util.stream.IntStream.range;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -194,7 +193,7 @@ public class SFTDetectionTest {
 	private final GoalDetector.Config goalDetectorConfig = new GoalDetector.Config();
 
 	private SFTDetection sut;
-	private InputStream is;
+	private Reader reader;
 
 	@Test
 	public void relativeValuesGetsConvertedToAbsolutesAtKickoff() throws IOException {
@@ -538,7 +537,7 @@ public class SFTDetectionTest {
 	}
 
 	private void givenStdInContains(String... messages) {
-		is = new ByteArrayInputStream(Arrays.stream(messages).collect(joining("\n")).getBytes());
+		reader = new StringReader(Arrays.stream(messages).collect(joining("\n")));
 	}
 
 	private void givenInputToProcessIs(StdInBuilder builder) {
@@ -555,7 +554,7 @@ public class SFTDetectionTest {
 
 	void whenInputWasProcessed() throws IOException {
 		sut = sut.withGoalConfig(goalDetectorConfig);
-		sut.process(new ReaderPositionProvider(new InputStreamReader(is), new RelativeValueParser()));
+		sut.process(new ReaderPositionProvider(reader, new RelativeValueParser()));
 	}
 
 	private void thenTheRelativePositionOnTheTableIsPublished(double x, double y) {
