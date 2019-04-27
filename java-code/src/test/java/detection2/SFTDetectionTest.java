@@ -317,7 +317,7 @@ public class SFTDetectionTest {
 		);
 		whenInputWasProcessed();
 		thenPayloadsWithTopicAre("team/scored", times("1", 3));
-		thenPayloadsWithTopicAre("game/score/1", "1", "2", "3");
+		thenPayloadsWithTopicAre("team/score/1", "1", "2", "3");
 	}
 
 	@Test
@@ -362,7 +362,7 @@ public class SFTDetectionTest {
 		givenFrontOfGoalPercentage(20);
 		givenInputToProcessIs(ball().prepareForLeftGoal().then().score().then(anyCorner()));
 		whenInputWasProcessed();
-		thenPayloadsWithTopicAre("game/score/1", "1", "0");
+		thenPayloadsWithTopicAre("team/score/1", "1", "0");
 	}
 
 	@Test
@@ -470,39 +470,46 @@ public class SFTDetectionTest {
 				.prepareForRightGoal().score() //
 		);
 		whenInputWasProcessed();
-		assertThat(collectedMessages(m -> !m.getTopic().startsWith("ball/")).collect(toList()), //
+		Predicate<Message> deprecatedTopic = m -> m.getTopic().startsWith("game/score/");
+
+		assertThat("The deprecated topic no more is sent. Please remove the filtering predicate",
+				collectedMessages.stream().filter(deprecatedTopic).anyMatch(deprecatedTopic), is(true));
+
+		assertThat(
+				collectedMessages(m -> !m.getTopic().startsWith("ball/")).filter(deprecatedTopic.negate())
+						.collect(toList()), //
 				is(asList( //
 						message("game/start", ""), //
 						message("team/scored", 1), //
-						message("game/score/1", 1), //
+						message("team/score/1", 1), //
 						message("team/scored", 0), //
-						message("game/score/0", 1), //
+						message("team/score/0", 1), //
 						message("team/scored", 1), //
-						message("game/score/1", 2), //
+						message("team/score/1", 2), //
 						message("team/scored", 0), //
-						message("game/score/0", 2), //
+						message("team/score/0", 2), //
 						message("team/scored", 1), //
-						message("game/score/1", 3), //
+						message("team/score/1", 3), //
 						message("team/scored", 0), //
-						message("game/score/0", 3), //
+						message("team/score/0", 3), //
 						message("team/scored", 1), //
-						message("game/score/1", 4), //
+						message("team/score/1", 4), //
 						message("team/scored", 0), //
-						message("game/score/0", 4), //
+						message("team/score/0", 4), //
 						message("team/scored", 1), //
-						message("game/score/1", 5), //
+						message("team/score/1", 5), //
 						message("team/scored", 0), //
-						message("game/score/0", 5), //
+						message("team/score/0", 5), //
 						message("game/gameover", winners(0, 1)), //
 						message("game/start", ""), //
 						message("team/scored", 1), //
-						message("game/score/1", 1), //
+						message("team/score/1", 1), //
 						message("team/scored", 1), //
-						message("game/score/1", 2), //
+						message("team/score/1", 2), //
 						message("team/scored", 0), //
-						message("game/score/0", 1), //
+						message("team/score/0", 1), //
 						message("team/scored", 0), //
-						message("game/score/0", 2))));
+						message("team/score/0", 2))));
 	}
 
 	@Test
@@ -547,8 +554,8 @@ public class SFTDetectionTest {
 
 		whenInputWasProcessed();
 		thenPayloadsWithTopicAre("game/start", "");
-		thenPayloadsWithTopicAre("game/score/0", "1", "2");
-		thenNoMessageWithTopicIsSent("game/score/1");
+		thenPayloadsWithTopicAre("team/score/0", "1", "2");
+		thenNoMessageWithTopicIsSent("team/score/1");
 	}
 
 	public void setInProgressConsumer(Consumer<RelativePosition> inProgressConsumer) {
@@ -627,7 +634,7 @@ public class SFTDetectionTest {
 	}
 
 	private void thenGameScoreForTeamIsPublished(int teamid, int score) {
-		assertOneMessageWithPayload(messagesWithTopic("game/score/" + teamid), is(String.valueOf(score)));
+		assertOneMessageWithPayload(messagesWithTopic("team/score/" + teamid), is(String.valueOf(score)));
 	}
 
 	private void assertOneMessageWithPayload(Stream<Message> messagesWithTopic, Matcher<String> matcher) {
@@ -675,7 +682,11 @@ public class SFTDetectionTest {
 	}
 
 	private Stream<Message> messagesWithTopic(String topic) {
-		return collectedMessages.stream().filter(m -> m.getTopic().equals(topic));
+		return collectedMessages.stream().filter(topic(topic));
+	}
+
+	private Predicate<Message> topic(String topic) {
+		return m -> m.getTopic().equals(topic);
 	}
 
 	private BallPosBuilder anyCorner() {

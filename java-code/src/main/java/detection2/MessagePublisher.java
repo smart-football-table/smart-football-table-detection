@@ -43,7 +43,8 @@ public class MessagePublisher {
 
 	public void teamScored(int teamid, int score) {
 		publish(message("team/scored", teamid));
-		publish(message("game/score/" + teamid, score));
+		publish(message("team/score/" + teamid, score));
+		publish(message("game/score/" + teamid, score)); // deprecated
 	}
 
 	public void foul() {
