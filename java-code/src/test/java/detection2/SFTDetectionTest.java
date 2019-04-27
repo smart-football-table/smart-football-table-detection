@@ -522,11 +522,11 @@ public class SFTDetectionTest {
 				.prepareForRightGoal().score() //
 		);
 
-		callAfterProcessed(create(909200, kickoff().x, kickoff().y), p -> resetGame());
+		callAfterProcessed(create(909200, kickoff().x, kickoff().y), p -> resetGameAndClearMessages());
 		whenInputWasProcessed();
-		// TODO is gameover sent when game gets interrupted
-//		thenPayloadsWithTopicAre("game/gameover", "");
-		thenPayloadsWithTopicAre("game/start", "", "");
+		thenPayloadsWithTopicAre("game/start", "");
+		thenPayloadsWithTopicAre("game/score/0", "1", "2");
+		thenNoMessageWithTopicIsSent("game/score/1");
 	}
 
 	private void callAfterProcessed(RelativePosition compareTo, Consumer<RelativePosition> c) {
@@ -601,7 +601,8 @@ public class SFTDetectionTest {
 		};
 	}
 
-	private void resetGame() {
+	private void resetGameAndClearMessages() {
+		this.collectedMessages.clear();
 		sut.resetGame();
 	}
 
