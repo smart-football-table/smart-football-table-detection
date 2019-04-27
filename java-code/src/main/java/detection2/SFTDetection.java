@@ -1,11 +1,21 @@
 package detection2;
 
+import static detection2.detector.FoulDetector.onFoul;
+import static detection2.detector.GameStartDetector.onGameStart;
+import static detection2.detector.IdleDetector.onIdle;
+import static detection2.detector.MovementDetector.onMovement;
+import static detection2.detector.PositionDetector.onPositionChange;
+
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
+import detection2.Game.ScoreTracker;
 import detection2.data.Message;
 import detection2.data.Table;
 import detection2.data.position.RelativePosition;
+import detection2.detector.Detector;
 import detection2.detector.GoalDetector;
 import detection2.input.PositionProvider;
 
@@ -20,7 +30,39 @@ public class SFTDetection {
 
 	private SFTDetection(Table table, Consumer<Message> publisher) {
 		this.table = table;
-		this.game = new Game(publisher);
+		MessageSender sender = new MessageSender(publisher);
+		this.game = Game.newGame(detectors(sender), scoreTracker(sender));
+	}
+
+	private ScoreTracker.Listener scoreTracker(MessageSender sender) {
+		return new ScoreTracker.Listener() {
+
+			@Override
+			public void teamScored(int teamid, int score) {
+				sender.teamScored(teamid, score);
+			}
+
+			@Override
+			public void won(int teamid) {
+				sender.gameWon(teamid);
+			}
+
+			@Override
+			public void draw(int[] teamids) {
+				sender.draw(teamids);
+			}
+
+		};
+	}
+
+	private List<Detector> detectors(MessageSender sender) {
+		List<Detector> detectors = new ArrayList<>();
+		detectors.add(onGameStart(() -> sender.gameStart()));
+		detectors.add(onPositionChange(p -> sender.pos(p)));
+		detectors.add(onMovement(m -> sender.movement(m)));
+		detectors.add(onFoul(() -> sender.foul()));
+		detectors.add(onIdle(b -> sender.idle(b)));
+		return detectors;
 	}
 
 	public SFTDetection withGoalConfig(GoalDetector.Config goalConfig) {

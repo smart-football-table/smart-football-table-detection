@@ -1,50 +1,23 @@
 package detection2;
 
 import static detection2.Game.ScoreTracker.onScoreChange;
-import static detection2.data.Message.message;
-import static detection2.data.unit.DistanceUnit.CENTIMETER;
-import static detection2.data.unit.SpeedUnit.KMH;
-import static detection2.data.unit.SpeedUnit.MPS;
-import static detection2.detector.FoulDetector.onFoul;
-import static detection2.detector.GameStartDetector.onGameStart;
 import static detection2.detector.GoalDetector.onGoal;
-import static detection2.detector.IdleDetector.onIdle;
-import static detection2.detector.MovementDetector.onMovement;
-import static detection2.detector.PositionDetector.onPositionChange;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
-import detection2.data.Message;
+import detection2.Game.ScoreTracker.Listener;
 import detection2.data.position.AbsolutePosition;
-import detection2.data.position.Position;
 import detection2.detector.Detector;
 import detection2.detector.GoalDetector;
 import detection2.detector.GoalDetector.Config;
 
-public class Game {
+public abstract class Game {
 
-	private static class DetectorSuppliers {
-
-		private final List<Supplier<Detector>> detectors = new ArrayList<>();
-
-		public DetectorSuppliers add(Supplier<Detector> detector) {
-			this.detectors.add(detector);
-			return this;
-		}
-
-		public List<Detector> build() {
-			return detectors.stream().map(Supplier::get).collect(toList());
-		}
-
-	}
+	protected GoalDetector.Config goalDetectorConfig;
 
 	static class ScoreTracker {
 
@@ -116,140 +89,136 @@ public class Game {
 
 	}
 
-	private static class GameOverScoreState implements ScoreTracker.Listener {
-
-		private boolean gameover;
-
-		@Override
-		public void teamScored(int teamid, int score) {
-		}
-
-		@Override
-		public void won(int teamid) {
-			gameover = true;
-		}
-
-		@Override
-		public void draw(int[] teamids) {
-			gameover = true;
-		}
-
-	}
-
-	private final GameOverScoreState gameOverScoreState = new GameOverScoreState();
-	private final Consumer<Message> publisher;
-	private Config goalDetectorConfig;
-
-	private final List<Detector> detectors;
-
-	public Game(Consumer<Message> pub) {
-		this(pub, new GoalDetector.Config());
-	}
-
-	public Game(Consumer<Message> publisher, Config goalDetectorConfig) {
-		this.publisher = publisher;
+	protected Game(Config goalDetectorConfig) {
 		this.goalDetectorConfig = goalDetectorConfig;
-		this.detectors = create();
 	}
 
-	public Game withGoalConfig(Config goalConfig) {
-		return new Game(publisher, goalConfig);
+	public abstract Game update(AbsolutePosition pos);
+
+	public static Game newGame(List<Detector> detectors, ScoreTracker.Listener listener) {
+		return new GameoverGame(detectors, new GoalDetector.Config(), listener);
 	}
 
-	public Game update(AbsolutePosition pos) {
-		for (Detector detector : detectors) {
-			detector.detect(pos);
+	private static class InGameGame extends Game {
+
+		private static class GameOverScoreState implements ScoreTracker.Listener {
+
+			private boolean gameover;
+
+			@Override
+			public void teamScored(int teamid, int score) {
+			}
+
+			@Override
+			public void won(int teamid) {
+				gameover = true;
+			}
+
+			@Override
+			public void draw(int[] teamids) {
+				gameover = true;
+			}
+
 		}
-		return isGameover() ? new Game(publisher, goalDetectorConfig) : this;
-	}
 
-	private boolean isGameover() {
-		return gameOverScoreState.gameover;
-	}
+		private final GameOverScoreState gameOverScoreState = new GameOverScoreState();
+		private final List<Detector> detectors;
+		private final List<Detector> origDetectors;
+		private Listener scoreTrackerListener;
 
-	private List<Detector> create() {
-		ScoreTracker scoreTracker = onScoreChange(multiplexed(publishScoreChanges(publisher), gameOverScoreState));
-		return new DetectorSuppliers() //
-				.add(() -> onGameStart(() -> publisher.accept(message("game/start", "")))) //
-				.add(() -> onPositionChange(p -> {
-					publisher.accept(message("ball/position/abs", posPayload(p)));
-					publisher.accept(message("ball/position/rel", posPayload(p.getRelativePosition())));
-				})) //
-				.add(() -> onMovement(m -> {
-					publisher.accept(message("ball/distance/cm", m.distance(CENTIMETER)));
-					publisher.accept(message("ball/velocity/mps", m.velocity(MPS)));
-					publisher.accept(message("ball/velocity/kmh", m.velocity(KMH)));
-				})) //
-				.add(() -> onGoal(goalDetectorConfig, inform(scoreTracker))) //
-				.add(() -> onFoul(() -> publisher.accept(message("game/foul", "")))) //
-				.add(() -> onIdle(s -> publisher.accept(message("game/idle", Boolean.toString(s))))) //
-				.build();
-	}
+		public InGameGame(List<Detector> detectors, Config goalDetectorConfig,
+				ScoreTracker.Listener scoreTrackerListener) {
+			super(goalDetectorConfig);
+			this.origDetectors = detectors;
+			this.detectors = create(detectors, scoreTrackerListener);
+			this.goalDetectorConfig = goalDetectorConfig;
+			this.scoreTrackerListener = scoreTrackerListener;
+		}
 
-	private String posPayload(Position pos) {
-		return "{ \"x\":" + pos.getX() + ", \"y\":" + pos.getY() + " }";
-	}
-
-	private GoalDetector.Listener inform(ScoreTracker scoreTracker) {
-		return new GoalDetector.Listener() {
-			@Override
-			public void goal(int teamid) {
-				scoreTracker.teamScored(teamid);
+		@Override
+		public Game update(AbsolutePosition pos) {
+			for (Detector detector : detectors) {
+				detector.detect(pos);
 			}
+			return isGameover() ? new GameoverGame(origDetectors, goalDetectorConfig, scoreTrackerListener) : this;
+		}
 
-			@Override
-			public void goalRevert(int teamid) {
-				scoreTracker.revertGoal(teamid);
-			}
-		};
-	}
+		private boolean isGameover() {
+			return gameOverScoreState.gameover;
+		}
 
-	private ScoreTracker.Listener publishScoreChanges(Consumer<Message> pub) {
-		return new ScoreTracker.Listener() {
+		private List<Detector> create(List<Detector> detectors, ScoreTracker.Listener scoreTrackerListener) {
+			ScoreTracker.Listener scoreTrackerMultiplexer = multiplex(scoreTrackerListener, gameOverScoreState);
 
-			@Override
-			public void teamScored(int teamid, int score) {
-				pub.accept(message("team/scored", teamid));
-				pub.accept(message("game/score/" + teamid, score));
-			}
+			ScoreTracker scoreTracker = onScoreChange(scoreTrackerMultiplexer);
+			List<Detector> detectorsByCaller = new ArrayList<>(detectors);
+			detectorsByCaller.add(onGoal(goalDetectorConfig, inform(scoreTracker)));
+			return detectorsByCaller;
+		}
 
-			@Override
-			public void won(int teamid) {
-				pub.accept(message("game/gameover", teamid));
-			}
-
-			@Override
-			public void draw(int[] teamids) {
-				pub.accept(message("game/gameover",
-						IntStream.of(teamids).mapToObj(String::valueOf).collect(joining(","))));
-			}
-
-		};
-	}
-
-	private static ScoreTracker.Listener multiplexed(ScoreTracker.Listener... listeners) {
-		return new ScoreTracker.Listener() {
-			@Override
-			public void teamScored(int teamid, int score) {
-				for (ScoreTracker.Listener listener : listeners) {
-					listener.teamScored(teamid, score);
+		private ScoreTracker.Listener multiplex(Listener... listeners) {
+			return new ScoreTracker.Listener() {
+				@Override
+				public void teamScored(int teamid, int score) {
+					for (ScoreTracker.Listener listener : listeners) {
+						listener.teamScored(teamid, score);
+					}
 				}
-			}
 
-			@Override
-			public void won(int teamid) {
-				for (ScoreTracker.Listener listener : listeners) {
-					listener.won(teamid);
+				@Override
+				public void won(int teamid) {
+					for (ScoreTracker.Listener listener : listeners) {
+						listener.won(teamid);
+					}
 				}
-			}
 
-			@Override
-			public void draw(int[] teamids) {
-				for (ScoreTracker.Listener listener : listeners) {
-					listener.draw(teamids);
+				@Override
+				public void draw(int[] teamids) {
+					for (ScoreTracker.Listener listener : listeners) {
+						listener.draw(teamids);
+					}
 				}
-			}
-		};
+			};
+		}
+
+		private GoalDetector.Listener inform(ScoreTracker scoreTracker) {
+			return new GoalDetector.Listener() {
+				@Override
+				public void goal(int teamid) {
+					scoreTracker.teamScored(teamid);
+				}
+
+				@Override
+				public void goalRevert(int teamid) {
+					scoreTracker.revertGoal(teamid);
+				}
+			};
+		}
+
+	}
+
+	private static class GameoverGame extends Game {
+
+		private final List<Detector> detectors;
+		private final Listener scoreTrackerListener;
+
+		public GameoverGame(List<Detector> detectors, Config goalDetectorConfig,
+				ScoreTracker.Listener scoreTrackerListener) {
+			super(goalDetectorConfig);
+			this.detectors = detectors;
+			this.scoreTrackerListener = scoreTrackerListener;
+		}
+
+		@Override
+		public Game update(AbsolutePosition pos) {
+			return new InGameGame(detectors, goalDetectorConfig, scoreTrackerListener).update(pos);
+		}
+
+	}
+
+	public Game withGoalConfig(Config goalDetectorConfig) {
+		this.goalDetectorConfig = goalDetectorConfig;
+		return this;
 	}
 
 }
