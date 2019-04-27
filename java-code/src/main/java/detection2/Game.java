@@ -16,6 +16,7 @@ import detection2.detector.GoalDetector.Config;
 
 public abstract class Game {
 
+	protected final List<Detector> detectors;
 	protected GoalDetector.Config goalDetectorConfig;
 
 	private static class DefaultScoreTracker implements ScoreTracker {
@@ -78,7 +79,8 @@ public abstract class Game {
 
 	}
 
-	protected Game(Config goalDetectorConfig) {
+	protected Game(List<Detector> detectors, Config goalDetectorConfig) {
+		this.detectors = detectors;
 		this.goalDetectorConfig = goalDetectorConfig;
 	}
 
@@ -111,25 +113,23 @@ public abstract class Game {
 		}
 
 		private final GameOverScoreState gameOverScoreState = new GameOverScoreState();
-		private final List<Detector> detectors;
-		private final List<Detector> origDetectors;
+		private final List<Detector> detectorsWithGoalDetector;
 		private ScoreTracker.Listener scoreTrackerListener;
 
 		public InGameGame(List<Detector> detectors, Config goalDetectorConfig,
 				ScoreTracker.Listener scoreTrackerListener) {
-			super(goalDetectorConfig);
-			this.origDetectors = detectors;
-			this.detectors = addOnGoalDetector(detectors, scoreTrackerListener);
+			super(detectors, goalDetectorConfig);
+			this.detectorsWithGoalDetector = addOnGoalDetector(detectors, scoreTrackerListener);
 			this.goalDetectorConfig = goalDetectorConfig;
 			this.scoreTrackerListener = scoreTrackerListener;
 		}
 
 		@Override
 		public Game update(AbsolutePosition pos) {
-			for (Detector detector : detectors) {
+			for (Detector detector : detectorsWithGoalDetector) {
 				detector.detect(pos);
 			}
-			return isGameover() ? new GameoverGame(origDetectors, goalDetectorConfig, scoreTrackerListener) : this;
+			return isGameover() ? new GameoverGame(detectors, goalDetectorConfig, scoreTrackerListener) : this;
 		}
 
 		private boolean isGameover() {
@@ -186,13 +186,11 @@ public abstract class Game {
 
 	private static class GameoverGame extends Game {
 
-		private final List<Detector> detectors;
 		private final ScoreTracker.Listener scoreTrackerListener;
 
 		public GameoverGame(List<Detector> detectors, Config goalDetectorConfig,
 				ScoreTracker.Listener scoreTrackerListener) {
-			super(goalDetectorConfig);
-			this.detectors = detectors;
+			super(detectors, goalDetectorConfig);
 			this.scoreTrackerListener = scoreTrackerListener;
 		}
 
