@@ -25,7 +25,6 @@
 			<groupId>hu.blackbelt.bundles.moquette</groupId>
 			<artifactId>io.moquette</artifactId>
 			<version>0.11_1</version>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
