@@ -470,8 +470,8 @@ public class SFTDetectionTest {
 				.prepareForRightGoal().score() //
 		);
 		whenInputWasProcessed();
-		Predicate<Message> deprecatedTopic = m -> m.getTopic().startsWith("game/score/");
 
+		Predicate<Message> deprecatedTopic = m -> m.getTopic().startsWith("game/score/");
 		assertThat("The deprecated topic no more is sent. Please remove the filtering predicate",
 				collectedMessages.stream().filter(deprecatedTopic).anyMatch(deprecatedTopic), is(true));
 

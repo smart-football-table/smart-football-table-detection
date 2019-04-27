@@ -1,18 +1,17 @@
-package detection2.mqtt;
+package detection2.main;
 
 import static detection2.data.Message.message;
 import static io.moquette.BrokerConstants.HOST_PROPERTY_NAME;
 import static io.moquette.BrokerConstants.PORT_PROPERTY_NAME;
-import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -22,16 +21,20 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import detection2.SFTDetection;
 import detection2.data.Message;
+import detection2.data.Table;
+import detection2.data.position.RelativePosition;
+import detection2.detector.GoalDetector;
+import detection2.input.PositionProvider;
 import detection2.mqtt.MqttConsumer;
 import io.moquette.server.Server;
 import io.moquette.server.config.MemoryConfig;
 
-public class MqttConsumerTest {
+public class OpenCVHandlerTestIT {
 
 	private static final String LOCALHOST = "localhost";
 
@@ -64,7 +67,6 @@ public class MqttConsumerTest {
 		return server;
 	}
 
-
 	private MqttClient newMqttClient(String host, int port, String id) throws MqttException, MqttSecurityException {
 		MqttClient client = new MqttClient("tcp://" + host + ":" + port, id, new MemoryPersistence());
 		client.connect();
@@ -92,19 +94,28 @@ public class MqttConsumerTest {
 	}
 
 	@Test
-	public void sendSomeMessages() throws InterruptedException {
-		List<Message> messages = asList(message("topic1", "payload1"), message("topic2", "payload2"));
-		messages.forEach(mqttConsumer::accept);
-		MILLISECONDS.sleep(10);
-		assertThat(messagesReceived, is(messages));
+	public void test() throws IOException {
+		SFTDetection.detectionOn(new Table(120, 68), new MqttConsumer(LOCALHOST, brokerPort))
+				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40)).process(positionProvider());
 	}
 
-	@After
-	public void tearDown() throws MqttException, IOException {
-		secondClient.disconnect();
-		secondClient.close();
-		mqttConsumer.close();
-		server.stopServer();
+	private PositionProvider positionProvider() {
+		return new PositionProvider() {
+			private int i;
+
+			@Override
+			public RelativePosition next() throws IOException {
+				if (i++ > 1_000) {
+					return null;
+				}
+				try {
+					MILLISECONDS.sleep(1000 / 30);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+				return RelativePosition.create(1, 2, 3);
+			}
+		};
 	}
 
 }
