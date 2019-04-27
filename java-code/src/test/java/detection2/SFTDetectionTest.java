@@ -10,6 +10,7 @@ import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.offTable;
 import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.pos;
 import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.upperLeftCorner;
 import static detection2.data.Message.message;
+import static detection2.data.position.RelativePosition.create;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -31,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
@@ -515,24 +517,40 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	@Ignore
 	public void canResetAgameInPlay() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
 
 		givenInputToProcessIs(ball(MINUTES.toMillis(15)) //
 				.prepareForLeftGoal().score().thenAfter(5, SECONDS) //
+				.prepareForLeftGoal().score() //
+				.prepareForRightGoal().score().thenAfter(5, SECONDS) //
 				.prepareForRightGoal().score() //
 		);
+
+		callAfterProcessed(create(909200, kickoff().x, kickoff().y), p -> resetGame());
+		whenInputWasProcessed();
+		// TODO is gameover sent when game gets interrupted
+//		thenPayloadsWithTopicAre("game/gameover", "");
+		thenPayloadsWithTopicAre("game/start", "", "");
+	}
+
+	private void callAfterProcessed(RelativePosition compareTo, Consumer<RelativePosition> c) {
 		inProgressConsumer = new Consumer<RelativePosition>() {
+			private boolean processed;
+			private boolean called;
+
 			@Override
 			public void accept(RelativePosition pos) {
-				System.out.println(pos);
+				if (processed && !called) {
+					c.accept(pos);
+					called = true;
+				}
+				if (compareTo.equals(pos)) {
+					processed = true;
+				}
 			}
 		};
-		whenInputWasProcessed();
-		thenPayloadsWithTopicAre("game/gameover", "xxx");
-		thenPayloadsWithTopicAre("game/start", "", "yyy");
 	}
 
 	private void thenDistanceInCentimetersAndVelocityArePublished(double centimeters, double mps, double kmh) {
@@ -587,6 +605,10 @@ public class SFTDetectionTest {
 				return pos;
 			}
 		};
+	}
+
+	private void resetGame() {
+		sut.resetGame();
 	}
 
 	private void thenTheRelativePositionOnTheTableIsPublished(double x, double y) {

@@ -92,6 +92,8 @@ public abstract class Game {
 
 	public abstract Game update(AbsolutePosition pos);
 
+	public abstract Game reset();
+
 	public static Game newGame(Detector... detectors) {
 		return newGame(Arrays.asList(detectors));
 	}
@@ -137,7 +139,12 @@ public abstract class Game {
 			for (Detector detector : detectorsWithGoalDetector) {
 				detector.detect(pos);
 			}
-			return isGameover() ? new GameoverGame(detectors, goalDetectorConfig, scoreTrackerListeners) : this;
+			return isGameover() ? reset() : this;
+		}
+
+		@Override
+		public Game reset() {
+			return new GameoverGame(detectors, goalDetectorConfig, scoreTrackerListeners);
 		}
 
 		private boolean isGameover() {
@@ -208,6 +215,11 @@ public abstract class Game {
 		public Game update(AbsolutePosition pos) {
 			return new InGameGame(detectors.stream().map(Detector::newInstance).collect(toList()), goalDetectorConfig,
 					scoreTrackerListeners).update(pos);
+		}
+
+		@Override
+		public Game reset() {
+			return this;
 		}
 
 	}

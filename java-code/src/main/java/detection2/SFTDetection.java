@@ -71,4 +71,8 @@ public class SFTDetection {
 		}
 	}
 
+	public void resetGame() {
+		game = game.reset();
+	}
+
 }
