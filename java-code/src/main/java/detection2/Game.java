@@ -211,7 +211,7 @@ public abstract class Game {
 		return this;
 	}
 
-	public Game withScoreTracker(ScoreTracker.Listener scoreTracker) {
+	public Game addScoreTracker(ScoreTracker.Listener scoreTracker) {
 		this.scoreTrackerListeners.add(scoreTracker);
 		return this;
 	}

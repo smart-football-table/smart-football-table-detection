@@ -30,7 +30,7 @@ public class SFTDetection {
 	private SFTDetection(Table table, Consumer<Message> consumer) {
 		this.table = table;
 		MessagePublisher publisher = new MessagePublisher(consumer);
-		this.game = Game.newGame(detectors(publisher)).withScoreTracker(scoreTracker(publisher));
+		this.game = Game.newGame(detectors(publisher)).addScoreTracker(scoreTracker(publisher));
 	}
 
 	private ScoreTracker.Listener scoreTracker(MessagePublisher sender) {
