@@ -552,7 +552,9 @@ public class SFTDetectionTest {
 		);
 
 		whenInputWasProcessed();
-		thenPayloadsWithTopicAre("game/start", "");
+		// when resetting the game the game/start message is sent immediately as well
+		// when the ball is then detected at the middle line
+		thenPayloadsWithTopicAre("game/start", "", "");
 		thenPayloadsWithTopicAre("team/score/0", "1", "2");
 		thenNoMessageWithTopicIsSent("team/score/1");
 	}

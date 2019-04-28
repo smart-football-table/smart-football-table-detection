@@ -13,6 +13,7 @@ import static org.junit.rules.Timeout.seconds;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -40,7 +41,6 @@ import detection2.data.Message;
 import detection2.data.Table;
 import detection2.data.position.RelativePosition;
 import detection2.detector.GoalDetector;
-import detection2.input.PositionProvider;
 import detection2.mqtt.MqttConsumer;
 import io.moquette.server.Server;
 import io.moquette.server.config.MemoryConfig;
@@ -173,24 +173,27 @@ public class OpenCVHandlerTestIT {
 		secondClient.publish("game/reset", new MqttMessage("".getBytes()));
 	}
 
-	private PositionProvider positionProvider(int count) {
+	private Iterator<RelativePosition> positionProvider(int count) {
 		return provider(count, () -> create(currentTimeMillis(), 0.2, 0.3));
 	}
 
-	private PositionProvider provider(int count, Supplier<RelativePosition> supplier) {
-		return new PositionProvider() {
+	private Iterator<RelativePosition> provider(int count, Supplier<RelativePosition> supplier) {
+		return new Iterator<RelativePosition>() {
 			private int i;
 
 			@Override
-			public RelativePosition next() throws IOException {
-				if (i++ > count) {
-					return null;
-				}
+			public boolean hasNext() {
+				return i <= count;
+			}
+
+			@Override
+			public RelativePosition next() {
 				try {
 					MILLISECONDS.sleep(10);
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 				}
+				i++;
 				return supplier.get();
 			}
 

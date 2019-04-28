@@ -7,13 +7,13 @@ import static detection2.detector.MovementDetector.onMovement;
 import static detection2.detector.PositionDetector.onPositionChange;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.function.Consumer;
 
 import detection2.data.Message;
 import detection2.data.Table;
 import detection2.data.position.RelativePosition;
 import detection2.detector.GoalDetector;
-import detection2.input.PositionProvider;
 
 public class SFTDetection {
 
@@ -74,9 +74,9 @@ public class SFTDetection {
 		return this;
 	}
 
-	public void process(PositionProvider positionProvider) throws IOException {
-		RelativePosition pos;
-		while ((pos = positionProvider.next()) != null) {
+	public void process(Iterator<RelativePosition> positions) throws IOException {
+		while (positions.hasNext()) {
+			RelativePosition pos = positions.next();
 			if (reset) {
 				game = game.reset();
 				messages.gameStart();
