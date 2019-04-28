@@ -1,6 +1,5 @@
 package detection2;
 
-import static detection2.SFTDetection.detectionOn;
 import static detection2.SFTDetectionTest.StdInBuilder.ball;
 import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.frontOfLeftGoal;
 import static detection2.SFTDetectionTest.StdInBuilder.BallPosBuilder.frontOfRightGoal;
@@ -577,7 +576,7 @@ public class SFTDetectionTest {
 	}
 
 	private void givenATableOfSize(int width, int height) {
-		this.sut = detectionOn(new Table(width, height), messageCollector);
+		this.sut = new SFTDetection(new Table(width, height), messageCollector);
 	}
 
 	private void givenATableOfAnySize() {

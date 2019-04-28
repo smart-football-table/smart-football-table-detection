@@ -71,7 +71,7 @@ public class PythonOutputProcessingMain {
 		// }
 		// };
 
-		SFTDetection.detectionOn(new Table(120, 68), sysout)
+		new SFTDetection(new Table(120, 68), sysout)
 				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40))
 				.process(new ReaderPositionProvider(
 						new InputStreamReader(new FileInputStream(new File("python_output_opencv.txt"))),

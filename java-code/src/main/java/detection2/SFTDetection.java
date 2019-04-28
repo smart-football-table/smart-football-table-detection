@@ -1,14 +1,5 @@
 package detection2;
 
-import static detection2.Messages.IncomingMessages.isReset;
-import static detection2.Messages.OutgoingMessages.publihGameWon;
-import static detection2.Messages.OutgoingMessages.publishFoul;
-import static detection2.Messages.OutgoingMessages.publishGameDraw;
-import static detection2.Messages.OutgoingMessages.publishGameStart;
-import static detection2.Messages.OutgoingMessages.publishMovement;
-import static detection2.Messages.OutgoingMessages.publishPos;
-import static detection2.Messages.OutgoingMessages.publishTeamScored;
-import static detection2.Messages.OutgoingMessages.pusblishIdle;
 import static detection2.detector.FoulDetector.onFoul;
 import static detection2.detector.GameStartDetector.onGameStart;
 import static detection2.detector.IdleDetector.onIdle;
@@ -26,50 +17,53 @@ import detection2.input.PositionProvider;
 
 public class SFTDetection {
 
-	public static SFTDetection detectionOn(Table table, Consumer<Message> consumer) {
-		return new SFTDetection(table, consumer);
-	}
-
 	private final Table table;
 	private Game game;
+	private Messages messages;
 	private volatile boolean reset;
 
-	private SFTDetection(Table table, Consumer<Message> consumer) {
+	public SFTDetection(Table table, Consumer<Message> consumer) {
 		this.table = table;
+		this.messages = new Messages(consumer);
 		this.game = Game.newGame( //
-				onGameStart(() -> publishGameStart(consumer)), //
-				onPositionChange(p -> publishPos(consumer, p)), //
-				onMovement(m -> publishMovement(consumer, m)), //
-				onFoul(() -> publishFoul(consumer)), //
-				onIdle(b -> pusblishIdle(consumer, b)) //
-		).addScoreTracker(scoreTracker(consumer));
+				onGameStart(() -> messages.gameStart()), //
+				onPositionChange(p -> messages.pos(p)), //
+				onMovement(m -> messages.movement(m)), //
+				onFoul(() -> messages.foul()), //
+				onIdle(b -> messages.idle(b)) //
+		).addScoreTracker(scoreTracker(messages, consumer));
+	}
+
+	public SFTDetection messages(Messages messages) {
+		this.messages = messages;
+		return this;
 	}
 
 	public SFTDetection receiver(MessageProvider provider) {
 		provider.addConsumer(m -> {
-			if (isReset(m)) {
+			if (messages.isReset(m)) {
 				resetGame();
 			}
 		});
 		return this;
 	}
 
-	private ScoreTracker.Listener scoreTracker(Consumer<Message> consumer) {
+	private ScoreTracker.Listener scoreTracker(Messages messages, Consumer<Message> consumer) {
 		return new ScoreTracker.Listener() {
 
 			@Override
 			public void teamScored(int teamid, int score) {
-				publishTeamScored(consumer, teamid, score);
+				messages.publishTeamScored(teamid, score);
 			}
 
 			@Override
 			public void won(int teamid) {
-				publihGameWon(consumer, teamid);
+				messages.publihGameWon(teamid);
 			}
 
 			@Override
 			public void draw(int[] teamids) {
-				publishGameDraw(consumer, teamids);
+				messages.publishGameDraw(teamids);
 			}
 
 		};

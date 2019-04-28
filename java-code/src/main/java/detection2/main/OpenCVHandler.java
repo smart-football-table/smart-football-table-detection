@@ -59,7 +59,7 @@ public class OpenCVHandler {
 	}
 
 	private void runDetection(InputStream is) throws IOException {
-		SFTDetection.detectionOn(new Table(120, 68), consumer)
+		new SFTDetection(new Table(120, 68), consumer)
 				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40))
 				.process(new ReaderPositionProvider(new InputStreamReader(is), parser()));
 	}
