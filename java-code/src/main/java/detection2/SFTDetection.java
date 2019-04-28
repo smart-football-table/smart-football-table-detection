@@ -32,7 +32,7 @@ public class SFTDetection {
 
 	private final Table table;
 	private Game game;
-	private boolean reset;
+	private volatile boolean reset;
 
 	private SFTDetection(Table table, Consumer<Message> consumer) {
 		this.table = table;
