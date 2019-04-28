@@ -15,6 +15,7 @@ import java.net.ServerSocket;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
@@ -140,8 +141,8 @@ public class OpenCVHandlerTestIT {
 			throws IOException, InterruptedException, MqttPersistenceException, MqttException {
 		sut.process(positionProvider(1));
 		restartBroker();
-		waitClientIsReconnected(secondClient);
-		waitSutIsReconnected();
+		waitUntil(secondClient, IMqttClient::isConnected);
+		waitUntil(mqttConsumer, MqttConsumer::isConnected);
 		messagesReceived.clear();
 		sendReset();
 		sut.process(positionProvider(1));
@@ -158,14 +159,8 @@ public class OpenCVHandlerTestIT {
 		broker = newMqttServer(LOCALHOST, brokerPort);
 	}
 
-	private static void waitClientIsReconnected(IMqttClient sutMqttClient) throws InterruptedException {
-		while (!sutMqttClient.isConnected()) {
-			MILLISECONDS.sleep(500);
-		}
-	}
-
-	private void waitSutIsReconnected() throws InterruptedException {
-		while (!mqttConsumer.isConnected()) {
+	private static <T> void waitUntil(T object, Predicate<T> predicate) throws InterruptedException {
+		while (!predicate.test(object)) {
 			MILLISECONDS.sleep(500);
 		}
 	}
@@ -188,10 +183,10 @@ public class OpenCVHandlerTestIT {
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 				}
-				return rand();
+				return random();
 			}
 
-			private RelativePosition rand() {
+			private RelativePosition random() {
 				return create(currentTimeMillis(), 0.2, 0.3);
 			}
 		};
