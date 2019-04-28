@@ -64,7 +64,6 @@ public class MqttConsumerTest {
 		return server;
 	}
 
-
 	private MqttClient newMqttClient(String host, int port, String id) throws MqttException, MqttSecurityException {
 		MqttClient client = new MqttClient("tcp://" + host + ":" + port, id, new MemoryPersistence());
 		client.connect();

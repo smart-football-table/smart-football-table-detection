@@ -14,11 +14,14 @@ import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
@@ -41,18 +44,21 @@ public class OpenCVHandlerTestIT {
 
 	private static final String LOCALHOST = "localhost";
 
+	private Server broker;
 	private int brokerPort;
 	private IMqttClient secondClient;
-	private List<Message> messagesReceived = new ArrayList<>();
+	private List<Message> messagesReceived = new CopyOnWriteArrayList<>();
 
 	private SFTDetection sut;
+
+	private MqttConsumer mqttConsumer;
 
 	@Before
 	public void setup() throws IOException, MqttException {
 		brokerPort = randomPort();
-		newMqttServer(LOCALHOST, brokerPort);
+		broker = newMqttServer(LOCALHOST, brokerPort);
 		secondClient = newMqttClient(LOCALHOST, brokerPort, "client2");
-		MqttConsumer mqttConsumer = new MqttConsumer(LOCALHOST, brokerPort);
+		mqttConsumer = new MqttConsumer(LOCALHOST, brokerPort);
 		sut = SFTDetection.detectionOn(new Table(120, 68), mqttConsumer) //
 				.receiver(mqttConsumer) //
 				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40));
@@ -76,8 +82,12 @@ public class OpenCVHandlerTestIT {
 
 	private MqttClient newMqttClient(String host, int port, String id) throws MqttException, MqttSecurityException {
 		MqttClient client = new MqttClient("tcp://" + host + ":" + port, id, new MemoryPersistence());
-		client.connect();
-		client.setCallback(new MqttCallback() {
+		client.connect(connectOptions());
+		client.setCallback(new MqttCallbackExtended() {
+
+			@Override
+			public void deliveryComplete(IMqttDeliveryToken token) {
+			}
 
 			@Override
 			public void messageArrived(String topic, MqttMessage message) throws Exception {
@@ -85,16 +95,30 @@ public class OpenCVHandlerTestIT {
 			}
 
 			@Override
-			public void deliveryComplete(IMqttDeliveryToken token) {
+			public void connectComplete(boolean reconnect, String serverURI) {
+				try {
+					subscribe(client);
+				} catch (MqttException e) {
+					throw new RuntimeException(e);
+				}
 			}
 
 			@Override
 			public void connectionLost(Throwable cause) {
 			}
-
 		});
-		client.subscribe("#");
+		subscribe(client);
 		return client;
+	}
+
+	private void subscribe(MqttClient client) throws MqttException {
+		client.subscribe("#");
+	}
+
+	private MqttConnectOptions connectOptions() {
+		MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
+		mqttConnectOptions.setAutomaticReconnect(true);
+		return mqttConnectOptions;
 	}
 
 	@Test
@@ -102,7 +126,38 @@ public class OpenCVHandlerTestIT {
 		sut.process(positionProvider(1));
 		sendReset();
 		sut.process(positionProvider(1));
+		TimeUnit.MILLISECONDS.sleep(50);
 		assertThat(messagesReceived.stream().filter(m -> m.getTopic().equals("game/start")).count(), is(2L));
+	}
+
+	@Test
+	public void doesReconnectAndResubscribe() throws IOException, InterruptedException, MqttPersistenceException, MqttException {
+		sut.process(positionProvider(1));
+		restartBroker();
+		waitClientIsReconnected(secondClient);
+		waitSutIsReconnected();
+		messagesReceived.clear();
+		sendReset();
+		sut.process(positionProvider(1));
+		TimeUnit.MILLISECONDS.sleep(50);
+		assertThat(messagesReceived.stream().filter(m -> m.getTopic().equals("game/start")).count(), is(1L));
+	}
+
+	private void restartBroker() throws IOException {
+		broker.stopServer();
+		broker = newMqttServer(LOCALHOST, brokerPort);
+	}
+
+	private static void waitClientIsReconnected(IMqttClient sutMqttClient) throws InterruptedException {
+		while (!sutMqttClient.isConnected()) {
+			MILLISECONDS.sleep(500);
+		}
+	}
+
+	private void waitSutIsReconnected() throws InterruptedException {
+		while (!mqttConsumer.isConnected()) {
+			MILLISECONDS.sleep(500);
+		}
 	}
 
 	private void sendReset() throws MqttException, MqttPersistenceException {

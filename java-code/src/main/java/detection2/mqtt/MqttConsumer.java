@@ -8,7 +8,9 @@ import java.util.function.Consumer;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
@@ -24,16 +26,17 @@ public class MqttConsumer implements Consumer<Message>, MessageProvider, Closeab
 	public MqttConsumer(String host, int port) throws IOException {
 		try {
 			mqttClient = new MqttClient("tcp://" + host + ":" + port, "SFT-Detection", new MemoryPersistence());
-			mqttClient.connect();
+			mqttClient.connect(connectOptions());
 			mqttClient.setCallback(callback());
-			mqttClient.subscribe("#");
+			subscribe();
 		} catch (MqttException e) {
 			throw new IOException(e);
 		}
 	}
 
 	private MqttCallback callback() {
-		return new MqttCallback() {
+		return new MqttCallbackExtended() {
+
 			@Override
 			public void messageArrived(String topic, MqttMessage message) throws Exception {
 				for (Consumer<Message> consumer : consumers) {
@@ -47,9 +50,27 @@ public class MqttConsumer implements Consumer<Message>, MessageProvider, Closeab
 
 			@Override
 			public void connectionLost(Throwable cause) {
+			}
 
+			@Override
+			public void connectComplete(boolean reconnect, String serverURI) {
+				try {
+					subscribe();
+				} catch (MqttException e) {
+					throw new RuntimeException(e);
+				}
 			}
 		};
+	}
+
+	private MqttConnectOptions connectOptions() {
+		MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
+		mqttConnectOptions.setAutomaticReconnect(true);
+		return mqttConnectOptions;
+	}
+
+	private void subscribe() throws MqttException {
+		mqttClient.subscribe("#");
 	}
 
 	@Override
@@ -71,6 +92,10 @@ public class MqttConsumer implements Consumer<Message>, MessageProvider, Closeab
 		} catch (MqttException e) {
 			throw new IOException(e);
 		}
+	}
+
+	public boolean isConnected() {
+		return mqttClient.isConnected();
 	}
 
 	@Override
