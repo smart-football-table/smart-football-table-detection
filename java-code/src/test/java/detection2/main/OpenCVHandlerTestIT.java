@@ -14,7 +14,6 @@ import java.net.ServerSocket;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -125,12 +124,13 @@ public class OpenCVHandlerTestIT {
 		sut.process(positionProvider(1));
 		sendReset();
 		sut.process(positionProvider(1));
-		TimeUnit.MILLISECONDS.sleep(50);
+		MILLISECONDS.sleep(50);
 		assertThat(messagesReceived.stream().filter(m -> m.getTopic().equals("game/start")).count(), is(2L));
 	}
 
 	@Test
-	public void doesReconnectAndResubscribe() throws IOException, InterruptedException, MqttPersistenceException, MqttException {
+	public void doesReconnectAndResubscribe()
+			throws IOException, InterruptedException, MqttPersistenceException, MqttException {
 		sut.process(positionProvider(1));
 		restartBroker();
 		waitClientIsReconnected(secondClient);
@@ -138,7 +138,7 @@ public class OpenCVHandlerTestIT {
 		messagesReceived.clear();
 		sendReset();
 		sut.process(positionProvider(1));
-		TimeUnit.MILLISECONDS.sleep(50);
+		MILLISECONDS.sleep(50);
 		assertThat(messagesReceived.stream().filter(m -> m.getTopic().equals("game/start")).count(), is(1L));
 	}
 
