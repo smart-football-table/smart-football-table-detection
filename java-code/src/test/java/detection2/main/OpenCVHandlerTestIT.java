@@ -2,6 +2,7 @@ package detection2.main;
 
 import static detection2.data.Message.message;
 import static detection2.data.position.RelativePosition.create;
+import static detection2.data.position.RelativePosition.noPosition;
 import static io.moquette.BrokerConstants.HOST_PROPERTY_NAME;
 import static io.moquette.BrokerConstants.PORT_PROPERTY_NAME;
 import static java.lang.System.currentTimeMillis;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
@@ -128,24 +130,27 @@ public class OpenCVHandlerTestIT {
 	}
 
 	@Test
-	public void canReset() throws IOException, MqttPersistenceException, MqttException, InterruptedException {
-		sut.process(positionProvider(1));
+	public void onResetTheNewGameIsStartedImmediatelyAndWithoutTableInteraction()
+			throws IOException, MqttPersistenceException, MqttException, InterruptedException {
+		sut.process(positionProvider(42));
+		messagesReceived.clear();
 		sendReset();
-		sut.process(positionProvider(1));
+		sut.process(provider(3, () -> noPosition(System.currentTimeMillis())));
 		MILLISECONDS.sleep(50);
-		assertThat(messagesWithTopic("game/start").count(), is(2L));
+		assertThat(messagesWithTopic("game/start").count(), is(1L));
 	}
 
 	@Test
 	public void doesReconnectAndResubscribe()
 			throws IOException, InterruptedException, MqttPersistenceException, MqttException {
-		sut.process(positionProvider(1));
+		sut.process(positionProvider(42));
 		restartBroker();
 		waitUntil(secondClient, IMqttClient::isConnected);
 		waitUntil(mqttConsumer, MqttConsumer::isConnected);
+		MILLISECONDS.sleep(50);
 		messagesReceived.clear();
 		sendReset();
-		sut.process(positionProvider(1));
+		sut.process(provider(3, () -> noPosition(System.currentTimeMillis())));
 		MILLISECONDS.sleep(50);
 		assertThat(messagesWithTopic("game/start").count(), is(1L));
 	}
@@ -170,6 +175,10 @@ public class OpenCVHandlerTestIT {
 	}
 
 	private PositionProvider positionProvider(int count) {
+		return provider(count, () -> create(currentTimeMillis(), 0.2, 0.3));
+	}
+
+	private PositionProvider provider(int count, Supplier<RelativePosition> supplier) {
 		return new PositionProvider() {
 			private int i;
 
@@ -179,16 +188,13 @@ public class OpenCVHandlerTestIT {
 					return null;
 				}
 				try {
-					MILLISECONDS.sleep(1000 / 30);
+					MILLISECONDS.sleep(10);
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 				}
-				return random();
+				return supplier.get();
 			}
 
-			private RelativePosition random() {
-				return create(currentTimeMillis(), 0.2, 0.3);
-			}
 		};
 	}
 

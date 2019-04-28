@@ -53,17 +53,17 @@ public class SFTDetection {
 
 			@Override
 			public void teamScored(int teamid, int score) {
-				messages.publishTeamScored(teamid, score);
+				messages.teamScored(teamid, score);
 			}
 
 			@Override
 			public void won(int teamid) {
-				messages.publihGameWon(teamid);
+				messages.gameWon(teamid);
 			}
 
 			@Override
 			public void draw(int[] teamids) {
-				messages.publishGameDraw(teamids);
+				messages.gameDraw(teamids);
 			}
 
 		};
@@ -79,11 +79,10 @@ public class SFTDetection {
 		while ((pos = positionProvider.next()) != null) {
 			if (reset) {
 				game = game.reset();
+				messages.gameStart();
 				reset = false;
 			}
-			if (pos.isNull() || !pos.isNull()) {
-				game = game.update(table.toAbsolute(pos));
-			}
+			game = game.update(table.toAbsolute(pos));
 		}
 	}
 

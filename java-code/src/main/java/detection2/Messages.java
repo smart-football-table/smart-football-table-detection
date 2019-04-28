@@ -41,7 +41,7 @@ public class Messages {
 		publish(message("ball/velocity/kmh", m.velocity(KMH)));
 	}
 
-	public void publishTeamScored(int teamid, int score) {
+	public void teamScored(int teamid, int score) {
 		publish(message("team/scored", teamid));
 		publish(message("team/score/" + teamid, score));
 		publish(message("game/score/" + teamid, score)); // deprecated
@@ -51,11 +51,11 @@ public class Messages {
 		publish(message("game/foul", ""));
 	}
 
-	public void publihGameWon(int teamid) {
+	public void gameWon(int teamid) {
 		publish(message("game/gameover", teamid));
 	}
 
-	public void publishGameDraw(int[] teamids) {
+	public void gameDraw(int[] teamids) {
 		publish(message("game/gameover", IntStream.of(teamids).mapToObj(String::valueOf).collect(joining(","))));
 	}
 
