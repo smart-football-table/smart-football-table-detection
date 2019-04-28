@@ -2,31 +2,71 @@ package detection2.data.position;
 
 import static java.lang.Math.abs;
 
-public class RelativePosition implements Position {
+public abstract class RelativePosition implements Position {
+
+	private static class Absent extends RelativePosition {
+
+		public Absent(long timestamp) {
+			super(timestamp);
+		}
+
+		@Override
+		public boolean isNull() {
+			return true;
+		}
+
+		@Override
+		public double getX() {
+			return -1;
+		}
+
+		@Override
+		public double getY() {
+			return -1;
+		}
+
+	}
+
+	private static class Present extends RelativePosition {
+
+		private final double x;
+		private final double y;
+
+		public Present(long timestamp, double x, double y) {
+			super(timestamp);
+			this.x = x;
+			this.y = y;
+		}
+
+		@Override
+		public boolean isNull() {
+			return false;
+		}
+
+		@Override
+		public double getX() {
+			return x;
+		}
+
+		@Override
+		public double getY() {
+			return y;
+		}
+
+	}
 
 	private final long timestamp;
-	private final double x;
-	private final double y;
 
 	public static RelativePosition noPosition(long timestamp) {
-		return create(timestamp, -1, -1);
+		return new Absent(timestamp);
 	}
 
-	// TODO create two subclasses absent/pressent
 	public static RelativePosition create(long timestamp, double x, double y) {
-//		return x == -1 && y == -1 ? noPosition(timestamp) : new RelativePosition(timestamp, x, y);
-		return new RelativePosition(timestamp, x, y);
+		return x == -1 && y == -1 ? noPosition(timestamp) : new Present(timestamp, x, y);
 	}
 
-	private RelativePosition(long timestamp, double x, double y) {
+	private RelativePosition(long timestamp) {
 		this.timestamp = timestamp;
-		this.x = x;
-		this.y = y;
-	}
-
-	@Override
-	public boolean isNull() {
-		return x < 0 || y < 0;
 	}
 
 	@Override
@@ -34,26 +74,16 @@ public class RelativePosition implements Position {
 		return timestamp;
 	}
 
-	@Override
-	public double getX() {
-		return x;
-	}
-
-	@Override
-	public double getY() {
-		return y;
-	}
-
 	public RelativePosition normalizeX() {
-		return create(timestamp, centerX() + abs(centerX() - x), y);
+		return create(timestamp, centerX() + abs(centerX() - getX()), getY());
 	}
 
 	public RelativePosition normalizeY() {
-		return create(timestamp, x, centerY() + abs(centerY() - y));
+		return create(timestamp, getX(), centerY() + abs(centerY() - getY()));
 	}
 
 	public boolean isRightHandSide() {
-		return x >= centerX();
+		return getX() >= centerX();
 	}
 
 	private double centerX() {
@@ -70,9 +100,9 @@ public class RelativePosition implements Position {
 		int result = 1;
 		result = prime * result + (int) (timestamp ^ (timestamp >>> 32));
 		long temp;
-		temp = Double.doubleToLongBits(x);
+		temp = Double.doubleToLongBits(getX());
 		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(y);
+		temp = Double.doubleToLongBits(getY());
 		result = prime * result + (int) (temp ^ (temp >>> 32));
 		return result;
 	}
@@ -88,16 +118,16 @@ public class RelativePosition implements Position {
 		RelativePosition other = (RelativePosition) obj;
 		if (timestamp != other.timestamp)
 			return false;
-		if (Double.doubleToLongBits(x) != Double.doubleToLongBits(other.x))
+		if (Double.doubleToLongBits(getX()) != Double.doubleToLongBits(other.getX()))
 			return false;
-		if (Double.doubleToLongBits(y) != Double.doubleToLongBits(other.y))
+		if (Double.doubleToLongBits(getY()) != Double.doubleToLongBits(other.getY()))
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "RelativePosition [timestamp=" + timestamp + ", x=" + x + ", y=" + y + "]";
+		return "RelativePosition [timestamp=" + timestamp + ", x=" + getX() + ", y=" + getY() + "]";
 	}
 
 }

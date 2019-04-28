@@ -29,8 +29,6 @@ import detection2.data.Message;
 import detection2.data.Table;
 import detection2.data.position.RelativePosition;
 import detection2.detector.GoalDetector;
-import detection2.parser.LineParser;
-import detection2.parser.RelativeValueParser;
 
 public class OpenCVHandler {
 
@@ -62,8 +60,8 @@ public class OpenCVHandler {
 	}
 
 	private void runDetection(InputStream is) throws IOException {
-		Stream<RelativePosition> stream = new BufferedReader(new InputStreamReader(is)).lines().map(parser())
-				.map(divide());
+		Stream<RelativePosition> stream = new BufferedReader(new InputStreamReader(is)).lines()
+				.map(oldPythonFormatParser());
 		new SFTDetection(new Table(120, 68), consumer)
 				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40)).process(stream);
 	}
@@ -84,12 +82,7 @@ public class OpenCVHandler {
 		return args.toArray(new String[args.size()]);
 	}
 
-	private static Function<RelativePosition, RelativePosition> divide() {
-		return p -> create(p.getTimestamp(), p.getX() == -1 ? -1 : p.getX() / 765,
-				p.getY() == -1 ? -1 : p.getY() / 640);
-	}
-
-	private Function<String, RelativePosition> parser() {
+	public static Function<String, RelativePosition> oldPythonFormatParser() {
 		return new Function<String, RelativePosition>() {
 			@Override
 			public RelativePosition apply(String line) {
@@ -99,7 +92,7 @@ public class OpenCVHandler {
 					Long timestamp = SECONDS.toMillis(toLong(secsMillis[0])) + toLong(fillRight(secsMillis[1], 2));
 					Double y = toDouble(values[2]);
 					Double x = toDouble(values[1]);
-					return create(timestamp, x, y);
+					return create(timestamp, x == -1 ? -1 : x / 765, y == -1 ? -1 : y / 640);
 				}
 				return null;
 			}
