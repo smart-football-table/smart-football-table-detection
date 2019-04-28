@@ -18,7 +18,6 @@ import detection2.data.Table;
 import detection2.data.position.RelativePosition;
 import detection2.detector.GoalDetector;
 import detection2.parser.LineParser;
-import detection2.parser.RelativeValueParser;
 
 public class PythonOutputProcessingMain {
 
@@ -74,16 +73,15 @@ public class PythonOutputProcessingMain {
 		try (BufferedReader reader = new BufferedReader(
 				new InputStreamReader(new FileInputStream(new File("python_output_opencv.txt"))))) {
 			Function<String, RelativePosition> mapper = parser::parse;
-			LineParser delegate = new RelativeValueParser();
 			new SFTDetection(new Table(120, 68), sysout)
-					.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40)).process(reader.lines()
-							.map(mapper.andThen(PythonOutputProcessingMain::toString).andThen(delegate::parse)));
+					.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40))
+					.process(reader.lines().map(mapper).map(divide()));
 		}
 	}
 
-	private static String toString(RelativePosition p) {
-		return p.getTimestamp() + "," + (p.getX() == -1 ? -1 : (p.getX() / 765)) + ","
-				+ (p.getY() == -1 ? -1 : p.getY() / 640);
+	private static Function<RelativePosition, RelativePosition> divide() {
+		return p -> create(p.getTimestamp(), p.getX() == -1 ? -1 : p.getX() / 765,
+				p.getY() == -1 ? -1 : p.getY() / 640);
 	}
 
 }

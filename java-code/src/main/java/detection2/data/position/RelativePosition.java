@@ -14,6 +14,7 @@ public class RelativePosition implements Position {
 
 	// TODO create two subclasses absent/pressent
 	public static RelativePosition create(long timestamp, double x, double y) {
+//		return x == -1 && y == -1 ? noPosition(timestamp) : new RelativePosition(timestamp, x, y);
 		return new RelativePosition(timestamp, x, y);
 	}
 

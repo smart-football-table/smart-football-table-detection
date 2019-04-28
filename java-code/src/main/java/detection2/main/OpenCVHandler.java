@@ -62,7 +62,8 @@ public class OpenCVHandler {
 	}
 
 	private void runDetection(InputStream is) throws IOException {
-		Stream<RelativePosition> stream = new BufferedReader(new InputStreamReader(is)).lines().map(parser());
+		Stream<RelativePosition> stream = new BufferedReader(new InputStreamReader(is)).lines().map(parser())
+				.map(divide());
 		new SFTDetection(new Table(120, 68), consumer)
 				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40)).process(stream);
 	}
@@ -83,13 +84,12 @@ public class OpenCVHandler {
 		return args.toArray(new String[args.size()]);
 	}
 
-	private Function<String, RelativePosition> parser() {
-		LineParser delegate = new RelativeValueParser();
-		return parse().andThen(p -> (p.getTimestamp() + "," + (p.getX() == -1 ? -1 : (p.getX() / 765)) + ","
-				+ (p.getY() == -1 ? -1 : p.getY() / 640))).andThen(delegate::parse);
+	private static Function<RelativePosition, RelativePosition> divide() {
+		return p -> create(p.getTimestamp(), p.getX() == -1 ? -1 : p.getX() / 765,
+				p.getY() == -1 ? -1 : p.getY() / 640);
 	}
 
-	private Function<String, RelativePosition> parse() {
+	private Function<String, RelativePosition> parser() {
 		return new Function<String, RelativePosition>() {
 			@Override
 			public RelativePosition apply(String line) {
