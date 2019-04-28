@@ -15,6 +15,7 @@ import java.net.ServerSocket;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Stream;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -131,7 +132,7 @@ public class OpenCVHandlerTestIT {
 		sendReset();
 		sut.process(positionProvider(1));
 		MILLISECONDS.sleep(50);
-		assertThat(messagesReceived.stream().filter(m -> m.getTopic().equals("game/start")).count(), is(2L));
+		assertThat(messagesWithTopic("game/start").count(), is(2L));
 	}
 
 	@Test
@@ -145,7 +146,11 @@ public class OpenCVHandlerTestIT {
 		sendReset();
 		sut.process(positionProvider(1));
 		MILLISECONDS.sleep(50);
-		assertThat(messagesReceived.stream().filter(m -> m.getTopic().equals("game/start")).count(), is(1L));
+		assertThat(messagesWithTopic("game/start").count(), is(1L));
+	}
+
+	private Stream<Message> messagesWithTopic(String topic) {
+		return messagesReceived.stream().filter(m -> m.getTopic().equals(topic));
 	}
 
 	private void restartBroker() throws IOException {
