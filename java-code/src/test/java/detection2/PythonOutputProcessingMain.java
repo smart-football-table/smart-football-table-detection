@@ -1,5 +1,6 @@
 package detection2;
 
+import static detection2.data.position.RelativePosition.create;
 import static java.lang.System.arraycopy;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import detection2.data.Message;
 import detection2.data.Table;
@@ -20,11 +22,8 @@ import detection2.parser.RelativeValueParser;
 
 public class PythonOutputProcessingMain {
 
-	private static RelativeValueParser delegate = new RelativeValueParser();
-
 	private static class AbsValueParser implements LineParser {
 
-		@Override
 		public RelativePosition parse(String line) {
 			String[] values = line.split("\\|");
 			if (values.length == 3) {
@@ -32,7 +31,7 @@ public class PythonOutputProcessingMain {
 				Long timestamp = SECONDS.toMillis(toLong(secsMillis[0])) + toLong(fillRight(secsMillis[1], 2));
 				Double y = toDouble(values[2]);
 				Double x = toDouble(values[1]);
-				return delegate.parse(timestamp + "," + (x == -1 ? -1 : (x / 765)) + "," + (y == -1 ? -1 : y / 640));
+				return create(timestamp, x, y);
 			}
 			return null;
 		}
@@ -74,10 +73,17 @@ public class PythonOutputProcessingMain {
 		AbsValueParser parser = new AbsValueParser();
 		try (BufferedReader reader = new BufferedReader(
 				new InputStreamReader(new FileInputStream(new File("python_output_opencv.txt"))))) {
+			Function<String, RelativePosition> mapper = parser::parse;
+			LineParser delegate = new RelativeValueParser();
 			new SFTDetection(new Table(120, 68), sysout)
-					.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40))
-					.process(reader.lines().map(parser::parse));
+					.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40)).process(reader.lines()
+							.map(mapper.andThen(PythonOutputProcessingMain::toString).andThen(delegate::parse)));
 		}
+	}
+
+	private static String toString(RelativePosition p) {
+		return p.getTimestamp() + "," + (p.getX() == -1 ? -1 : (p.getX() / 765)) + ","
+				+ (p.getY() == -1 ? -1 : p.getY() / 640);
 	}
 
 }

@@ -1,5 +1,6 @@
 package detection2.main;
 
+import static detection2.data.position.RelativePosition.create;
 import static detection2.main.OpenCVHandler.PythonArg.BUFFER_SIZE;
 import static detection2.main.OpenCVHandler.PythonArg.CAM_INDEX;
 import static detection2.main.OpenCVHandler.PythonArg.COLOR;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import detection2.SFTDetection;
@@ -60,8 +62,7 @@ public class OpenCVHandler {
 	}
 
 	private void runDetection(InputStream is) throws IOException {
-		LineParser parser = parser();
-		Stream<RelativePosition> stream = new BufferedReader(new InputStreamReader(is)).lines().map(parser::parse);
+		Stream<RelativePosition> stream = new BufferedReader(new InputStreamReader(is)).lines().map(parser());
 		new SFTDetection(new Table(120, 68), consumer)
 				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40)).process(stream);
 	}
@@ -82,19 +83,23 @@ public class OpenCVHandler {
 		return args.toArray(new String[args.size()]);
 	}
 
-	private LineParser parser() {
-		RelativeValueParser delegate = new RelativeValueParser();
-		return new LineParser() {
+	private Function<String, RelativePosition> parser() {
+		LineParser delegate = new RelativeValueParser();
+		return parse().andThen(p -> (p.getTimestamp() + "," + (p.getX() == -1 ? -1 : (p.getX() / 765)) + ","
+				+ (p.getY() == -1 ? -1 : p.getY() / 640))).andThen(delegate::parse);
+	}
+
+	private Function<String, RelativePosition> parse() {
+		return new Function<String, RelativePosition>() {
 			@Override
-			public RelativePosition parse(String line) {
+			public RelativePosition apply(String line) {
 				String[] values = line.split("\\|");
 				if (values.length == 3) {
 					String[] secsMillis = values[0].split("\\.");
 					Long timestamp = SECONDS.toMillis(toLong(secsMillis[0])) + toLong(fillRight(secsMillis[1], 2));
 					Double y = toDouble(values[2]);
 					Double x = toDouble(values[1]);
-					return delegate
-							.parse(timestamp + "," + (x == -1 ? -1 : (x / 765)) + "," + (y == -1 ? -1 : y / 640));
+					return create(timestamp, x, y);
 				}
 				return null;
 			}

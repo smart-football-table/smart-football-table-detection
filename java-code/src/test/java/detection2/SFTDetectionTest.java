@@ -603,19 +603,9 @@ public class SFTDetectionTest {
 
 	void whenInputWasProcessed() throws IOException {
 		sut = sut.withGoalConfig(goalDetectorConfig);
-		LineParser parser = adapt(new RelativeValueParser());
-		sut.process(new BufferedReader(new StringReader(inputString)).lines().map(parser::parse));
-	}
-
-	private LineParser adapt(RelativeValueParser delegate) {
-		return new LineParser() {
-			@Override
-			public RelativePosition parse(String line) {
-				RelativePosition pos = delegate.parse(line);
-				inProgressConsumer.accept(pos);
-				return pos;
-			}
-		};
+		LineParser parser = new RelativeValueParser();
+		sut.process(
+				new BufferedReader(new StringReader(inputString)).lines().map(parser::parse).peek(inProgressConsumer));
 	}
 
 	private void resetGameAndClearMessages() {
