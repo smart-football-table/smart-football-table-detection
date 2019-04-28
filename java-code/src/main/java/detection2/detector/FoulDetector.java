@@ -39,7 +39,9 @@ public class FoulDetector implements Detector {
 			foulInProgress = false;
 		} else {
 			if (noMovementSince == null) {
-				noMovementSince = pos.getRelativePosition().normalizeX();
+				if (!pos.isNull()) {
+					noMovementSince = pos.getRelativePosition().normalizeX();
+				}
 			} else if (noMovementDurationInMillis(pos) >= TIMEOUT) {
 				if (!foulInProgress) {
 					listener.foulHappenend();

@@ -132,7 +132,7 @@ public class GoalDetector implements Detector {
 		}
 
 		private boolean ballAtMiddleLine(AbsolutePosition pos) {
-			return pos.getRelativePosition().normalizeX().getX() <= midAreaMax;
+			return !pos.isNull() && pos.getRelativePosition().normalizeX().getX() <= midAreaMax;
 		}
 
 	}
@@ -147,8 +147,8 @@ public class GoalDetector implements Detector {
 					this;
 		}
 
-		private boolean isFrontOfGoal(RelativePosition relPos) {
-			return relPos.normalizeX().getX() >= frontOfGoal;
+		private boolean isFrontOfGoal(RelativePosition pos) {
+			return !pos.isNull() && pos.normalizeX().getX() >= frontOfGoal;
 		}
 	}
 

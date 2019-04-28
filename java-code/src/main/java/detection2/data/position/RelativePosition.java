@@ -25,6 +25,21 @@ public abstract class RelativePosition implements Position {
 			return -1;
 		}
 
+		@Override
+		public RelativePosition normalizeX() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public RelativePosition normalizeY() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean isRightHandSide() {
+			throw new UnsupportedOperationException();
+		}
+
 	}
 
 	private static class Present extends RelativePosition {
@@ -53,6 +68,26 @@ public abstract class RelativePosition implements Position {
 			return y;
 		}
 
+		public RelativePosition normalizeX() {
+			return create(getTimestamp(), centerX() + abs(centerX() - x), y);
+		}
+
+		public RelativePosition normalizeY() {
+			return create(getTimestamp(), x, centerY() + abs(centerY() - y));
+		}
+
+		public boolean isRightHandSide() {
+			return getX() >= centerX();
+		}
+
+		private double centerX() {
+			return 0.5;
+		}
+
+		private double centerY() {
+			return 0.5;
+		}
+
 	}
 
 	private final long timestamp;
@@ -74,25 +109,11 @@ public abstract class RelativePosition implements Position {
 		return timestamp;
 	}
 
-	public RelativePosition normalizeX() {
-		return create(timestamp, centerX() + abs(centerX() - getX()), getY());
-	}
+	public abstract RelativePosition normalizeX();
 
-	public RelativePosition normalizeY() {
-		return create(timestamp, getX(), centerY() + abs(centerY() - getY()));
-	}
+	public abstract RelativePosition normalizeY();
 
-	public boolean isRightHandSide() {
-		return getX() >= centerX();
-	}
-
-	private double centerX() {
-		return 0.5;
-	}
-
-	private double centerY() {
-		return 0.5;
-	}
+	public abstract boolean isRightHandSide();
 
 	@Override
 	public int hashCode() {
