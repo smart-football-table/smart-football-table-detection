@@ -8,6 +8,7 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.rules.Timeout.seconds;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -26,7 +27,9 @@ import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
 import detection2.SFTDetection;
 import detection2.data.Message;
@@ -50,6 +53,9 @@ public class OpenCVHandlerTestIT {
 	private SFTDetection sut;
 
 	private MqttConsumer mqttConsumer;
+
+	@Rule
+	public Timeout timeout = seconds(30);
 
 	@Before
 	public void setup() throws IOException, MqttException {
