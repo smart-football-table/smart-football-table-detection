@@ -1,5 +1,14 @@
 package detection2;
 
+import static detection2.Messages.IncomingMessages.isReset;
+import static detection2.Messages.OutgoingMessages.publihGameWon;
+import static detection2.Messages.OutgoingMessages.publishFoul;
+import static detection2.Messages.OutgoingMessages.publishGameDraw;
+import static detection2.Messages.OutgoingMessages.publishGameStart;
+import static detection2.Messages.OutgoingMessages.publishMovement;
+import static detection2.Messages.OutgoingMessages.publishPos;
+import static detection2.Messages.OutgoingMessages.publishTeamScored;
+import static detection2.Messages.OutgoingMessages.pusblishIdle;
 import static detection2.detector.FoulDetector.onFoul;
 import static detection2.detector.GameStartDetector.onGameStart;
 import static detection2.detector.IdleDetector.onIdle;
@@ -9,14 +18,11 @@ import static detection2.detector.PositionDetector.onPositionChange;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-import org.eclipse.paho.client.mqttv3.MqttException;
-
 import detection2.data.Message;
 import detection2.data.Table;
 import detection2.data.position.RelativePosition;
 import detection2.detector.GoalDetector;
 import detection2.input.PositionProvider;
-import detection2.mqtt.MqttConsumer;
 
 public class SFTDetection {
 
@@ -30,48 +36,40 @@ public class SFTDetection {
 
 	private SFTDetection(Table table, Consumer<Message> consumer) {
 		this.table = table;
-		MessagePublisher publisher = new MessagePublisher(consumer);
 		this.game = Game.newGame( //
-				onGameStart(() -> publisher.gameStart()), //
-				onPositionChange(p -> publisher.pos(p)), //
-				onMovement(m -> publisher.movement(m)), //
-				onFoul(() -> publisher.foul()), //
-				onIdle(b -> publisher.idle(b)) //
-		).addScoreTracker(scoreTracker(publisher));
+				onGameStart(() -> publishGameStart(consumer)), //
+				onPositionChange(p -> publishPos(consumer, p)), //
+				onMovement(m -> publishMovement(consumer, m)), //
+				onFoul(() -> publishFoul(consumer)), //
+				onIdle(b -> pusblishIdle(consumer, b)) //
+		).addScoreTracker(scoreTracker(consumer));
 	}
 
-	public SFTDetection receiver(Consumer<Message> consumer) {
-		if (consumer instanceof MqttConsumer) {
-			MqttConsumer mqttConsumer = (MqttConsumer) consumer;
-			try {
-				mqttConsumer.setCallback(m -> {
-					if (m.getTopic().equals("game/reset")) {
-						resetGame();
-					}
-				});
-			} catch (MqttException e) {
-				throw new RuntimeException(e);
+	public SFTDetection receiver(MessageProvider provider) {
+		provider.addConsumer(m -> {
+			if (isReset(m)) {
+				resetGame();
 			}
-		}
+		});
 		return this;
 	}
 
-	private ScoreTracker.Listener scoreTracker(MessagePublisher sender) {
+	private ScoreTracker.Listener scoreTracker(Consumer<Message> consumer) {
 		return new ScoreTracker.Listener() {
 
 			@Override
 			public void teamScored(int teamid, int score) {
-				sender.teamScored(teamid, score);
+				publishTeamScored(consumer, teamid, score);
 			}
 
 			@Override
 			public void won(int teamid) {
-				sender.gameWon(teamid);
+				publihGameWon(consumer, teamid);
 			}
 
 			@Override
 			public void draw(int[] teamids) {
-				sender.draw(teamids);
+				publishGameDraw(consumer, teamids);
 			}
 
 		};

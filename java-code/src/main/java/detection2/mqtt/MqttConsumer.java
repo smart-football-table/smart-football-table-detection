@@ -2,6 +2,8 @@ package detection2.mqtt;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -11,19 +13,43 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
+import detection2.MessageProvider;
 import detection2.data.Message;
 
-public class MqttConsumer implements Consumer<Message>, Closeable {
+public class MqttConsumer implements Consumer<Message>, MessageProvider, Closeable {
 
 	private final MqttClient mqttClient;
+	private final List<Consumer<Message>> consumers = new CopyOnWriteArrayList<>();
 
 	public MqttConsumer(String host, int port) throws IOException {
 		try {
 			mqttClient = new MqttClient("tcp://" + host + ":" + port, "SFT-Detection", new MemoryPersistence());
 			mqttClient.connect();
+			mqttClient.setCallback(callback());
+			mqttClient.subscribe("#");
 		} catch (MqttException e) {
 			throw new IOException(e);
 		}
+	}
+
+	private MqttCallback callback() {
+		return new MqttCallback() {
+			@Override
+			public void messageArrived(String topic, MqttMessage message) throws Exception {
+				for (Consumer<Message> consumer : consumers) {
+					consumer.accept(Message.message(topic, new String(message.getPayload())));
+				}
+			}
+
+			@Override
+			public void deliveryComplete(IMqttDeliveryToken token) {
+			}
+
+			@Override
+			public void connectionLost(Throwable cause) {
+
+			}
+		};
 	}
 
 	@Override
@@ -47,24 +73,9 @@ public class MqttConsumer implements Consumer<Message>, Closeable {
 		}
 	}
 
-	public void setCallback(Consumer<Message> c) throws MqttException {
-		mqttClient.setCallback(new MqttCallback() {
-			@Override
-			public void messageArrived(String topic, MqttMessage message) throws Exception {
-				c.accept(Message.message(topic, new String(message.getPayload())));
-			}
-
-			@Override
-			public void deliveryComplete(IMqttDeliveryToken token) {
-			}
-
-			@Override
-			public void connectionLost(Throwable cause) {
-
-			}
-		});
-		mqttClient.subscribe("#");
-
+	@Override
+	public void addConsumer(Consumer<Message> consumer) {
+		consumers.add(consumer);
 	}
 
 }
