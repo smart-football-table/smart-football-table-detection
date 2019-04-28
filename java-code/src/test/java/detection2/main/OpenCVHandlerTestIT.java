@@ -135,7 +135,7 @@ public class OpenCVHandlerTestIT {
 		sut.process(positionProvider(42));
 		messagesReceived.clear();
 		sendReset();
-		sut.process(provider(3, () -> noPosition(System.currentTimeMillis())));
+		sut.process(provider(3, () -> noPosition(currentTimeMillis())));
 		MILLISECONDS.sleep(50);
 		assertThat(messagesWithTopic("game/start").count(), is(1L));
 	}
@@ -147,10 +147,9 @@ public class OpenCVHandlerTestIT {
 		restartBroker();
 		waitUntil(secondClient, IMqttClient::isConnected);
 		waitUntil(mqttConsumer, MqttConsumer::isConnected);
-		MILLISECONDS.sleep(50);
 		messagesReceived.clear();
 		sendReset();
-		sut.process(provider(3, () -> noPosition(System.currentTimeMillis())));
+		sut.process(provider(3, () -> noPosition(currentTimeMillis())));
 		MILLISECONDS.sleep(50);
 		assertThat(messagesWithTopic("game/start").count(), is(1L));
 	}
