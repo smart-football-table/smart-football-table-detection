@@ -6,9 +6,8 @@ import static detection2.detector.IdleDetector.onIdle;
 import static detection2.detector.MovementDetector.onMovement;
 import static detection2.detector.PositionDetector.onPositionChange;
 
-import java.io.IOException;
-import java.util.Iterator;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import detection2.data.Message;
 import detection2.data.Table;
@@ -74,16 +73,19 @@ public class SFTDetection {
 		return this;
 	}
 
-	public void process(Iterator<RelativePosition> positions) throws IOException {
-		while (positions.hasNext()) {
-			RelativePosition pos = positions.next();
-			if (reset) {
-				game = game.reset();
-				messages.gameStart();
-				reset = false;
+	public void process(Stream<RelativePosition> positions) {
+		positions.forEach(pos -> {
+			if (pos == null) {
+				// TOOO log invalid line
+			} else {
+				if (reset) {
+					game = game.reset();
+					messages.gameStart();
+					reset = false;
+				}
+				game = game.update(table.toAbsolute(pos));
 			}
-			game = game.update(table.toAbsolute(pos));
-		}
+		});
 	}
 
 	public void resetGame() {

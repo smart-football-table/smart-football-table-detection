@@ -3,6 +3,7 @@ package detection2;
 import static java.lang.System.arraycopy;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -14,7 +15,6 @@ import detection2.data.Message;
 import detection2.data.Table;
 import detection2.data.position.RelativePosition;
 import detection2.detector.GoalDetector;
-import detection2.input.ReaderPositionProvider;
 import detection2.parser.LineParser;
 import detection2.parser.RelativeValueParser;
 
@@ -71,11 +71,13 @@ public class PythonOutputProcessingMain {
 		// }
 		// };
 
-		new SFTDetection(new Table(120, 68), sysout)
-				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40))
-				.process(new ReaderPositionProvider(
-						new InputStreamReader(new FileInputStream(new File("python_output_opencv.txt"))),
-						new AbsValueParser()));
+		AbsValueParser parser = new AbsValueParser();
+		try (BufferedReader reader = new BufferedReader(
+				new InputStreamReader(new FileInputStream(new File("python_output_opencv.txt"))))) {
+			new SFTDetection(new Table(120, 68), sysout)
+					.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40))
+					.process(reader.lines().map(parser::parse));
+		}
 	}
 
 }

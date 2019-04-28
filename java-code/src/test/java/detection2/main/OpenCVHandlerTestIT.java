@@ -6,7 +6,10 @@ import static detection2.data.position.RelativePosition.noPosition;
 import static io.moquette.BrokerConstants.HOST_PROPERTY_NAME;
 import static io.moquette.BrokerConstants.PORT_PROPERTY_NAME;
 import static java.lang.System.currentTimeMillis;
+import static java.util.Spliterator.ORDERED;
+import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.stream.IntStream.range;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.rules.Timeout.seconds;
@@ -19,7 +22,9 @@ import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -132,7 +137,7 @@ public class OpenCVHandlerTestIT {
 	@Test
 	public void onResetTheNewGameIsStartedImmediatelyAndWithoutTableInteraction()
 			throws IOException, MqttPersistenceException, MqttException, InterruptedException {
-		sut.process(positionProvider(42));
+		sut.process(positions(42));
 		messagesReceived.clear();
 		sendReset();
 		sut.process(provider(3, () -> noPosition(currentTimeMillis())));
@@ -143,7 +148,7 @@ public class OpenCVHandlerTestIT {
 	@Test
 	public void doesReconnectAndResubscribe()
 			throws IOException, InterruptedException, MqttPersistenceException, MqttException {
-		sut.process(positionProvider(42));
+		sut.process(positions(42));
 		restartBroker();
 		waitUntil(secondClient, IMqttClient::isConnected);
 		waitUntil(mqttConsumer, MqttConsumer::isConnected);
@@ -173,31 +178,20 @@ public class OpenCVHandlerTestIT {
 		secondClient.publish("game/reset", new MqttMessage("".getBytes()));
 	}
 
-	private Iterator<RelativePosition> positionProvider(int count) {
+	private Stream<RelativePosition> positions(int count) {
 		return provider(count, () -> create(currentTimeMillis(), 0.2, 0.3));
 	}
 
-	private Iterator<RelativePosition> provider(int count, Supplier<RelativePosition> supplier) {
-		return new Iterator<RelativePosition>() {
-			private int i;
+	private Stream<RelativePosition> provider(int count, Supplier<RelativePosition> supplier) {
+		return range(0, count).peek(i -> sleep()).mapToObj(i -> supplier.get());
+	}
 
-			@Override
-			public boolean hasNext() {
-				return i <= count;
-			}
-
-			@Override
-			public RelativePosition next() {
-				try {
-					MILLISECONDS.sleep(10);
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-				}
-				i++;
-				return supplier.get();
-			}
-
-		};
+	private void sleep() {
+		try {
+			MILLISECONDS.sleep(10);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
 	}
 
 }

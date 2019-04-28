@@ -20,6 +20,7 @@ import static java.util.stream.IntStream.range;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -41,7 +42,6 @@ import detection2.data.Message;
 import detection2.data.Table;
 import detection2.data.position.RelativePosition;
 import detection2.detector.GoalDetector;
-import detection2.input.ReaderPositionProvider;
 import detection2.parser.LineParser;
 import detection2.parser.RelativeValueParser;
 
@@ -603,7 +603,8 @@ public class SFTDetectionTest {
 
 	void whenInputWasProcessed() throws IOException {
 		sut = sut.withGoalConfig(goalDetectorConfig);
-		sut.process(new ReaderPositionProvider(new StringReader(inputString), adapt(new RelativeValueParser())));
+		LineParser parser = adapt(new RelativeValueParser());
+		sut.process(new BufferedReader(new StringReader(inputString)).lines().map(parser::parse));
 	}
 
 	private LineParser adapt(RelativeValueParser delegate) {

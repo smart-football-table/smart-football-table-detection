@@ -9,6 +9,7 @@ import static java.lang.System.arraycopy;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -19,13 +20,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import detection2.SFTDetection;
 import detection2.data.Message;
 import detection2.data.Table;
 import detection2.data.position.RelativePosition;
 import detection2.detector.GoalDetector;
-import detection2.input.ReaderPositionProvider;
 import detection2.parser.LineParser;
 import detection2.parser.RelativeValueParser;
 
@@ -59,9 +60,10 @@ public class OpenCVHandler {
 	}
 
 	private void runDetection(InputStream is) throws IOException {
+		LineParser parser = parser();
+		Stream<RelativePosition> stream = new BufferedReader(new InputStreamReader(is)).lines().map(parser::parse);
 		new SFTDetection(new Table(120, 68), consumer)
-				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40))
-				.process(new ReaderPositionProvider(new InputStreamReader(is), parser()));
+				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40)).process(stream);
 	}
 
 	private String pythonModule() {
