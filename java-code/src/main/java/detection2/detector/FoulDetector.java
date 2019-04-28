@@ -17,7 +17,7 @@ public class FoulDetector implements Detector {
 	public static FoulDetector onFoul(Listener listener) {
 		return new FoulDetector(listener);
 	}
-	
+
 	@Override
 	public FoulDetector newInstance() {
 		return new FoulDetector(listener);
@@ -34,18 +34,16 @@ public class FoulDetector implements Detector {
 
 	@Override
 	public void detect(AbsolutePosition pos) {
-		if (noMovementSince != null && xChanged(pos)) {
+		if (noMovementSince == null) {
+			if (!pos.isNull()) {
+				noMovementSince = pos.getRelativePosition().normalizeX();
+			}
+		} else if (pos.isNull() || xChanged(pos)) {
 			noMovementSince = null;
 			foulInProgress = false;
-		} else {
-			if (noMovementSince == null) {
-				if (!pos.isNull()) {
-					noMovementSince = pos.getRelativePosition().normalizeX();
-				}
-			} else if (noMovementDurationInMillis(pos) >= TIMEOUT) {
-				if (!foulInProgress) {
-					listener.foulHappenend();
-				}
+		} else if (noMovementDurationInMillis(pos) >= TIMEOUT) {
+			if (!foulInProgress) {
+				listener.foulHappenend();
 				foulInProgress = true;
 			}
 		}
@@ -56,7 +54,7 @@ public class FoulDetector implements Detector {
 	}
 
 	private boolean xChanged(AbsolutePosition pos) {
-		return pos.isNull() || xDiff(pos) > MOVEMENT_GREATER_THAN;
+		return xDiff(pos) > MOVEMENT_GREATER_THAN;
 	}
 
 	private double xDiff(AbsolutePosition pos) {
