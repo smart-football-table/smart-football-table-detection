@@ -6,6 +6,47 @@ import detection2.data.position.AbsolutePosition;
 
 public class IdleDetector implements Detector {
 
+	private interface State {
+		State update(AbsolutePosition pos);
+	}
+
+	private class GameInPlay implements IdleDetector.State {
+		@Override
+		public State update(AbsolutePosition pos) {
+			return pos.isNull() ? new OffTableNotIdle(pos) : this;
+		}
+	}
+
+	private class OffTableNotIdle implements IdleDetector.State {
+
+		private long offTableSince;
+
+		public OffTableNotIdle(AbsolutePosition pos) {
+			this.offTableSince = pos.getTimestamp();
+		}
+
+		@Override
+		public State update(AbsolutePosition pos) {
+			return pos.isNull() //
+					? isIdle(pos) //
+							? new OffTableAndIdle() //
+							: this //
+					: new GameInPlay();
+		}
+
+		private boolean isIdle(AbsolutePosition pos) {
+			return pos.getTimestamp() - offTableSince >= idleWhen;
+		}
+
+	}
+
+	private class OffTableAndIdle implements State {
+		@Override
+		public State update(AbsolutePosition pos) {
+			return pos.isNull() ? this : new GameInPlay();
+		}
+	}
+
 	public static IdleDetector onIdle(Listener listener) {
 		return new IdleDetector(listener);
 	}
@@ -22,8 +63,7 @@ public class IdleDetector implements Detector {
 	}
 
 	private final IdleDetector.Listener listener;
-	private AbsolutePosition offTableSince;
-	private boolean idle;
+	private State state = new GameInPlay();
 
 	private IdleDetector(IdleDetector.Listener listener) {
 		this.listener = listener;
@@ -31,29 +71,22 @@ public class IdleDetector implements Detector {
 
 	@Override
 	public void detect(AbsolutePosition pos) {
-		if (offTable(pos)) {
-			if (offTableSince == null) {
-				offTableSince = pos;
-			} else {
-				long diff = pos.getTimestamp() - offTableSince.getTimestamp();
-				if (diff >= idleWhen) {
-					if (!idle) {
-						listener.idle(true);
-						idle = true;
-					}
-				}
-			}
-		} else {
-			offTableSince = null;
-			if (idle) {
-				listener.idle(false);
-				idle = false;
-			}
+		State oldState = state;
+		state = state.update(pos);
+		if (switchedToIdle(oldState)) {
+			listener.idle(true);
+		}
+		if (switchedFromIdle(oldState)) {
+			listener.idle(false);
 		}
 	}
 
-	private boolean offTable(AbsolutePosition pos) {
-		return pos.isNull();
+	private boolean switchedToIdle(State oldState) {
+		return !(oldState instanceof OffTableAndIdle) && state instanceof OffTableAndIdle;
+	}
+
+	private boolean switchedFromIdle(State oldState) {
+		return (oldState instanceof OffTableAndIdle) && !(state instanceof OffTableAndIdle);
 	}
 
 }
