@@ -91,9 +91,8 @@ public class IdleDetector implements Detector {
 	public void detect(AbsolutePosition pos) {
 		boolean oldIdleState = state.isIdle();
 		state = state.update(pos);
-		boolean newIdleState = state.isIdle();
-		if (newIdleState != oldIdleState) {
-			listener.idle(newIdleState);
+		if (oldIdleState != state.isIdle()) {
+			listener.idle(state.isIdle());
 		}
 	}
 
