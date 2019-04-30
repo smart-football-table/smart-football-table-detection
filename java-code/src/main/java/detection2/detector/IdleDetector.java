@@ -36,19 +36,19 @@ public class IdleDetector implements Detector {
 		@Override
 		public State update(AbsolutePosition pos) {
 			return pos.isNull() //
-					? idleTimeout(pos) //
+					? timestampDiff(pos) >= idleWhen //
 							? new OffTableAndIdle() //
 							: this //
 					: new GameInPlay();
 		}
 
+		private long timestampDiff(AbsolutePosition pos) {
+			return pos.getTimestamp() - offTableSince;
+		}
+
 		@Override
 		public boolean isIdle() {
 			return false;
-		}
-
-		private boolean idleTimeout(AbsolutePosition pos) {
-			return pos.getTimestamp() - offTableSince >= idleWhen;
 		}
 
 	}
