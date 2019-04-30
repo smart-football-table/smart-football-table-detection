@@ -8,6 +8,8 @@ public class IdleDetector implements Detector {
 
 	private interface State {
 		State update(AbsolutePosition pos);
+
+		boolean isIdle();
 	}
 
 	private class GameInPlay implements IdleDetector.State {
@@ -15,6 +17,12 @@ public class IdleDetector implements Detector {
 		public State update(AbsolutePosition pos) {
 			return pos.isNull() ? new OffTableNotIdle(pos) : this;
 		}
+
+		@Override
+		public boolean isIdle() {
+			return false;
+		}
+
 	}
 
 	private class OffTableNotIdle implements IdleDetector.State {
@@ -28,13 +36,18 @@ public class IdleDetector implements Detector {
 		@Override
 		public State update(AbsolutePosition pos) {
 			return pos.isNull() //
-					? isIdle(pos) //
+					? idleTimeout(pos) //
 							? new OffTableAndIdle() //
 							: this //
 					: new GameInPlay();
 		}
 
-		private boolean isIdle(AbsolutePosition pos) {
+		@Override
+		public boolean isIdle() {
+			return false;
+		}
+
+		private boolean idleTimeout(AbsolutePosition pos) {
 			return pos.getTimestamp() - offTableSince >= idleWhen;
 		}
 
@@ -44,6 +57,11 @@ public class IdleDetector implements Detector {
 		@Override
 		public State update(AbsolutePosition pos) {
 			return pos.isNull() ? this : new GameInPlay();
+		}
+
+		@Override
+		public boolean isIdle() {
+			return true;
 		}
 	}
 
@@ -71,22 +89,12 @@ public class IdleDetector implements Detector {
 
 	@Override
 	public void detect(AbsolutePosition pos) {
-		State oldState = state;
+		boolean oldIdleState = state.isIdle();
 		state = state.update(pos);
-		if (switchedToIdle(oldState)) {
-			listener.idle(true);
+		boolean newIdleState = state.isIdle();
+		if (newIdleState != oldIdleState) {
+			listener.idle(newIdleState);
 		}
-		if (switchedFromIdle(oldState)) {
-			listener.idle(false);
-		}
-	}
-
-	private boolean switchedToIdle(State oldState) {
-		return !(oldState instanceof OffTableAndIdle) && state instanceof OffTableAndIdle;
-	}
-
-	private boolean switchedFromIdle(State oldState) {
-		return (oldState instanceof OffTableAndIdle) && !(state instanceof OffTableAndIdle);
 	}
 
 }
