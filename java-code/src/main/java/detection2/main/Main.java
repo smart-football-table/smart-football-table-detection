@@ -1,18 +1,19 @@
 package detection2.main;
 
 import java.io.IOException;
-import java.util.function.Consumer;
 
 import detection2.data.Message;
 import detection2.mqtt.MqttConsumer;
+import detection2.queue.QueueConsumer;
 
 public class Main {
 
 	public Main() throws IOException {
-		new OpenCVHandler(mqtt("localhost", 1883)).startPythonModule();
+		MqttConsumer mqtt = mqtt("localhost", 1883);
+		new OpenCVHandler(new QueueConsumer<Message>(mqtt, 300), mqtt).startPythonModule();
 	}
 
-	private Consumer<Message> mqtt(String host, int port) throws IOException {
+	private MqttConsumer mqtt(String host, int port) throws IOException {
 		return new MqttConsumer(host, port);
 	}
 

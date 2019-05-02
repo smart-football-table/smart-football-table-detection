@@ -1,4 +1,4 @@
-package detection2.mqtt;
+package detection2.queue;
 
 import static detection2.data.Message.message;
 import static io.moquette.BrokerConstants.HOST_PROPERTY_NAME;
@@ -31,7 +31,7 @@ import detection2.mqtt.MqttConsumer;
 import io.moquette.server.Server;
 import io.moquette.server.config.MemoryConfig;
 
-public class MqttConsumerTest {
+public class MqttQueueTest {
 
 	private static final String LOCALHOST = "localhost";
 
