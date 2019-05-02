@@ -46,12 +46,16 @@ public class OpenCVHandler {
 
 	private final Map<PythonArg, String> pythonArgs = new EnumMap<>(PythonArg.class);
 
-	private final Consumer<Message> consumer;
-	private final MessageProvider receiver;
+	private SFTDetection detection;
 
-	public OpenCVHandler(Consumer<Message> consumer, MessageProvider receiver) throws IOException {
-		this.consumer = consumer;
-		this.receiver = receiver;
+	public OpenCVHandler(Consumer<Message> consumer) throws IOException {
+		this.detection = new SFTDetection(new Table(120, 68), consumer)
+				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40));
+	}
+
+	public OpenCVHandler withReceiver(MessageProvider receiver) {
+		detection = detection.receiver(receiver);
+		return this;
 	}
 
 	public void startPythonModule() throws IOException {
@@ -65,10 +69,7 @@ public class OpenCVHandler {
 	private void runDetection(InputStream is) throws IOException {
 		Stream<RelativePosition> stream = new BufferedReader(new InputStreamReader(is)).lines()
 				.map(oldPythonFormatParser());
-		SFTDetection detection = new SFTDetection(new Table(120, 68), consumer)
-				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40));
-		detection = receiver == null ? detection : detection.receiver(receiver);
-		detection.process(stream);
+		this.detection.process(stream);
 	}
 
 	private String pythonModule() {
