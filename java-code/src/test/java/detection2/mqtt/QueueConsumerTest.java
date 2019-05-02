@@ -5,7 +5,6 @@ import static java.util.Collections.emptyList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
