@@ -1,11 +1,6 @@
 package detection2.main;
 
 import static detection2.data.position.RelativePosition.create;
-import static detection2.main.OpenCVHandler.PythonArg.BUFFER_SIZE;
-import static detection2.main.OpenCVHandler.PythonArg.CAM_INDEX;
-import static detection2.main.OpenCVHandler.PythonArg.COLOR;
-import static detection2.main.OpenCVHandler.PythonArg.RECORD_PATH;
-import static detection2.main.OpenCVHandler.PythonArg.VIDEO_PATH;
 import static java.lang.System.arraycopy;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -16,10 +11,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -33,18 +25,9 @@ import detection2.detector.GoalDetector;
 
 public class OpenCVHandler {
 
-	public enum PythonArg {
-		VIDEO_PATH("-v"), RECORD_PATH("-r"), COLOR("-c"), CAM_INDEX("-i"), BUFFER_SIZE("-b");
-		private String pythonSwitch;
-
-		private PythonArg(String pythonSwitch) {
-			this.pythonSwitch = pythonSwitch;
-		}
-	}
-
 	private static final String PYTHON_MODULE = "src/main/resources/ballDetectorClassicOpenCV.py";
 
-	private final Map<PythonArg, String> pythonArgs = new EnumMap<>(PythonArg.class);
+	private List<String> pythonArgs;
 
 	private SFTDetection detection;
 
@@ -77,14 +60,9 @@ public class OpenCVHandler {
 	}
 
 	private Process startProcess(String... pythonCommand) throws IOException {
-		return new ProcessBuilder(appendArgs(new ArrayList<>(asList(pythonCommand)))).start();
-	}
-
-	private String[] appendArgs(List<String> args) {
-		for (Entry<PythonArg, String> entry : pythonArgs.entrySet()) {
-			args.addAll(asList(entry.getKey().pythonSwitch, entry.getValue()));
-		}
-		return args.toArray(new String[args.size()]);
+		List<String> args = new ArrayList<>(asList(pythonCommand));
+		args.addAll(pythonArgs);
+		return new ProcessBuilder(args).start();
 	}
 
 	public static Function<String, RelativePosition> oldPythonFormatParser() {
@@ -129,33 +107,8 @@ public class OpenCVHandler {
 		};
 	}
 
-	@Deprecated // use setPythonArg directly
-	public void setPythonArgumentVideoPath(String value) {
-		addPythonArg(VIDEO_PATH, value);
-	}
-
-	@Deprecated // use setPythonArg directly
-	public void setPythonArgumentColor(String value) {
-		addPythonArg(COLOR, value);
-	}
-
-	@Deprecated // use setPythonArg directly
-	public void setPythonArgumentCamIndex(String value) {
-		addPythonArg(CAM_INDEX, value);
-	}
-
-	@Deprecated // use setPythonArg directly
-	public void setPythonArgumentBufferSize(String value) {
-		addPythonArg(BUFFER_SIZE, value);
-	}
-
-	@Deprecated // use setPythonArg directly
-	public void setPythonArgumentRecordPath(String value) {
-		addPythonArg(RECORD_PATH, value);
-	}
-
-	public OpenCVHandler addPythonArg(PythonArg pythonArg, String value) {
-		this.pythonArgs.put(pythonArg, value);
+	public OpenCVHandler withPythonArgs(String... values) {
+		this.pythonArgs = Arrays.asList(values);
 		return this;
 	}
 
