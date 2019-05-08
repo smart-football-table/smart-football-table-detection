@@ -42,7 +42,7 @@ public class OpenCVHandler {
 		}
 	}
 
-	private static final String PYTHON_MODULE = "darknet_video.py";
+	private static final String PYTHON_MODULE = "src/main/resources/ballDetectorClassicOpenCV.py";
 
 	private final Map<PythonArg, String> pythonArgs = new EnumMap<>(PythonArg.class);
 
@@ -73,8 +73,7 @@ public class OpenCVHandler {
 	}
 
 	private String pythonModule() {
-		// TODO do not depend on user home
-		return System.getProperty("user.dir") + "/" + PYTHON_MODULE;
+		return PYTHON_MODULE;
 	}
 
 	private Process startProcess(String... pythonCommand) throws IOException {

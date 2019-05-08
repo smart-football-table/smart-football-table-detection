@@ -17,4 +17,10 @@ public class Main {
 		return new MqttConsumer(host, port);
 	}
 
+	public static void main(String[] args) throws IOException {
+
+		new Main();
+
+	}
+
 }
