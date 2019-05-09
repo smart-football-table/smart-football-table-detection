@@ -28,7 +28,7 @@ public class MainTest {
 	}
 
 	private static File tmpFileWithContent(String... content) throws IOException {
-		File file = writeContent(createTempFile(MainTest.class.getName() + "tmp", ".py").toPath(), content);
+		File file = writeContent(createTempFile("tmp-" + MainTest.class.getName(), ".py").toPath(), content);
 		file.deleteOnExit();
 		return file;
 	}
