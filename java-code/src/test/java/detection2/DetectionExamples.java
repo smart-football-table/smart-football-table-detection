@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import detection2.data.Message;
 import detection2.data.Table;
@@ -28,10 +29,10 @@ import net.jqwik.api.Provide;
 class DetectionExamples {
 
 	@Property
-	void ballsOnTableNeverWillRaiseAGoalEvent(@ForAll("positionsOnTable") List<RelativePosition> positions,
+	void ballsOnTableNeverWillRaiseAGoalEvent(@ForAll("positionsOnTable") Stream<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		List<Message> messages = new ArrayList<>();
-		new SFTDetection(table, messages::add).process(positions.stream());
+		new SFTDetection(table, messages::add).process(positions);
 		assertThat(messages.stream().filter(anyOf( //
 				asList( //
 						topicStartsWith("ball/position/"), //
@@ -60,7 +61,7 @@ class DetectionExamples {
 	}
 
 	@Provide
-	Arbitrary<List<RelativePosition>> positionsOnTable() {
+	Arbitrary<Stream<RelativePosition>> positionsOnTable() {
 		AtomicLong now = new AtomicLong();
 		return combine(//
 				longs().between(1, SECONDS.toMillis(5)), //
@@ -68,7 +69,7 @@ class DetectionExamples {
 				doubles().between(0, 1)) //
 						.as((timestamp, x, y) //
 						-> RelativePosition.create(now.addAndGet(timestamp), x, y)) //
-						.list();
+						.stream();
 	}
 
 }
