@@ -1,13 +1,13 @@
 package detection.main;
 
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.util.Properties;
-
 import static io.moquette.BrokerConstants.HOST_PROPERTY_NAME;
 import static io.moquette.BrokerConstants.PORT_PROPERTY_NAME;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.util.Properties;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
@@ -15,9 +15,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.moquette.server.Server;
-import io.moquette.server.config.IConfig;
-import io.moquette.server.config.MemoryConfig;
+import io.moquette.broker.Server;
+import io.moquette.broker.config.IConfig;
+import io.moquette.broker.config.MemoryConfig;
 
 public class GameManagerTest {
 

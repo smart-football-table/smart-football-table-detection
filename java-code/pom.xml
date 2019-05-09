@@ -12,6 +12,14 @@
 		<junit.jupiter.version>5.3.1</junit.jupiter.version>
 	</properties>
 
+	<repositories>
+		<!-- moquette:moquette-broker:0.12.1 -->
+		<repository>
+			<id>bintray</id>
+			<url>https://jcenter.bintray.com</url>
+		</repository>
+	</repositories>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.eclipse.paho</groupId>
@@ -19,9 +27,9 @@
 			<version>1.2.0</version>
 		</dependency>
 		<dependency>
-			<groupId>hu.blackbelt.bundles.moquette</groupId>
-			<artifactId>io.moquette</artifactId>
-			<version>0.11_1</version>
+			<groupId>io.moquette</groupId>
+			<artifactId>moquette-broker</artifactId>
+			<version>0.12.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>

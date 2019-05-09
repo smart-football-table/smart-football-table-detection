@@ -42,8 +42,8 @@ import detection2.data.Table;
 import detection2.data.position.RelativePosition;
 import detection2.detector.GoalDetector;
 import detection2.mqtt.MqttConsumer;
-import io.moquette.server.Server;
-import io.moquette.server.config.MemoryConfig;
+import io.moquette.broker.Server;
+import io.moquette.broker.config.MemoryConfig;
 
 public class OpenCVHandlerTestIT {
 
