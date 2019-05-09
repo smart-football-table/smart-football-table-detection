@@ -18,7 +18,7 @@ import org.junit.Test;
 public class MainTest {
 
 	@Test
-	public void test() throws IOException {
+	public void canCallPython() throws IOException {
 		String module = tmpFileWithContent( //
 				"import sys", //
 				"print('Hello, world! ', str(sys.argv))" //
