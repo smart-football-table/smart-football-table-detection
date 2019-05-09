@@ -19,20 +19,22 @@ public class MainTest {
 
 	@Test
 	public void test() throws IOException {
-		File tmpFile = fileWithContent( //
+		String module = tmpFileWithContent( //
 				"import sys", //
 				"print('Hello, world! ', str(sys.argv))" //
-		);
-		tmpFile.deleteOnExit();
-
-		String module = tmpFile.getAbsolutePath();
+		).getAbsolutePath();
 		assertThat(Main.process(module, "-foo", "bar").collect(toList()),
 				is(asList("('Hello, world! ', \"['" + module + "', '-foo', 'bar']\")")));
 	}
 
-	private static File fileWithContent(String... content) throws IOException {
-		return write(createTempFile(MainTest.class.getName() + "tmp", ".py").toPath(),
-				stream(content).collect(joining("\n")).getBytes()).toFile();
+	private static File tmpFileWithContent(String... content) throws IOException {
+		File file = writeContent(createTempFile(MainTest.class.getName() + "tmp", ".py").toPath(), content);
+		file.deleteOnExit();
+		return file;
+	}
+
+	private static File writeContent(Path path, String... content) throws IOException {
+		return write(path, stream(content).collect(joining("\n")).getBytes()).toFile();
 	}
 
 }
