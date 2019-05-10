@@ -122,35 +122,6 @@ class DetectionExamples {
 				.collect(toList()), everyItem(is(positive())));
 	}
 
-	@Property
-	void mpsValuesAreDistanceDividedByElapsedTimeMultipliedBy10(
-			@ForAll("positionsOnTable") List<RelativePosition> positions, @ForAll("table") Table table) {
-		statistics(positions);
-		List<Message> ballVelocitiesInMps = process(positions, table, ballVelocityMps);
-		for (int i = 0; i < ballVelocitiesInMps.size() - 1; i++) {
-			Message message = ballVelocitiesInMps.get(i);
-			AbsolutePosition pos1 = table.toAbsolute(positions.get(i + 1));
-			AbsolutePosition pos2 = table.toAbsolute(positions.get(i));
-			assertThat(parseDouble(message.getPayload()),
-					is(closeTo(distance(pos1, pos2) / elapsedTime(pos1, pos2) * 10, 0.001)));
-		}
-	}
-
-	private long elapsedTime(AbsolutePosition pos1, AbsolutePosition pos2) {
-		return pos1.getTimestamp() - pos2.getTimestamp();
-	}
-
-	private double distance(AbsolutePosition pos1, AbsolutePosition pos2) {
-		return sqrt( //
-				pow(diff(Position::getX, pos1, pos2), 2) //
-						+ pow(diff(Position::getY, pos1, pos2), 2) //
-		);
-	}
-
-	private double diff(Function<AbsolutePosition, Double> mapper, AbsolutePosition... positions) {
-		return Arrays.stream(positions).map(mapper).mapToDouble(Double::valueOf).reduce((l, r) -> l - r).getAsDouble();
-	}
-
 	private void statistics(Collection<?> col) {
 		Statistics.collect(col.size() < 10 ? "<10" : col.size() < 30 ? "<30" : ">=30");
 	}
