@@ -10,7 +10,7 @@ import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ControllerTest {
+public class ControllerTestIT {
 
 	private Controller game;
 	private OpenCVHandler cv;

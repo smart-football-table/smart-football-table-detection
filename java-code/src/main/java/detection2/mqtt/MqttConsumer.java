@@ -26,9 +26,8 @@ public class MqttConsumer implements Consumer<Message>, MessageProvider, Closeab
 	public MqttConsumer(String host, int port) throws IOException {
 		try {
 			mqttClient = new MqttClient("tcp://" + host + ":" + port, "SFT-Detection", new MemoryPersistence());
-			mqttClient.connect(connectOptions());
 			mqttClient.setCallback(callback());
-			subscribe();
+			mqttClient.connect(connectOptions());
 		} catch (MqttException e) {
 			throw new IOException(e);
 		}
