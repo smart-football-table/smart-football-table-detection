@@ -25,4 +25,9 @@ public class Table {
 		return width * x;
 	}
 
+	@Override
+	public String toString() {
+		return "Table [width=" + width + ", height=" + height + "]";
+	}
+
 }

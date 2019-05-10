@@ -1,9 +1,7 @@
 package detection2.main;
 
 import static detection2.data.position.RelativePosition.create;
-import static java.lang.System.arraycopy;
 import static java.util.Collections.addAll;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,10 +23,14 @@ import detection2.queue.QueueConsumer;
 
 public class Main {
 
-	private String pythonModule = "src/main/resources/ballDetectorClassicOpenCV.py";
+	private String pythonModule = "src/main/resources/python-files/ballDetectorClassicOpenCV.py";
 
 	public static void main(String[] args) throws IOException {
-		new Main(args);
+
+		// runtime configuration stuff, shouldn't be in code
+		String[] arguments = { "-v", "src/main/resources/videos/testVid_ballFromLeftToRight.avi", "-c", "20,100,100,30,255,255" };
+
+		new Main(arguments);
 	}
 
 	public Main(String... args) throws IOException {
@@ -62,21 +64,12 @@ public class Main {
 			public RelativePosition apply(String line) {
 				String[] values = line.split("\\|");
 				if (values.length == 3) {
-					String[] secsMillis = values[0].split("\\.");
-					Long timestamp = SECONDS.toMillis(toLong(secsMillis[0])) + toLong(fillRight(secsMillis[1], 2));
+					Long timestamp = toLong(values[0]);
 					Double y = toDouble(values[2]);
 					Double x = toDouble(values[1]);
 					return create(timestamp, x == -1 ? -1 : x / 765, y == -1 ? -1 : y / 640);
 				}
 				return null;
-			}
-
-			private String fillRight(String string, int len) {
-				char[] result = new char[len];
-				Arrays.fill(result, '0');
-				char[] in = string.toCharArray();
-				arraycopy(in, 0, result, 0, in.length);
-				return new String(result);
 			}
 
 			private Double toDouble(String val) {

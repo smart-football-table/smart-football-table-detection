@@ -100,8 +100,15 @@ while(True):
         
     actualPointX = position[0]
     actualPointY = position[1]
+
+    timeAsString = str(time.time())
+
+    if len(timeAsString) == 12:
+        timeAsString = timeAsString + "0"
+        # dirty hack to avoid missing 0
+    timeAsString = timeAsString.replace(".", "")
  
-    print(str(time.time()) + "|" + str(actualPointX) + "|" + str(actualPointY))
+    print(timeAsString + "|" + str(actualPointX) + "|" + str(actualPointY))
  
         
     if args["record"] is not 'empty':
