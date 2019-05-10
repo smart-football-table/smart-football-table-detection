@@ -9,54 +9,60 @@ public class IdleDetector implements Detector {
 	private interface State {
 		State update(AbsolutePosition pos);
 
-		boolean isIdle();
-	}
-
-	private class GameInPlay implements IdleDetector.State {
-		@Override
-		public State update(AbsolutePosition pos) {
-			return pos.isNull() ? new OffTableNotIdle(pos) : this;
-		}
-
-		@Override
-		public boolean isIdle() {
+		default boolean isIdle() {
 			return false;
 		}
-
 	}
 
-	private class OffTableNotIdle implements IdleDetector.State {
+	private class Movement implements IdleDetector.State {
 
-		private long offTableSince;
+		private final AbsolutePosition lastMovement;
 
-		public OffTableNotIdle(AbsolutePosition pos) {
-			this.offTableSince = pos.getTimestamp();
+		public Movement(AbsolutePosition lastMovement) {
+			this.lastMovement = lastMovement;
 		}
 
 		@Override
 		public State update(AbsolutePosition pos) {
-			return pos.isNull() //
-					? timestampDiff(pos) >= idleWhen //
-							? new OffTableAndIdle() //
+			return pos.isNull() || pos.getRelativePosition().equalsPosition(lastMovement.getRelativePosition())
+					? new NoMovement(pos)
+					: new Movement(pos);
+		}
+
+	}
+
+	private class NoMovement implements IdleDetector.State {
+
+		private final AbsolutePosition noMovementSince;
+
+		public NoMovement(AbsolutePosition pos) {
+			this.noMovementSince = pos;
+		}
+
+		@Override
+		public State update(AbsolutePosition pos) {
+			return pos.getRelativePosition().equalsPosition(noMovementSince.getRelativePosition()) //
+					? timeoutReached(pos, noMovementSince.getTimestamp()) //
+							? new Idle(pos) //
 							: this //
-					: new GameInPlay();
-		}
-
-		private long timestampDiff(AbsolutePosition pos) {
-			return pos.getTimestamp() - offTableSince;
-		}
-
-		@Override
-		public boolean isIdle() {
-			return false;
+					: new Movement(pos);
 		}
 
 	}
 
-	private class OffTableAndIdle implements State {
+	private class Idle implements State {
+
+		private final AbsolutePosition pos;
+
+		public Idle(AbsolutePosition pos) {
+			this.pos = pos;
+		}
+
 		@Override
 		public State update(AbsolutePosition pos) {
-			return pos.isNull() ? this : new GameInPlay();
+			return pos.getRelativePosition().equalsPosition(this.pos.getRelativePosition()) //
+					? this //
+					: new Movement(pos);
 		}
 
 		@Override
@@ -76,12 +82,20 @@ public class IdleDetector implements Detector {
 
 	private final long idleWhen = MINUTES.toMillis(1);
 
+	private boolean timeoutReached(AbsolutePosition pos, long offTableSince) {
+		return timestampDiff(pos, offTableSince) >= idleWhen;
+	}
+
+	private long timestampDiff(AbsolutePosition pos, long offTableSince) {
+		return pos.getTimestamp() - offTableSince;
+	}
+
 	public static interface Listener {
 		void idle(boolean state);
 	}
 
 	private final IdleDetector.Listener listener;
-	private State state = new GameInPlay();
+	private State state = p -> new Movement(p);
 
 	private IdleDetector(IdleDetector.Listener listener) {
 		this.listener = listener;

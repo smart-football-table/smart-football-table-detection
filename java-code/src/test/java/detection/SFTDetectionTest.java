@@ -513,7 +513,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void doesSendIdleOn() throws IOException {
+	public void doesSendIdleOnWhenBallIsOffTableForOneMinuteOrMore() throws IOException {
 		givenATableOfAnySize();
 		givenInputToProcessIs(ball().at(kickoff()) //
 				.thenAfter(1, SECONDS).at(offTable()) //
@@ -527,12 +527,40 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void doesSendIdleOff() throws IOException {
+	public void doesSendIdleOnWhenBallHasNoMovementForOneMinuteOrMore() throws IOException {
+		givenATableOfAnySize();
+		givenInputToProcessIs(ball().at(kickoff()) //
+				.thenAfter(1, SECONDS).at(kickoff()) //
+				.thenAfter(1, MINUTES).at(kickoff()) //
+				.thenAfter(1, SECONDS).at(kickoff()) //
+				.thenAfter(1, SECONDS).at(kickoff()) //
+				.thenAfter(1, SECONDS).at(kickoff()) //
+		);
+		whenInputWasProcessed();
+		thenPayloadsWithTopicAre("game/idle", "true");
+	}
+
+	@Test
+	public void doesSendIdleOffWhenBallWasOffTableAndComesBack() throws IOException {
 		givenATableOfAnySize();
 		givenInputToProcessIs(ball().at(kickoff()) //
 				.thenAfter(1, SECONDS).at(offTable()) //
 				.thenAfter(1, MINUTES).at(offTable()) //
 				.thenAfter(1, SECONDS).at(kickoff()) //
+				.thenAfter(1, SECONDS).at(kickoff()) //
+				.thenAfter(1, SECONDS).at(kickoff()) //
+		);
+		whenInputWasProcessed();
+		thenPayloadsWithTopicAre("game/idle", "true", "false");
+	}
+
+	@Test
+	public void doesSendIdleOffWhenBallIsMovedAgainAfterLongerPeriodOfTime() throws IOException {
+		givenATableOfAnySize();
+		givenInputToProcessIs(ball().at(kickoff()) //
+				.thenAfter(1, SECONDS).at(kickoff()) //
+				.thenAfter(1, MINUTES).at(kickoff()) //
+				.thenAfter(1, SECONDS).at(kickoff().down(0.01)) //
 				.thenAfter(1, SECONDS).at(kickoff()) //
 				.thenAfter(1, SECONDS).at(kickoff()) //
 		);
