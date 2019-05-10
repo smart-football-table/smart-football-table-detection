@@ -1,6 +1,10 @@
 package detection;
 
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.isJson;
+import static detection.data.position.RelativePosition.create;
+import static java.lang.Double.parseDouble;
+import static java.lang.Math.pow;
+import static java.lang.Math.sqrt;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
@@ -9,6 +13,7 @@ import static net.jqwik.api.Arbitraries.integers;
 import static net.jqwik.api.Arbitraries.longs;
 import static net.jqwik.api.Combinators.combine;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -16,19 +21,25 @@ import static org.hamcrest.core.Every.everyItem;
 import static org.junit.Assert.assertThat;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
-import detection.SFTDetection;
+import org.hamcrest.Matcher;
+
 import detection.data.Message;
 import detection.data.Table;
+import detection.data.position.AbsolutePosition;
+import detection.data.position.Position;
 import detection.data.position.RelativePosition;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
+import net.jqwik.api.Statistics;
 
 class DetectionExamples {
 
@@ -40,24 +51,28 @@ class DetectionExamples {
 	private static final Predicate<Message> gameStart = topicStartsWith("game/start");
 	private static final Predicate<Message> gameFoul = topicStartsWith("game/foul");
 	private static final Predicate<Message> gameIdle = topicStartsWith("game/idle");
+
 	private static final List<Predicate<Message>> topics = asList(ballPositionAbs, ballPositionRel, ballDistanceCm,
 			ballVelocityKmh, ballVelocityMps, gameStart, gameFoul, gameIdle);
 
 	@Property
-	void ballsOnTableNeverWillRaiseAGoalEvent(@ForAll("positionsOnTable") List<RelativePosition> positions,
+	void ballsOnTableNeverWillRaiseEventsOtherThan(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
+		statistics(positions);
 		assertThat(process(positions, table, anyOf(topics)), is(empty()));
 	}
 
 	@Property
 	void ballPositionRelForEveryPosition(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
+		statistics(positions);
 		assertThat(process(positions, table, ballPositionRel), hasSize(positions.size()));
 	}
 
 	@Property
 	void ballPositionRelIsJson(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
+		statistics(positions);
 		assertThat(process(positions, table, ballPositionRel).stream().map(Message::getPayload).collect(toList()),
 				everyItem(isJson()));
 	}
@@ -65,12 +80,14 @@ class DetectionExamples {
 	@Property
 	void ballPositionAbsForEveryPosition(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
+		statistics(positions);
 		assertThat(process(positions, table, ballPositionAbs), hasSize(positions.size()));
 	}
 
 	@Property
 	void ballPositionAbsIsJson(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
+		statistics(positions);
 		assertThat(process(positions, table, ballPositionAbs).stream().map(Message::getPayload).collect(toList()),
 				everyItem(isJson()));
 	}
@@ -78,27 +95,64 @@ class DetectionExamples {
 	@Property
 	void ballVelocityKmhForEveryPositionChange(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
+		statistics(positions);
 		assertThat(process(positions, table, ballVelocityKmh), hasSize(positions.size() - 1));
 	}
 
 	@Property
 	void allBallPositionAbsArePositive(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
+		statistics(positions);
 		assertThat(process(positions, table, ballVelocityKmh).stream().map(Message::getPayload).map(Double::parseDouble)
-				.collect(toList()), everyItem(greaterThanOrEqualTo(0.0)));
+				.collect(toList()), everyItem(is(positive())));
 	}
 
 	@Property
 	void ballVelocityMpsForEveryPositionChange(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
+		statistics(positions);
 		assertThat(process(positions, table, ballVelocityMps), hasSize(positions.size() - 1));
 	}
 
 	@Property
 	void ballVelocityMpsForArePositive(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
+		statistics(positions);
 		assertThat(process(positions, table, ballVelocityMps).stream().map(Message::getPayload).map(Double::parseDouble)
-				.collect(toList()), everyItem(greaterThanOrEqualTo(0.0)));
+				.collect(toList()), everyItem(is(positive())));
+	}
+
+	@Property
+	void mpsValuesAreDistanceDividedByElapsedTimeMultipliedBy10(
+			@ForAll("positionsOnTable") List<RelativePosition> positions, @ForAll("table") Table table) {
+		statistics(positions);
+		List<Message> ballVelocitiesInMps = process(positions, table, ballVelocityMps);
+		for (int i = 0; i < ballVelocitiesInMps.size() - 1; i++) {
+			Message message = ballVelocitiesInMps.get(i);
+			AbsolutePosition pos1 = table.toAbsolute(positions.get(i + 1));
+			AbsolutePosition pos2 = table.toAbsolute(positions.get(i));
+			assertThat(parseDouble(message.getPayload()),
+					is(closeTo(distance(pos1, pos2) / elapsedTime(pos1, pos2) * 10, 0.001)));
+		}
+	}
+
+	private long elapsedTime(AbsolutePosition pos1, AbsolutePosition pos2) {
+		return pos1.getTimestamp() - pos2.getTimestamp();
+	}
+
+	private double distance(AbsolutePosition pos1, AbsolutePosition pos2) {
+		return sqrt( //
+				pow(diff(Position::getX, pos1, pos2), 2) //
+						+ pow(diff(Position::getY, pos1, pos2), 2) //
+		);
+	}
+
+	private double diff(Function<AbsolutePosition, Double> mapper, AbsolutePosition... positions) {
+		return Arrays.stream(positions).map(mapper).mapToDouble(Double::valueOf).reduce((l, r) -> l - r).getAsDouble();
+	}
+
+	private void statistics(Collection<?> col) {
+		Statistics.collect(col.size() < 10 ? "<10" : col.size() < 30 ? "<30" : ">=30");
 	}
 
 	private List<Message> process(List<RelativePosition> positions, Table table, Predicate<Message> predicate) {
@@ -115,6 +169,10 @@ class DetectionExamples {
 		return m -> m.getTopic().startsWith(topic);
 	}
 
+	private Matcher<Double> positive() {
+		return greaterThanOrEqualTo(0.0);
+	}
+
 	@Provide
 	Arbitrary<Table> table() {
 		return combine( //
@@ -125,14 +183,17 @@ class DetectionExamples {
 
 	@Provide
 	Arbitrary<List<RelativePosition>> positionsOnTable() {
-		AtomicLong now = new AtomicLong();
-		return combine(//
+		return longs().map(AtomicLong::new).flatMap( //
+				base -> position(base).list().ofMinSize(2));
+	}
+
+	private Arbitrary<RelativePosition> position(AtomicLong base) {
+		return combine( //
 				longs().between(1, SECONDS.toMillis(10)), //
 				doubles().between(0, 1), //
 				doubles().between(0, 1)) //
 						.as((timestamp, x, y) //
-						-> RelativePosition.create(now.addAndGet(timestamp), x, y)) //
-						.list().ofMinSize(2);
+						-> create(base.addAndGet(timestamp), x, y));
 	}
 
 }
