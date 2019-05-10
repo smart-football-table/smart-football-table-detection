@@ -26,6 +26,11 @@ public abstract class RelativePosition implements Position {
 		}
 
 		@Override
+		public boolean equalsPosition(RelativePosition other) {
+			return other.isNull();
+		}
+
+		@Override
 		public RelativePosition normalizeX() {
 			throw new UnsupportedOperationException();
 		}
@@ -115,6 +120,11 @@ public abstract class RelativePosition implements Position {
 
 	public abstract boolean isRightHandSide();
 
+	public boolean equalsPosition(RelativePosition other) {
+		return Double.doubleToLongBits(getX()) == Double.doubleToLongBits(other.getX()) //
+				&& Double.doubleToLongBits(getY()) == Double.doubleToLongBits(other.getY());
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -139,11 +149,7 @@ public abstract class RelativePosition implements Position {
 		RelativePosition other = (RelativePosition) obj;
 		if (timestamp != other.timestamp)
 			return false;
-		if (Double.doubleToLongBits(getX()) != Double.doubleToLongBits(other.getX()))
-			return false;
-		if (Double.doubleToLongBits(getY()) != Double.doubleToLongBits(other.getY()))
-			return false;
-		return true;
+		return equalsPosition(other);
 	}
 
 	@Override
