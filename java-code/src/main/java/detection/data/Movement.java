@@ -1,7 +1,6 @@
 package detection.data;
 
 import static detection.data.unit.DistanceUnit.CENTIMETER;
-import static java.lang.Math.abs;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -19,7 +18,7 @@ public class Movement {
 	private final Distance distance;
 
 	public Movement(Position pos1, Position pos2) {
-		this.distance = new Distance(sqrt(pow2(absDiffX(pos1, pos2)) + pow2(absDiffY(pos1, pos2))), CENTIMETER);
+		this.distance = new Distance(sqrt(pow2(diffX(pos1, pos2)) + pow2(diffY(pos1, pos2))), CENTIMETER);
 		this.durationInMillis = pos2.getTimestamp() - pos1.getTimestamp();
 		if (this.durationInMillis < 0) {
 			throw new IllegalStateException("timestamp of pos2 (" + pos2 + ") before pos1 (" + pos1 + ")");
@@ -39,12 +38,12 @@ public class Movement {
 		return velocity.value(speedUnit);
 	}
 
-	private double absDiffX(Position p1, Position p2) {
-		return abs(p1.getX() - p2.getX());
+	private double diffX(Position p1, Position p2) {
+		return p1.getX() - p2.getX();
 	}
 
-	private double absDiffY(Position p1, Position p2) {
-		return abs(p1.getY() - p2.getY());
+	private double diffY(Position p1, Position p2) {
+		return p1.getY() - p2.getY();
 	}
 
 	private double pow2(double d) {
