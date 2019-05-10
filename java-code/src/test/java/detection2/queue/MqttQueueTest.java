@@ -28,8 +28,8 @@ import org.junit.Test;
 
 import detection2.data.Message;
 import detection2.mqtt.MqttConsumer;
-import io.moquette.broker.Server;
-import io.moquette.broker.config.MemoryConfig;
+import io.moquette.server.Server;
+import io.moquette.server.config.MemoryConfig;
 
 public class MqttQueueTest {
 
@@ -45,7 +45,7 @@ public class MqttQueueTest {
 	public void setup() throws IOException, MqttException {
 		brokerPort = randomPort();
 		server = newMqttServer(LOCALHOST, brokerPort);
-		secondClient = newMqttClient(LOCALHOST, brokerPort, "client2");
+		secondClient = newMqttClient(LOCALHOST, brokerPort, "second-client-for-test");
 		mqttConsumer = new MqttConsumer(LOCALHOST, brokerPort);
 	}
 

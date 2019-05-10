@@ -42,8 +42,8 @@ import detection2.data.Table;
 import detection2.data.position.RelativePosition;
 import detection2.detector.GoalDetector;
 import detection2.mqtt.MqttConsumer;
-import io.moquette.broker.Server;
-import io.moquette.broker.config.MemoryConfig;
+import io.moquette.server.Server;
+import io.moquette.server.config.MemoryConfig;
 
 public class OpenCVHandlerTestIT {
 
@@ -67,9 +67,13 @@ public class OpenCVHandlerTestIT {
 		broker = newMqttServer(LOCALHOST, brokerPort);
 		secondClient = newMqttClient(LOCALHOST, brokerPort, "client2");
 		mqttConsumer = new MqttConsumer(LOCALHOST, brokerPort);
-		sut = new SFTDetection(new Table(120, 68), mqttConsumer) //
-				.receiver(mqttConsumer) //
-				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40));
+		sut = new SFTDetection( //
+				new Table(120, 68), //
+				// TODO use/test queue
+//				new QueueConsumer<>(mqttConsumer)) //
+				mqttConsumer) //
+						.receiver(mqttConsumer) //
+						.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40));
 
 	}
 
@@ -90,7 +94,6 @@ public class OpenCVHandlerTestIT {
 
 	private MqttClient newMqttClient(String host, int port, String id) throws MqttException, MqttSecurityException {
 		MqttClient client = new MqttClient("tcp://" + host + ":" + port, id, new MemoryPersistence());
-		client.connect(connectOptions());
 		client.setCallback(new MqttCallbackExtended() {
 
 			@Override
@@ -115,7 +118,7 @@ public class OpenCVHandlerTestIT {
 			public void connectionLost(Throwable cause) {
 			}
 		});
-		subscribe(client);
+		client.connect(connectOptions());
 		return client;
 	}
 

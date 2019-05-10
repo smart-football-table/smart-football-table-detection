@@ -17,8 +17,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import io.moquette.broker.Server;
-import io.moquette.broker.config.MemoryConfig;
+import io.moquette.server.Server;
+import io.moquette.server.config.MemoryConfig;
 
 public class MqttSystemTest {
 

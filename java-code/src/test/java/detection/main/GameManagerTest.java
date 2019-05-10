@@ -15,9 +15,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.moquette.broker.Server;
-import io.moquette.broker.config.IConfig;
-import io.moquette.broker.config.MemoryConfig;
+import io.moquette.server.Server;
+import io.moquette.server.config.IConfig;
+import io.moquette.server.config.MemoryConfig;
 
 public class GameManagerTest {
 
