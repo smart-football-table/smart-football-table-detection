@@ -256,11 +256,11 @@ class DetectionExamples {
 	Arbitrary<List<RelativePosition>> goalSituationsLeft() {
 		return longs().map(AtomicLong::new).flatMap(ts -> {
 			return join(asList( //
-					middleLinePosition(ts).list().ofMinSize(1), //
-					onTablePosition(ts).list(), //
-					leftGoalPosition(ts).list().ofMinSize(1), //
-					offTablePositions(ts), //
-					onTablePosition(ts).list() //
+					atMiddleLine(ts).list().ofMinSize(1), //
+					anywhereOnTable(ts).list(), //
+					frontOfLeftGoal(ts).list().ofMinSize(1), //
+					offTable(ts), //
+					anywhereOnTable(ts).list() //
 			));
 		});
 	}
@@ -269,25 +269,25 @@ class DetectionExamples {
 	Arbitrary<List<RelativePosition>> goalSituationsRight() {
 		return longs().map(AtomicLong::new).flatMap(ts -> {
 			return join(asList( //
-					middleLinePosition(ts).list().ofMinSize(1), //
-					onTablePosition(ts).list(), //
-					rightGoalPosition(ts).list().ofMinSize(1), //
-					offTablePositions(ts), //
-					onTablePosition(ts).list() //
+					atMiddleLine(ts).list().ofMinSize(1), //
+					anywhereOnTable(ts).list(), //
+					frontOfRightGoal(ts).list().ofMinSize(1), //
+					offTable(ts), //
+					anywhereOnTable(ts).list() //
 			));
 		});
 	}
 
-	private Arbitrary<List<RelativePosition>> offTablePositions(AtomicLong timestamp) {
+	private Arbitrary<List<RelativePosition>> offTable(AtomicLong timestamp) {
 		// TODO create as many positions as needed (2000ms between first and last)
 		return offTablePosition(timestamp).list().ofSize(10);
 	}
 
 	private static Arbitrary<List<RelativePosition>> onTablePositions(AtomicLong timestamp) {
-		return onTablePosition(timestamp).list().ofMinSize(2);
+		return anywhereOnTable(timestamp).list().ofMinSize(2);
 	}
 
-	private static Arbitrary<RelativePosition> onTablePosition(AtomicLong timestamp) {
+	private static Arbitrary<RelativePosition> anywhereOnTable(AtomicLong timestamp) {
 		return combine(diffInMillis(), wholeTable(), wholeTable()) //
 				.as((millis, x, y) //
 				-> create(timestamp.addAndGet(millis), x, y));
@@ -297,19 +297,19 @@ class DetectionExamples {
 		return diffInMillis().map(millis -> noPosition(timestamp.addAndGet(millis)));
 	}
 
-	private static Arbitrary<RelativePosition> middleLinePosition(AtomicLong timestamp) {
+	private static Arbitrary<RelativePosition> atMiddleLine(AtomicLong timestamp) {
 		return combine(diffInMillis(), middleLine(), wholeTable()) //
 				.as((millis, x, y) //
 				-> create(timestamp.addAndGet(millis), x, y));
 	}
 
-	private static Arbitrary<RelativePosition> leftGoalPosition(AtomicLong timestamp) {
+	private static Arbitrary<RelativePosition> frontOfLeftGoal(AtomicLong timestamp) {
 		return combine(diffInMillis(), frontOfLeftGoal(), wholeTable()) //
 				.as((millis, x, y) //
 				-> create(timestamp.addAndGet(millis), x, y));
 	}
 
-	private static Arbitrary<RelativePosition> rightGoalPosition(AtomicLong timestamp) {
+	private static Arbitrary<RelativePosition> frontOfRightGoal(AtomicLong timestamp) {
 		return combine(diffInMillis(), frontOfRightGoal(), wholeTable()) //
 				.as((millis, x, y) //
 				-> create(timestamp.addAndGet(millis), x, y));
