@@ -5,13 +5,16 @@ import static detection.DetectionExamples.Topic.BALL_POSITION_ABS;
 import static detection.DetectionExamples.Topic.BALL_POSITION_REL;
 import static detection.DetectionExamples.Topic.BALL_VELOCITY_KMH;
 import static detection.DetectionExamples.Topic.BALL_VELOCITY_MPS;
-import static detection.DetectionExamples.Topic.TEAM_SCORE;
+import static detection.DetectionExamples.Topic.TEAM_SCORE_LEFT;
+import static detection.DetectionExamples.Topic.TEAM_SCORE_RIGHT;
 import static detection.DetectionExamples.Topic.TEAM_SCORED;
 import static detection.data.position.RelativePosition.create;
 import static detection.data.position.RelativePosition.noPosition;
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.IntStream.rangeClosed;
 import static net.jqwik.api.Arbitraries.doubles;
 import static net.jqwik.api.Arbitraries.integers;
 import static net.jqwik.api.Arbitraries.longs;
@@ -20,7 +23,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Every.everyItem;
 import static org.junit.Assert.assertThat;
 
@@ -29,7 +31,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.IntPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -39,7 +43,7 @@ import detection.data.Message;
 import detection.data.Table;
 import detection.data.position.RelativePosition;
 import net.jqwik.api.Arbitrary;
-import net.jqwik.api.Disabled;
+import net.jqwik.api.Assume;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
@@ -59,7 +63,8 @@ class DetectionExamples {
 		GAME_START(topicStartsWith("game/start")), //
 		GAME_FOUL(topicStartsWith("game/foul")), //
 		GAME_IDLE(topicStartsWith("game/idle")), //
-		TEAM_SCORE(topicStartsWith("team/score")), //
+		TEAM_SCORE_LEFT(topicStartsWith("team/score/0")), //
+		TEAM_SCORE_RIGHT(topicStartsWith("team/score/1")), //
 		TEAM_SCORED(topicStartsWith("team/scored")); //
 
 		private final Predicate<Message> predicate;
@@ -83,16 +88,62 @@ class DetectionExamples {
 	void ballsOnTableNeverWillRaiseEventsOtherThan(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		statistics(positions);
-		assertThat(process(positions, table).filter(ignoreAllButNot(TEAM_SCORE, TEAM_SCORED)).collect(toList()),
+		assertThat(process(positions, table).filter(ignoreAllButNot(TEAM_SCORE_LEFT, TEAM_SCORED)).collect(toList()),
 				is(empty()));
 	}
 
-	@Property
-	@Disabled
-	void goalsProducesTeamScoredMessages(@ForAll("goalSituations") List<RelativePosition> positions,
+	void leftGoalProducesTeamScoredMessage(@ForAll("goalSituationsLeft") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
+		// TODO remove when generator is fixed
+		Assume.that(ballWasOffTableForAtLeast(positions, 2, SECONDS));
 		statistics(positions);
-		assertThat(process(positions, table).filter(TEAM_SCORED).collect(toList()), is(not(empty())));
+		assertThat(process(positions, table).filter(TEAM_SCORED).map(Message::getPayload).collect(toList()),
+				is(asList(0)));
+	}
+
+	void leftGoalsProducesTeamScoreMessage(@ForAll("goalSituationsLeft") List<RelativePosition> positions,
+			@ForAll("table") Table table) {
+		// TODO remove when generator is fixed
+		Assume.that(ballWasOffTableForAtLeast(positions, 2, SECONDS));
+		statistics(positions);
+		assertThat(process(positions, table).filter(TEAM_SCORE_LEFT).map(Message::getPayload).collect(toList()),
+				is(asList(1)));
+	}
+
+	void rightGoalProducesTeamScoredMessage(@ForAll("goalSituationsRight") List<RelativePosition> positions,
+			@ForAll("table") Table table) {
+		// TODO remove when generator is fixed
+		Assume.that(ballWasOffTableForAtLeast(positions, 2, SECONDS));
+		statistics(positions);
+		assertThat(process(positions, table).filter(TEAM_SCORED).map(Message::getPayload).collect(toList()),
+				is(asList(0)));
+	}
+
+	void rightGoalProducesTeamScoreMessage(@ForAll("goalSituationsRight") List<RelativePosition> positions,
+			@ForAll("table") Table table) {
+		// TODO remove when generator is fixed
+		Assume.that(ballWasOffTableForAtLeast(positions, 2, SECONDS));
+		statistics(positions);
+		assertThat(process(positions, table).filter(TEAM_SCORE_RIGHT).map(Message::getPayload).collect(toList()),
+				is(asList(1)));
+	}
+
+	private boolean ballWasOffTableForAtLeast(List<RelativePosition> positions, int duration, TimeUnit timeUnit) {
+		int firstOffTable = findOffTable(positions);
+		return positions.get(findNotOffTable(positions, firstOffTable) - 1).getTimestamp() //
+				- positions.get(firstOffTable).getTimestamp() >= timeUnit.toMillis(duration);
+	}
+
+	private int findOffTable(List<RelativePosition> positions) {
+		return findFirst(positions, 0, i -> positions.get(i).isNull());
+	}
+
+	private int findNotOffTable(List<RelativePosition> positions, int start) {
+		return findFirst(positions, start, i -> !positions.get(i).isNull());
+	}
+
+	private int findFirst(List<RelativePosition> positions, int start, IntPredicate predicate) {
+		return rangeClosed(start, positions.size()).filter(predicate).findFirst().getAsInt();
 	}
 
 	@Property
@@ -202,15 +253,34 @@ class DetectionExamples {
 	}
 
 	@Provide
-	Arbitrary<List<RelativePosition>> goalSituations() {
-		return longs().map(AtomicLong::new).flatMap(t -> {
-			Arbitrary<List<RelativePosition>> positions1 = middleLinePosition(t).list().ofMinSize(1);
-			Arbitrary<List<RelativePosition>> positions2 = onTablePosition(t).list();
-			Arbitrary<List<RelativePosition>> positions3 = leftGoalPosition(t).list().ofMinSize(1);
-			// TODO should be created recursive until 2 SECS are reached
-			Arbitrary<List<RelativePosition>> positions4 = offTablePosition(t).list().ofMinSize(1);
-			return join(asList(positions1, positions2, positions3, positions4));
+	Arbitrary<List<RelativePosition>> goalSituationsLeft() {
+		return longs().map(AtomicLong::new).flatMap(ts -> {
+			return join(asList( //
+					middleLinePosition(ts).list().ofMinSize(1), //
+					onTablePosition(ts).list(), //
+					leftGoalPosition(ts).list().ofMinSize(1), //
+					offTablePositions(ts), //
+					onTablePosition(ts).list() //
+			));
 		});
+	}
+
+	@Provide
+	Arbitrary<List<RelativePosition>> goalSituationsRight() {
+		return longs().map(AtomicLong::new).flatMap(ts -> {
+			return join(asList( //
+					middleLinePosition(ts).list().ofMinSize(1), //
+					onTablePosition(ts).list(), //
+					rightGoalPosition(ts).list().ofMinSize(1), //
+					offTablePositions(ts), //
+					onTablePosition(ts).list() //
+			));
+		});
+	}
+
+	private Arbitrary<List<RelativePosition>> offTablePositions(AtomicLong timestamp) {
+		// TODO create as many positions as needed (2000ms between first and last)
+		return offTablePosition(timestamp).list().ofSize(10);
 	}
 
 	private static Arbitrary<List<RelativePosition>> onTablePositions(AtomicLong timestamp) {
@@ -239,8 +309,14 @@ class DetectionExamples {
 				-> create(timestamp.addAndGet(millis), x, y));
 	}
 
+	private static Arbitrary<RelativePosition> rightGoalPosition(AtomicLong timestamp) {
+		return combine(diffInMillis(), frontOfRightGoal(), wholeTable()) //
+				.as((millis, x, y) //
+				-> create(timestamp.addAndGet(millis), x, y));
+	}
+
 	private static LongArbitrary diffInMillis() {
-		return longs().between(1, SECONDS.toMillis(10));
+		return longs().between(MILLISECONDS.toMillis(1), SECONDS.toMillis(10));
 	}
 
 	private static DoubleArbitrary wholeTable() {
@@ -248,11 +324,15 @@ class DetectionExamples {
 	}
 
 	private static DoubleArbitrary middleLine() {
-		return doubles().between(0.49, 0.51);
+		return doubles().between(0.45, 0.55);
 	}
 
 	private static DoubleArbitrary frontOfLeftGoal() {
 		return doubles().between(0, 0.3);
+	}
+
+	private static DoubleArbitrary frontOfRightGoal() {
+		return doubles().between(0.7, 1);
 	}
 
 	private static Arbitrary<List<RelativePosition>> join(List<Arbitrary<List<RelativePosition>>> arbitraries) {
