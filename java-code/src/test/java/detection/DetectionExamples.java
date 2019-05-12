@@ -44,6 +44,8 @@ import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
 import net.jqwik.api.Statistics;
+import net.jqwik.api.arbitraries.DoubleArbitrary;
+import net.jqwik.api.arbitraries.LongArbitrary;
 
 class DetectionExamples {
 
@@ -206,7 +208,7 @@ class DetectionExamples {
 			Arbitrary<List<RelativePosition>> positions2 = onTablePosition(t).list();
 			Arbitrary<List<RelativePosition>> positions3 = leftGoalPosition(t).list().ofMinSize(1);
 			// TODO should be created recursive until 2 SECS are reached
-			Arbitrary<List<RelativePosition>> positions4 = offTable(t).list().ofMinSize(1);
+			Arbitrary<List<RelativePosition>> positions4 = offTablePosition(t).list().ofMinSize(1);
 			return join(asList(positions1, positions2, positions3, positions4));
 		});
 	}
@@ -216,34 +218,41 @@ class DetectionExamples {
 	}
 
 	private static Arbitrary<RelativePosition> onTablePosition(AtomicLong timestamp) {
-		return combine( //
-				longs().between(1, SECONDS.toMillis(10)), //
-				doubles().between(0, 1), //
-				doubles().between(0, 1)) //
-						.as((inc, x, y) //
-						-> create(timestamp.addAndGet(inc), x, y));
+		return combine(diffInMillis(), wholeTable(), wholeTable()) //
+				.as((millis, x, y) //
+				-> create(timestamp.addAndGet(millis), x, y));
+	}
+
+	private Arbitrary<RelativePosition> offTablePosition(AtomicLong timestamp) {
+		return diffInMillis().map(millis -> noPosition(timestamp.addAndGet(millis)));
 	}
 
 	private static Arbitrary<RelativePosition> middleLinePosition(AtomicLong timestamp) {
-		return combine( //
-				longs().between(1, SECONDS.toMillis(10)), //
-				doubles().between(0.49, 0.51), //
-				doubles().between(0, 1)) //
-						.as((inc, x, y) //
-						-> create(timestamp.addAndGet(inc), x, y));
+		return combine(diffInMillis(), middleLine(), wholeTable()) //
+				.as((millis, x, y) //
+				-> create(timestamp.addAndGet(millis), x, y));
 	}
 
 	private static Arbitrary<RelativePosition> leftGoalPosition(AtomicLong timestamp) {
-		return combine( //
-				longs().between(1, SECONDS.toMillis(10)), //
-				doubles().between(0, 0.3), //
-				doubles().between(0, 1)) //
-						.as((inc, x, y) //
-						-> create(timestamp.addAndGet(inc), x, y));
+		return combine(diffInMillis(), frontOfLeftGoal(), wholeTable()) //
+				.as((millis, x, y) //
+				-> create(timestamp.addAndGet(millis), x, y));
 	}
 
-	private Arbitrary<RelativePosition> offTable(AtomicLong t) {
-		return longs().between(1, SECONDS.toMillis(10)).map(inc -> noPosition(t.addAndGet(inc)));
+	private static LongArbitrary diffInMillis() {
+		return longs().between(1, SECONDS.toMillis(10));
+	}
+
+	private static DoubleArbitrary wholeTable() {
+		return doubles().between(0, 1);
+	}
+
+	private static DoubleArbitrary middleLine() {
+		return doubles().between(0.49, 0.51);
+	}
+
+	private static DoubleArbitrary frontOfLeftGoal() {
+		return doubles().between(0, 0.3);
 	}
 
 	private static Arbitrary<List<RelativePosition>> join(List<Arbitrary<List<RelativePosition>>> arbitraries) {
