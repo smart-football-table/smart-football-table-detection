@@ -1,13 +1,14 @@
 package detection;
 
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.isJson;
+import static com.jayway.jsonpath.matchers.JsonPathMatchers.withJsonPath;
 import static detection.DetectionExamples.Topic.BALL_POSITION_ABS;
 import static detection.DetectionExamples.Topic.BALL_POSITION_REL;
 import static detection.DetectionExamples.Topic.BALL_VELOCITY_KMH;
 import static detection.DetectionExamples.Topic.BALL_VELOCITY_MPS;
+import static detection.DetectionExamples.Topic.TEAM_SCORED;
 import static detection.DetectionExamples.Topic.TEAM_SCORE_LEFT;
 import static detection.DetectionExamples.Topic.TEAM_SCORE_RIGHT;
-import static detection.DetectionExamples.Topic.TEAM_SCORED;
 import static detection.data.position.RelativePosition.create;
 import static detection.data.position.RelativePosition.noPosition;
 import static java.util.Arrays.asList;
@@ -23,6 +24,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.core.Every.everyItem;
 import static org.junit.Assert.assertThat;
 
@@ -159,7 +161,18 @@ class DetectionExamples {
 		statistics(positions);
 		assertThat(process(positions, table).filter(BALL_POSITION_REL).map(Message::getPayload).collect(toList()),
 				everyItem(isJson()));
+	}
 
+	@Property
+	void allRelPositionAreBetween0And1(@ForAll("positionsOnTable") List<RelativePosition> positions,
+			@ForAll("table") Table table) {
+		statistics(positions);
+		List<String> payloads = process(positions, table).filter(BALL_POSITION_REL).map(Message::getPayload)
+				.collect(toList());
+		assertThat(payloads, everyItem(isJson(withJsonPath("$.x", instanceOf(Number.class)))));
+		assertThat(payloads, everyItem(isJson(withJsonPath("$.y", instanceOf(Number.class)))));
+		assertThat(payloads, everyItem(isJson(withJsonPath("$[?(@.x >= 0 && @.x <= 1)]"))));
+		assertThat(payloads, everyItem(isJson(withJsonPath("$[?(@.y >= 0 && @.y <= 1)]"))));
 	}
 
 	@Property
@@ -175,6 +188,20 @@ class DetectionExamples {
 		statistics(positions);
 		assertThat(process(positions, table).filter(BALL_POSITION_ABS).map(Message::getPayload).collect(toList()),
 				everyItem(isJson()));
+	}
+
+	@Property
+	void allAbsPositionAreBetween0AndTableSize(@ForAll("positionsOnTable") List<RelativePosition> positions,
+			@ForAll("table") Table table) {
+		statistics(positions);
+		List<String> payloads = process(positions, table).filter(BALL_POSITION_ABS).map(Message::getPayload)
+				.collect(toList());
+		int w = table.getWidth();
+		int h = table.getHeight();
+		assertThat(payloads, everyItem(isJson(withJsonPath("$.x", instanceOf(Number.class)))));
+		assertThat(payloads, everyItem(isJson(withJsonPath("$.y", instanceOf(Number.class)))));
+		assertThat(payloads, everyItem(isJson(withJsonPath("$[?(@.x >= 0 && @.x <= " + w + ")]"))));
+		assertThat(payloads, everyItem(isJson(withJsonPath("$[?(@.y >= 0 && @.y <= " + h + ")]"))));
 	}
 
 	@Property
@@ -259,7 +286,7 @@ class DetectionExamples {
 					atMiddleLine(ts).list().ofMinSize(1), //
 					anywhereOnTable(ts).list(), //
 					frontOfLeftGoal(ts).list().ofMinSize(1), //
-					offTable(ts), //
+					offTablePositions(ts), //
 					anywhereOnTable(ts).list() //
 			));
 		});
@@ -272,13 +299,13 @@ class DetectionExamples {
 					atMiddleLine(ts).list().ofMinSize(1), //
 					anywhereOnTable(ts).list(), //
 					frontOfRightGoal(ts).list().ofMinSize(1), //
-					offTable(ts), //
+					offTablePositions(ts), //
 					anywhereOnTable(ts).list() //
 			));
 		});
 	}
 
-	private Arbitrary<List<RelativePosition>> offTable(AtomicLong timestamp) {
+	private Arbitrary<List<RelativePosition>> offTablePositions(AtomicLong timestamp) {
 		// TODO create as many positions as needed (2000ms between first and last)
 		return offTablePosition(timestamp).list().ofSize(10);
 	}
@@ -293,7 +320,7 @@ class DetectionExamples {
 				-> create(timestamp.addAndGet(millis), x, y));
 	}
 
-	private Arbitrary<RelativePosition> offTablePosition(AtomicLong timestamp) {
+	private static Arbitrary<RelativePosition> offTablePosition(AtomicLong timestamp) {
 		return diffInMillis().map(millis -> noPosition(timestamp.addAndGet(millis)));
 	}
 
