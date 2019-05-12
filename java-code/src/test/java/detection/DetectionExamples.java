@@ -8,6 +8,8 @@ import static detection.DetectionExamples.Topic.BALL_VELOCITY_MPS;
 import static detection.DetectionExamples.Topic.TEAM_SCORE;
 import static detection.DetectionExamples.Topic.TEAM_SCORED;
 import static detection.data.position.RelativePosition.create;
+import static detection.data.position.RelativePosition.noPosition;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static net.jqwik.api.Arbitraries.doubles;
@@ -18,6 +20,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Every.everyItem;
 import static org.junit.Assert.assertThat;
 
@@ -36,6 +39,7 @@ import detection.data.Message;
 import detection.data.Table;
 import detection.data.position.RelativePosition;
 import net.jqwik.api.Arbitrary;
+import net.jqwik.api.Disabled;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
@@ -79,6 +83,14 @@ class DetectionExamples {
 		statistics(positions);
 		assertThat(process(positions, table).filter(ignoreAllButNot(TEAM_SCORE, TEAM_SCORED)).collect(toList()),
 				is(empty()));
+	}
+
+	@Property
+	@Disabled
+	void goalsProducesTeamScoredMessages(@ForAll("goalSituations") List<RelativePosition> positions,
+			@ForAll("table") Table table) {
+		statistics(positions);
+		assertThat(process(positions, table).filter(TEAM_SCORED).collect(toList()), is(not(empty())));
 	}
 
 	@Property
@@ -184,20 +196,58 @@ class DetectionExamples {
 
 	@Provide
 	Arbitrary<List<RelativePosition>> positionsOnTable() {
-		return longs().map(AtomicLong::new).flatMap(DetectionExamples::positions);
+		return longs().map(AtomicLong::new).flatMap(DetectionExamples::onTablePositions);
 	}
 
-	private static Arbitrary<List<RelativePosition>> positions(AtomicLong timestamp) {
-		return position(timestamp).list().ofMinSize(2);
+	@Provide
+	Arbitrary<List<RelativePosition>> goalSituations() {
+		return longs().map(AtomicLong::new).flatMap(t -> {
+			Arbitrary<List<RelativePosition>> positions1 = middleLinePosition(t).list().ofMinSize(1);
+			Arbitrary<List<RelativePosition>> positions2 = onTablePosition(t).list();
+			Arbitrary<List<RelativePosition>> positions3 = leftGoalPosition(t).list().ofMinSize(1);
+			// TODO should be created recursive until 2 SECS are reached
+			Arbitrary<List<RelativePosition>> positions4 = offTable(t).list().ofMinSize(1);
+			return join(asList(positions1, positions2, positions3, positions4));
+		});
 	}
 
-	private static Arbitrary<RelativePosition> position(AtomicLong timestamp) {
+	private static Arbitrary<List<RelativePosition>> onTablePositions(AtomicLong timestamp) {
+		return onTablePosition(timestamp).list().ofMinSize(2);
+	}
+
+	private static Arbitrary<RelativePosition> onTablePosition(AtomicLong timestamp) {
 		return combine( //
 				longs().between(1, SECONDS.toMillis(10)), //
 				doubles().between(0, 1), //
 				doubles().between(0, 1)) //
 						.as((inc, x, y) //
 						-> create(timestamp.addAndGet(inc), x, y));
+	}
+
+	private static Arbitrary<RelativePosition> middleLinePosition(AtomicLong timestamp) {
+		return combine( //
+				longs().between(1, SECONDS.toMillis(10)), //
+				doubles().between(0.49, 0.51), //
+				doubles().between(0, 1)) //
+						.as((inc, x, y) //
+						-> create(timestamp.addAndGet(inc), x, y));
+	}
+
+	private static Arbitrary<RelativePosition> leftGoalPosition(AtomicLong timestamp) {
+		return combine( //
+				longs().between(1, SECONDS.toMillis(10)), //
+				doubles().between(0, 0.3), //
+				doubles().between(0, 1)) //
+						.as((inc, x, y) //
+						-> create(timestamp.addAndGet(inc), x, y));
+	}
+
+	private Arbitrary<RelativePosition> offTable(AtomicLong t) {
+		return longs().between(1, SECONDS.toMillis(10)).map(inc -> noPosition(t.addAndGet(inc)));
+	}
+
+	private static Arbitrary<List<RelativePosition>> join(List<Arbitrary<List<RelativePosition>>> arbitraries) {
+		return combine(arbitraries).as(p -> p.stream().flatMap(Collection::stream).collect(toList()));
 	}
 
 }
