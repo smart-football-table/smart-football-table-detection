@@ -2,13 +2,13 @@ package detection;
 
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.isJson;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.withJsonPath;
-import static detection.DetectionExamples.Topic.BALL_POSITION_ABS;
-import static detection.DetectionExamples.Topic.BALL_POSITION_REL;
-import static detection.DetectionExamples.Topic.BALL_VELOCITY_KMH;
-import static detection.DetectionExamples.Topic.BALL_VELOCITY_MPS;
-import static detection.DetectionExamples.Topic.TEAM_SCORED;
-import static detection.DetectionExamples.Topic.TEAM_SCORE_LEFT;
-import static detection.DetectionExamples.Topic.TEAM_SCORE_RIGHT;
+import static detection.Topic.BALL_POSITION_ABS;
+import static detection.Topic.BALL_POSITION_REL;
+import static detection.Topic.BALL_VELOCITY_KMH;
+import static detection.Topic.BALL_VELOCITY_MPS;
+import static detection.Topic.TEAM_SCORED;
+import static detection.Topic.TEAM_SCORE_LEFT;
+import static detection.Topic.TEAM_SCORE_RIGHT;
 import static detection.data.position.RelativePosition.create;
 import static detection.data.position.RelativePosition.noPosition;
 import static java.util.Arrays.asList;
@@ -21,6 +21,7 @@ import static net.jqwik.api.Arbitraries.integers;
 import static net.jqwik.api.Arbitraries.longs;
 import static net.jqwik.api.Combinators.combine;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -54,37 +55,6 @@ import net.jqwik.api.arbitraries.DoubleArbitrary;
 import net.jqwik.api.arbitraries.LongArbitrary;
 
 class DetectionExamples {
-
-	enum Topic implements Predicate<Message> {
-
-		BALL_POSITION_ABS(topicStartsWith("ball/position/abs")), //
-		BALL_POSITION_REL(topicStartsWith("ball/position/rel")), //
-		BALL_DISTANCE_CM(topicStartsWith("ball/distance/cm")), //
-		BALL_VELOCITY_KMH(topicStartsWith("ball/velocity/kmh")), //
-		BALL_VELOCITY_MPS(topicStartsWith("ball/velocity/mps")), //
-		GAME_START(topicStartsWith("game/start")), //
-		GAME_FOUL(topicStartsWith("game/foul")), //
-		GAME_IDLE(topicStartsWith("game/idle")), //
-		TEAM_SCORE_LEFT(topicStartsWith("team/score/0")), //
-		TEAM_SCORE_RIGHT(topicStartsWith("team/score/1")), //
-		TEAM_SCORED(topicStartsWith("team/scored")); //
-
-		private final Predicate<Message> predicate;
-
-		Topic(Predicate<Message> predicate) {
-			this.predicate = predicate;
-		}
-
-		Predicate<Message> getPredicate() {
-			return predicate;
-		}
-
-		@Override
-		public boolean test(Message message) {
-			return predicate.test(message);
-		}
-
-	}
 
 	@Property
 	void ballsOnTableNeverWillRaiseEventsOtherThan(@ForAll("positionsOnTable") List<RelativePosition> positions,
@@ -167,12 +137,12 @@ class DetectionExamples {
 	void allRelPositionAreBetween0And1(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		statistics(positions);
-		List<String> payloads = process(positions, table).filter(BALL_POSITION_REL).map(Message::getPayload)
-				.collect(toList());
-		assertThat(payloads, everyItem(isJson(withJsonPath("$.x", instanceOf(Number.class)))));
-		assertThat(payloads, everyItem(isJson(withJsonPath("$.y", instanceOf(Number.class)))));
-		assertThat(payloads, everyItem(isJson(withJsonPath("$[?(@.x >= 0 && @.x <= 1)]"))));
-		assertThat(payloads, everyItem(isJson(withJsonPath("$[?(@.y >= 0 && @.y <= 1)]"))));
+		assertThat(process(positions, table).filter(BALL_POSITION_REL).map(Message::getPayload).collect(toList()),
+				everyItem(allOf( //
+						isJson(withJsonPath("$.x", instanceOf(Number.class))),
+						isJson(withJsonPath("$.y", instanceOf(Number.class))),
+						isJson(withJsonPath("$[?(@.x >= 0 && @.x <= 1)]")),
+						isJson(withJsonPath("$[?(@.y >= 0 && @.y <= 1)]")))));
 	}
 
 	@Property
@@ -194,14 +164,12 @@ class DetectionExamples {
 	void allAbsPositionAreBetween0AndTableSize(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		statistics(positions);
-		List<String> payloads = process(positions, table).filter(BALL_POSITION_ABS).map(Message::getPayload)
-				.collect(toList());
-		int w = table.getWidth();
-		int h = table.getHeight();
-		assertThat(payloads, everyItem(isJson(withJsonPath("$.x", instanceOf(Number.class)))));
-		assertThat(payloads, everyItem(isJson(withJsonPath("$.y", instanceOf(Number.class)))));
-		assertThat(payloads, everyItem(isJson(withJsonPath("$[?(@.x >= 0 && @.x <= " + w + ")]"))));
-		assertThat(payloads, everyItem(isJson(withJsonPath("$[?(@.y >= 0 && @.y <= " + h + ")]"))));
+		assertThat(process(positions, table).filter(BALL_POSITION_ABS).map(Message::getPayload).collect(toList()),
+				everyItem(allOf( //
+						isJson(withJsonPath("$.x", instanceOf(Number.class))),
+						isJson(withJsonPath("$.y", instanceOf(Number.class))),
+						isJson(withJsonPath("$[?(@.x >= 0 && @.x <= " + table.getWidth() + ")]")),
+						isJson(withJsonPath("$[?(@.y >= 0 && @.y <= " + table.getHeight() + ")]")))));
 	}
 
 	@Property
@@ -258,7 +226,7 @@ class DetectionExamples {
 		return predicates.reduce(Predicate::or).map(Predicate::negate).orElse(m -> true);
 	}
 
-	private static Predicate<Message> topicStartsWith(String topic) {
+	static Predicate<Message> topicStartsWith(String topic) {
 		return m -> m.getTopic().startsWith(topic);
 	}
 
