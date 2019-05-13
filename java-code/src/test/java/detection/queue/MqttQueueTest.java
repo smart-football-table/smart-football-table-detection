@@ -22,16 +22,16 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 import detection.data.Message;
 import detection.mqtt.MqttConsumer;
 import io.moquette.server.Server;
 import io.moquette.server.config.MemoryConfig;
 
-public class MqttQueueTest {
+class MqttQueueTest {
 
 	private static final String LOCALHOST = "localhost";
 
@@ -41,12 +41,20 @@ public class MqttQueueTest {
 	private IMqttClient secondClient;
 	private List<Message> messagesReceived = new ArrayList<>();
 
-	@Before
-	public void setup() throws IOException, MqttException {
+	@BeforeEach
+	void setup() throws IOException, MqttException {
 		brokerPort = randomPort();
 		server = newMqttServer(LOCALHOST, brokerPort);
 		secondClient = newMqttClient(LOCALHOST, brokerPort, "second-client-for-test");
 		mqttConsumer = new MqttConsumer(LOCALHOST, brokerPort);
+	}
+
+	@AfterEach
+	void tearDown() throws MqttException, IOException {
+		secondClient.disconnect();
+		secondClient.close();
+		mqttConsumer.close();
+		server.stopServer();
 	}
 
 	private int randomPort() throws IOException {
@@ -91,19 +99,11 @@ public class MqttQueueTest {
 	}
 
 	@Test
-	public void sendSomeMessages() throws InterruptedException {
+	void sendSomeMessages() throws InterruptedException {
 		List<Message> messages = asList(message("topic1", "payload1"), message("topic2", "payload2"));
 		messages.forEach(mqttConsumer::accept);
 		MILLISECONDS.sleep(10);
 		assertThat(messagesReceived, is(messages));
-	}
-
-	@After
-	public void tearDown() throws MqttException, IOException {
-		secondClient.disconnect();
-		secondClient.close();
-		mqttConsumer.close();
-		server.stopServer();
 	}
 
 }

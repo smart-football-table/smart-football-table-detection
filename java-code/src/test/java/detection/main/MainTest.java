@@ -13,14 +13,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import detection.main.Main;
 
-public class MainTest {
+class MainTest {
 
 	@Test
-	public void canCallPython() throws IOException {
+	void canCallPython() throws IOException {
 		String module = tmpFileWithContent( //
 				"import sys", //
 				"print('Hello, world! ', str(sys.argv))" //

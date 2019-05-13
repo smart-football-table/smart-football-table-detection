@@ -35,7 +35,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.hamcrest.Matcher;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import detection.SFTDetection;
 import detection.SFTDetectionTest.StdInBuilder.BallPosBuilder;
@@ -46,7 +46,7 @@ import detection.detector.GoalDetector;
 import detection.parser.LineParser;
 import detection.parser.RelativeValueParser;
 
-public class SFTDetectionTest {
+class SFTDetectionTest {
 
 	public static class StdInBuilder {
 
@@ -229,7 +229,7 @@ public class SFTDetectionTest {
 	private String inputString = "";
 
 	@Test
-	public void relativeValuesGetsConvertedToAbsolutesAtKickoff() throws IOException {
+	void relativeValuesGetsConvertedToAbsolutesAtKickoff() throws IOException {
 		givenATableOfSize(100, 80);
 		givenInputToProcessIs(ball().at(kickoff()));
 		whenInputWasProcessed();
@@ -238,7 +238,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void relativeValuesGetsConvertedToAbsolutes() throws IOException {
+	void relativeValuesGetsConvertedToAbsolutes() throws IOException {
 		givenATableOfSize(100, 80);
 		givenInputToProcessIs(ball().at(pos(0.0, 1.0)));
 		whenInputWasProcessed();
@@ -247,7 +247,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void malformedMessageIsRead() throws IOException {
+	void malformedMessageIsRead() throws IOException {
 		givenATableOfAnySize();
 		givenInputToProcessIs(ball().invalidData());
 		whenInputWasProcessed();
@@ -255,7 +255,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void onReadingTheNoPositionMessage_noMessageIsSent() throws IOException {
+	void onReadingTheNoPositionMessage_noMessageIsSent() throws IOException {
 		givenATableOfAnySize();
 		givenInputToProcessIs(ball().at(offTable()));
 		whenInputWasProcessed();
@@ -263,7 +263,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void whenTwoPositionsAreRead_VelocityGetsPublished() throws IOException {
+	void whenTwoPositionsAreRead_VelocityGetsPublished() throws IOException {
 		givenATableOfSize(100, 80);
 		givenInputToProcessIs(ball().at(anyCorner()).thenAfter(1, SECONDS).at(lowerRightCorner()));
 		whenInputWasProcessed();
@@ -271,7 +271,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void canDetectGoalOnRightHandSide() throws IOException {
+	void canDetectGoalOnRightHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
 		givenInputToProcessIs(ball().prepareForRightGoal().then().score());
@@ -281,7 +281,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void canDetectGoalOnLeftHandSide() throws IOException {
+	void canDetectGoalOnLeftHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
 		givenInputToProcessIs(ball().prepareForLeftGoal().score());
@@ -290,7 +290,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void noGoalIfBallWasNotInFrontOfGoalRightHandSide() throws IOException {
+	void noGoalIfBallWasNotInFrontOfGoalRightHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
 		givenInputToProcessIs(ball().prepareForRightGoal().then().at(frontOfRightGoal().left(0.01)).score());
@@ -299,7 +299,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void noGoalIfBallWasNotInFrontOfGoalLeftHandSide() throws IOException {
+	void noGoalIfBallWasNotInFrontOfGoalLeftHandSide() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
 		givenInputToProcessIs(ball().prepareForLeftGoal().then().at(frontOfLeftGoal().right(0.01)).score());
@@ -308,7 +308,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void leftHandSideScoresThreeTimes() throws IOException {
+	void leftHandSideScoresThreeTimes() throws IOException {
 		givenATableOfAnySize();
 		givenInputToProcessIs(ball() //
 				.prepareForLeftGoal().then().score().then() //
@@ -321,7 +321,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void noGoalsIfBallWasNotDetectedAtMiddleLine() throws IOException {
+	void noGoalsIfBallWasNotDetectedAtMiddleLine() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
 		givenInputToProcessIs(ball().at(frontOfLeftGoal()).then().score());
@@ -330,7 +330,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void noGoalsIfThereAreNotTwoSecondsWithoutPositions() throws IOException {
+	void noGoalsIfThereAreNotTwoSecondsWithoutPositions() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
 		long timeout = SECONDS.toMillis(2);
@@ -347,7 +347,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void withoutWaitTimeTheGoalDirectlyCounts() throws IOException {
+	void withoutWaitTimeTheGoalDirectlyCounts() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
 		givenTimeWithoutBallTilGoal(0, MILLISECONDS);
@@ -357,7 +357,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void canRevertGoals() throws IOException {
+	void canRevertGoals() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
 		givenInputToProcessIs(ball().prepareForLeftGoal().then().score().then(anyCorner()));
@@ -366,7 +366,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void doesSendWinner() throws IOException {
+	void doesSendWinner() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
 		givenInputToProcessIs(ball() //
@@ -382,7 +382,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void doesSendDrawWinners() throws IOException {
+	void doesSendDrawWinners() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
 		givenInputToProcessIs(ball() //
@@ -402,7 +402,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void doesSendGameStart() throws IOException {
+	void doesSendGameStart() throws IOException {
 		givenATableOfAnySize();
 		givenInputToProcessIs(ball().at(kickoff()).at(kickoff()));
 		whenInputWasProcessed();
@@ -410,7 +410,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void doesSendFoul() throws IOException {
+	void doesSendFoul() throws IOException {
 		givenATableOfAnySize();
 		BallPosBuilder middlefieldRow = kickoff().left(0.1);
 		givenInputToProcessIs(ball().at(middlefieldRow) //
@@ -422,7 +422,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void doesNotSendFoul() throws IOException {
+	void doesNotSendFoul() throws IOException {
 		givenATableOfAnySize();
 		BallPosBuilder middlefieldRow = kickoff().left(0.1);
 		givenInputToProcessIs(ball().at(middlefieldRow) //
@@ -435,7 +435,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void doesSendFoulOnlyOnceUntilFoulIsOver() throws IOException {
+	void doesSendFoulOnlyOnceUntilFoulIsOver() throws IOException {
 		givenATableOfAnySize();
 		BallPosBuilder middlefieldRow = kickoff().left(0.1);
 		givenInputToProcessIs(ball().at(middlefieldRow.up(0.49)) //
@@ -449,7 +449,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void doesRestartAfterGameEnd() throws IOException {
+	void doesRestartAfterGameEnd() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
 		givenInputToProcessIs(ball() //
@@ -513,7 +513,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void doesSendIdleOnWhenBallIsOffTableForOneMinuteOrMore() throws IOException {
+	void doesSendIdleOnWhenBallIsOffTableForOneMinuteOrMore() throws IOException {
 		givenATableOfAnySize();
 		givenInputToProcessIs(ball().at(kickoff()) //
 				.thenAfter(1, SECONDS).at(offTable()) //
@@ -527,7 +527,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void doesSendIdleOnWhenBallHasNoMovementForOneMinuteOrMore() throws IOException {
+	void doesSendIdleOnWhenBallHasNoMovementForOneMinuteOrMore() throws IOException {
 		givenATableOfAnySize();
 		givenInputToProcessIs(ball().at(kickoff()) //
 				.thenAfter(1, SECONDS).at(kickoff()) //
@@ -541,7 +541,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void doesSendIdleOffWhenBallWasOffTableAndComesBack() throws IOException {
+	void doesSendIdleOffWhenBallWasOffTableAndComesBack() throws IOException {
 		givenATableOfAnySize();
 		givenInputToProcessIs(ball().at(kickoff()) //
 				.thenAfter(1, SECONDS).at(offTable()) //
@@ -555,7 +555,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void doesSendIdleOffWhenBallIsMovedAgainAfterLongerPeriodOfTime() throws IOException {
+	void doesSendIdleOffWhenBallIsMovedAgainAfterLongerPeriodOfTime() throws IOException {
 		givenATableOfAnySize();
 		givenInputToProcessIs(ball().at(kickoff()) //
 				.thenAfter(1, SECONDS).at(kickoff()) //
@@ -569,7 +569,7 @@ public class SFTDetectionTest {
 	}
 
 	@Test
-	public void canResetAgameInPlay() throws IOException {
+	void canResetAgameInPlay() throws IOException {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
 

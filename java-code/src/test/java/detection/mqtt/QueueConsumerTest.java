@@ -11,14 +11,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import detection.queue.QueueConsumer;
 
-public class QueueConsumerTest {
+class QueueConsumerTest {
 
 	@Test
-	public void singleElementInQueueOfSize1() throws InterruptedException {
+	void singleElementInQueueOfSize1() throws InterruptedException {
 		List<String> strings = new ArrayList<>();
 		queue(addTo(strings), 1).accept("test");
 		TimeUnit.MILLISECONDS.sleep(50);
@@ -26,7 +26,7 @@ public class QueueConsumerTest {
 	}
 
 	@Test
-	public void whenBlockingWillAcceptAsManyElementsAsTheQueueHasSize() throws InterruptedException {
+	void whenBlockingWillAcceptAsManyElementsAsTheQueueHasSize() throws InterruptedException {
 		int queueSize = 10;
 		List<String> strings = new ArrayList<>();
 		Consumer<String> queued = queue(sleep().andThen(addTo(strings)), queueSize);
@@ -36,7 +36,7 @@ public class QueueConsumerTest {
 	}
 
 	@Test
-	public void whenBlockingAndTheQueueIsFullNoMoreElementsAreAccepted() throws InterruptedException {
+	void whenBlockingAndTheQueueIsFullNoMoreElementsAreAccepted() throws InterruptedException {
 		int queueSize = 10;
 		List<String> strings = new ArrayList<>();
 		Consumer<String> queued = queue(sleep().andThen(addTo(strings)), queueSize);

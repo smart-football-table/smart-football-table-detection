@@ -3,14 +3,14 @@ package detection;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import detection.data.position.RelativePosition;
 
-public class RelativePositionTest {
+class RelativePositionTest {
 
 	@Test
-	public void normalizeLeftHandSide() {
+	void normalizeLeftHandSide() {
 		double x = 0.1;
 		double y = 0.2;
 		RelativePosition pos = RelativePosition.create(anyTimestamp(), x, y);
@@ -18,13 +18,13 @@ public class RelativePositionTest {
 	}
 
 	@Test
-	public void normalizeRightHandSide() {
+	void normalizeRightHandSide() {
 		RelativePosition pos = RelativePosition.create(anyTimestamp(), 0.9, 0.2);
 		assertThat(pos.normalizeX(), is(pos));
 	}
 
 	@Test
-	public void normalizeTop() {
+	void normalizeTop() {
 		double x = 0.2;
 		double y = 0.1;
 		RelativePosition pos = RelativePosition.create(anyTimestamp(), x, y);
@@ -32,7 +32,7 @@ public class RelativePositionTest {
 	}
 
 	@Test
-	public void normalizeBottom() {
+	void normalizeBottom() {
 		RelativePosition pos = RelativePosition.create(anyTimestamp(), 0.2, 0.9);
 		assertThat(pos.normalizeY(), is(pos));
 	}

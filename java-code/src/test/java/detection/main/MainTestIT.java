@@ -6,11 +6,12 @@ import static detection.data.position.RelativePosition.noPosition;
 import static io.moquette.BrokerConstants.HOST_PROPERTY_NAME;
 import static io.moquette.BrokerConstants.PORT_PROPERTY_NAME;
 import static java.lang.System.currentTimeMillis;
+import static java.time.Duration.ofSeconds;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.IntStream.range;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.rules.Timeout.seconds;
+import static org.junit.jupiter.api.Assertions.assertTimeout;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -31,10 +32,8 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.Timeout;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import detection.SFTDetection;
 import detection.data.Message;
@@ -45,7 +44,7 @@ import detection.mqtt.MqttConsumer;
 import io.moquette.server.Server;
 import io.moquette.server.config.MemoryConfig;
 
-public class MainTestIT {
+class MainTestIT {
 
 	private static final String LOCALHOST = "localhost";
 
@@ -58,11 +57,8 @@ public class MainTestIT {
 
 	private MqttConsumer mqttConsumer;
 
-	@Rule
-	public Timeout timeout = seconds(30);
-
-	@Before
-	public void setup() throws IOException, MqttException {
+	@BeforeEach
+	void setup() throws IOException, MqttException {
 		brokerPort = randomPort();
 		broker = newMqttServer(LOCALHOST, brokerPort);
 		secondClient = newMqttClient(LOCALHOST, brokerPort, "client2");
@@ -130,28 +126,32 @@ public class MainTestIT {
 	}
 
 	@Test
-	public void onResetTheNewGameIsStartedImmediatelyAndWithoutTableInteraction()
+	void onResetTheNewGameIsStartedImmediatelyAndWithoutTableInteraction()
 			throws IOException, MqttPersistenceException, MqttException, InterruptedException {
-		sut.process(positions(42));
-		messagesReceived.clear();
-		sendReset();
-		sut.process(provider(3, () -> noPosition(currentTimeMillis())));
-		MILLISECONDS.sleep(50);
-		assertThat(messagesWithTopic("game/start").count(), is(1L));
+		assertTimeout(ofSeconds(30), () -> {
+			sut.process(positions(42));
+			messagesReceived.clear();
+			sendReset();
+			sut.process(provider(3, () -> noPosition(currentTimeMillis())));
+			MILLISECONDS.sleep(50);
+			assertThat(messagesWithTopic("game/start").count(), is(1L));
+		});
 	}
 
 	@Test
-	public void doesReconnectAndResubscribe()
+	void doesReconnectAndResubscribe()
 			throws IOException, InterruptedException, MqttPersistenceException, MqttException {
-		sut.process(positions(42));
-		restartBroker();
-		waitUntil(secondClient, IMqttClient::isConnected);
-		waitUntil(mqttConsumer, MqttConsumer::isConnected);
-		messagesReceived.clear();
-		sendReset();
-		sut.process(provider(3, () -> noPosition(currentTimeMillis())));
-		MILLISECONDS.sleep(50);
-		assertThat(messagesWithTopic("game/start").count(), is(1L));
+		assertTimeout(ofSeconds(30), () -> {
+			sut.process(positions(42));
+			restartBroker();
+			waitUntil(secondClient, IMqttClient::isConnected);
+			waitUntil(mqttConsumer, MqttConsumer::isConnected);
+			messagesReceived.clear();
+			sendReset();
+			sut.process(provider(3, () -> noPosition(currentTimeMillis())));
+			MILLISECONDS.sleep(50);
+			assertThat(messagesWithTopic("game/start").count(), is(1L));
+		});
 	}
 
 	private Stream<Message> messagesWithTopic(String topic) {
