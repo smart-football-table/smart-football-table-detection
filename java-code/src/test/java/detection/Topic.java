@@ -5,6 +5,7 @@ import java.util.function.Predicate;
 import detection.data.Message;
 
 public enum Topic implements Predicate<Message> {
+	
 
 	BALL_POSITION_ABS(DetectionExamples.topicStartsWith("ball/position/abs")), //
 	BALL_POSITION_REL(DetectionExamples.topicStartsWith("ball/position/rel")), //
@@ -14,10 +15,13 @@ public enum Topic implements Predicate<Message> {
 	GAME_START(DetectionExamples.topicStartsWith("game/start")), //
 	GAME_FOUL(DetectionExamples.topicStartsWith("game/foul")), //
 	GAME_IDLE(DetectionExamples.topicStartsWith("game/idle")), //
-	TEAM_SCORE_LEFT(DetectionExamples.topicStartsWith("team/score/0")), //
-	TEAM_SCORE_RIGHT(DetectionExamples.topicStartsWith("team/score/1")), //
+	TEAM_SCORE_LEFT(DetectionExamples.topicStartsWith("team/score/" + Topic.TEAM_LEFT)), //
+	TEAM_SCORE_RIGHT(DetectionExamples.topicStartsWith("team/score/" + Topic.TEAM_RIGHT)), //
 	TEAM_SCORED(DetectionExamples.topicStartsWith("team/scored")); //
 
+	public static final String TEAM_LEFT = "1";
+	public static final String TEAM_RIGHT = "0";
+	
 	private final Predicate<Message> predicate;
 
 	Topic(Predicate<Message> predicate) {

@@ -6,11 +6,14 @@ import static detection.Topic.BALL_POSITION_ABS;
 import static detection.Topic.BALL_POSITION_REL;
 import static detection.Topic.BALL_VELOCITY_KMH;
 import static detection.Topic.BALL_VELOCITY_MPS;
+import static detection.Topic.TEAM_LEFT;
+import static detection.Topic.TEAM_RIGHT;
 import static detection.Topic.TEAM_SCORED;
 import static detection.Topic.TEAM_SCORE_LEFT;
 import static detection.Topic.TEAM_SCORE_RIGHT;
 import static detection.data.position.RelativePosition.create;
 import static detection.data.position.RelativePosition.noPosition;
+import static java.lang.Math.abs;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -53,6 +56,7 @@ import net.jqwik.api.Provide;
 import net.jqwik.api.Statistics;
 import net.jqwik.api.arbitraries.DoubleArbitrary;
 import net.jqwik.api.arbitraries.LongArbitrary;
+import net.jqwik.api.arbitraries.SizableArbitrary;
 
 class DetectionExamples {
 
@@ -64,40 +68,44 @@ class DetectionExamples {
 				is(empty()));
 	}
 
+	@Property
 	void leftGoalProducesTeamScoredMessage(@ForAll("goalSituationsLeft") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		// TODO remove when generator is fixed
 		Assume.that(ballWasOffTableForAtLeast(positions, 2, SECONDS));
 		statistics(positions);
 		assertThat(process(positions, table).filter(TEAM_SCORED).map(Message::getPayload).collect(toList()),
-				is(asList(0)));
+				is(asList(TEAM_LEFT)));
 	}
 
+	@Property
 	void leftGoalsProducesTeamScoreMessage(@ForAll("goalSituationsLeft") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		// TODO remove when generator is fixed
 		Assume.that(ballWasOffTableForAtLeast(positions, 2, SECONDS));
 		statistics(positions);
 		assertThat(process(positions, table).filter(TEAM_SCORE_LEFT).map(Message::getPayload).collect(toList()),
-				is(asList(1)));
+				is(asList("1")));
 	}
 
+	@Property
 	void rightGoalProducesTeamScoredMessage(@ForAll("goalSituationsRight") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		// TODO remove when generator is fixed
 		Assume.that(ballWasOffTableForAtLeast(positions, 2, SECONDS));
 		statistics(positions);
 		assertThat(process(positions, table).filter(TEAM_SCORED).map(Message::getPayload).collect(toList()),
-				is(asList(0)));
+				is(asList(TEAM_RIGHT)));
 	}
 
+	@Property
 	void rightGoalProducesTeamScoreMessage(@ForAll("goalSituationsRight") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		// TODO remove when generator is fixed
 		Assume.that(ballWasOffTableForAtLeast(positions, 2, SECONDS));
 		statistics(positions);
 		assertThat(process(positions, table).filter(TEAM_SCORE_RIGHT).map(Message::getPayload).collect(toList()),
-				is(asList(1)));
+				is(asList("1")));
 	}
 
 	private boolean ballWasOffTableForAtLeast(List<RelativePosition> positions, int duration, TimeUnit timeUnit) {
@@ -115,7 +123,8 @@ class DetectionExamples {
 	}
 
 	private int findFirst(List<RelativePosition> positions, int start, IntPredicate predicate) {
-		return rangeClosed(start, positions.size()).filter(predicate).findFirst().getAsInt();
+		int lastIdx = positions.size() - 1;
+		return rangeClosed(start, lastIdx).filter(predicate).findFirst().orElse(lastIdx);
 	}
 
 	@Property
@@ -126,23 +135,12 @@ class DetectionExamples {
 	}
 
 	@Property
-	void ballPositionRelIsJson(@ForAll("positionsOnTable") List<RelativePosition> positions,
-			@ForAll("table") Table table) {
-		statistics(positions);
-		assertThat(process(positions, table).filter(BALL_POSITION_REL).map(Message::getPayload).collect(toList()),
-				everyItem(isJson()));
-	}
-
-	@Property
 	void allRelPositionAreBetween0And1(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		statistics(positions);
 		assertThat(process(positions, table).filter(BALL_POSITION_REL).map(Message::getPayload).collect(toList()),
-				everyItem(allOf( //
-						isJson(withJsonPath("$.x", instanceOf(Number.class))),
-						isJson(withJsonPath("$.y", instanceOf(Number.class))),
-						isJson(withJsonPath("$[?(@.x >= 0 && @.x <= 1)]")),
-						isJson(withJsonPath("$[?(@.y >= 0 && @.y <= 1)]")))));
+				everyItem( //
+						allOf(hasNumberBetween("x", 0, 1), hasNumberBetween("y", 0, 1))));
 	}
 
 	@Property
@@ -153,23 +151,13 @@ class DetectionExamples {
 	}
 
 	@Property
-	void ballPositionAbsIsJson(@ForAll("positionsOnTable") List<RelativePosition> positions,
-			@ForAll("table") Table table) {
-		statistics(positions);
-		assertThat(process(positions, table).filter(BALL_POSITION_ABS).map(Message::getPayload).collect(toList()),
-				everyItem(isJson()));
-	}
-
-	@Property
 	void allAbsPositionAreBetween0AndTableSize(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		statistics(positions);
 		assertThat(process(positions, table).filter(BALL_POSITION_ABS).map(Message::getPayload).collect(toList()),
-				everyItem(allOf( //
-						isJson(withJsonPath("$.x", instanceOf(Number.class))),
-						isJson(withJsonPath("$.y", instanceOf(Number.class))),
-						isJson(withJsonPath("$[?(@.x >= 0 && @.x <= " + table.getWidth() + ")]")),
-						isJson(withJsonPath("$[?(@.y >= 0 && @.y <= " + table.getHeight() + ")]")))));
+				everyItem( //
+						allOf(hasNumberBetween("x", 0, table.getWidth()),
+								hasNumberBetween("y", 0, table.getHeight()))));
 	}
 
 	@Property
@@ -208,6 +196,13 @@ class DetectionExamples {
 		Statistics.collect(col.size() < 10 ? "<10" : col.size() < 30 ? "<30" : ">=30");
 	}
 
+	private Matcher<Object> hasNumberBetween(String name, int min, int max) {
+		return allOf( //
+				isJson(withJsonPath("$." + name, instanceOf(Number.class))), //
+				isJson(withJsonPath("$[?(@." + name + " >= " + min + " && @." + name + " <= " + max + ")]")) //
+		);
+	}
+
 	private Stream<Message> process(List<RelativePosition> positions, Table table) {
 		List<Message> messages = new ArrayList<>();
 		new SFTDetection(table, messages::add).process(positions.stream());
@@ -244,18 +239,18 @@ class DetectionExamples {
 
 	@Provide
 	Arbitrary<List<RelativePosition>> positionsOnTable() {
-		return longs().map(AtomicLong::new).flatMap(DetectionExamples::onTablePositions);
+		return longs().map(AtomicLong::new).flatMap(ts -> anywhereOnTable(ts).list().ofMinSize(2));
 	}
 
 	@Provide
 	Arbitrary<List<RelativePosition>> goalSituationsLeft() {
 		return longs().map(AtomicLong::new).flatMap(ts -> {
 			return join(asList( //
-					atMiddleLine(ts).list().ofMinSize(1), //
+					kickoffPositions(ts), //
 					anywhereOnTable(ts).list(), //
-					frontOfLeftGoal(ts).list().ofMinSize(1), //
+					prepareLeftGoal(ts), //
 					offTablePositions(ts), //
-					anywhereOnTable(ts).list() //
+					notInCorner(ts) //
 			));
 		});
 	}
@@ -264,22 +259,41 @@ class DetectionExamples {
 	Arbitrary<List<RelativePosition>> goalSituationsRight() {
 		return longs().map(AtomicLong::new).flatMap(ts -> {
 			return join(asList( //
-					atMiddleLine(ts).list().ofMinSize(1), //
+					kickoffPositions(ts), //
 					anywhereOnTable(ts).list(), //
-					frontOfRightGoal(ts).list().ofMinSize(1), //
+					preareRightGoal(ts), //
 					offTablePositions(ts), //
-					anywhereOnTable(ts).list() //
+					notInCorner(ts) //
 			));
 		});
+	}
+
+	private Arbitrary<List<RelativePosition>> notInCorner(AtomicLong ts) {
+		return combine(diffInMillis(), wholeTable(), wholeTable()) //
+				.as((millis, x, y) //
+				-> create(ts.addAndGet(millis), x, y)).list().ofMinSize(1)
+				.filter(c -> c.isEmpty() || !isCorner(c.get(0)));
+	}
+
+	private boolean isCorner(RelativePosition pos) {
+		return 0.5 + abs(0.5 - pos.getX()) >= 0.95 && 0.5 + abs(0.5 - pos.getY()) >= 0.95;
+	}
+
+	private SizableArbitrary<List<RelativePosition>> kickoffPositions(AtomicLong ts) {
+		return atMiddleLine(ts).list().ofMinSize(1);
+	}
+
+	private SizableArbitrary<List<RelativePosition>> prepareLeftGoal(AtomicLong ts) {
+		return frontOfLeftGoal(ts).list().ofMinSize(1);
+	}
+
+	private SizableArbitrary<List<RelativePosition>> preareRightGoal(AtomicLong ts) {
+		return frontOfRightGoal(ts).list().ofMinSize(1);
 	}
 
 	private Arbitrary<List<RelativePosition>> offTablePositions(AtomicLong timestamp) {
 		// TODO create as many positions as needed (2000ms between first and last)
 		return offTablePosition(timestamp).list().ofSize(10);
-	}
-
-	private static Arbitrary<List<RelativePosition>> onTablePositions(AtomicLong timestamp) {
-		return anywhereOnTable(timestamp).list().ofMinSize(2);
 	}
 
 	private static Arbitrary<RelativePosition> anywhereOnTable(AtomicLong timestamp) {
