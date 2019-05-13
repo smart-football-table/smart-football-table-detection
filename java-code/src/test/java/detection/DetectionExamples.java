@@ -57,7 +57,6 @@ import net.jqwik.api.Provide;
 import net.jqwik.api.Statistics;
 import net.jqwik.api.arbitraries.DoubleArbitrary;
 import net.jqwik.api.arbitraries.LongArbitrary;
-import net.jqwik.api.arbitraries.SizableArbitrary;
 
 class DetectionExamples {
 
@@ -327,30 +326,34 @@ class DetectionExamples {
 	private Arbitrary<List<RelativePosition>> corner(AtomicLong ts) {
 		return combine(diffInMillis(), corner(), corner(), bool(), bool()) //
 				.as((millis, x, y, swapX, swapY) //
-				-> create(ts.addAndGet(millis), swapX ? 1.0 - x : x, swapY ? 1.0 - y : y)).list().ofMinSize(1);
+				-> create(ts.addAndGet(millis), possiblySwap(x, swapX), possiblySwap(y, swapY))).list().ofMinSize(1);
+	}
+
+	private double possiblySwap(double value, boolean swap) {
+		return swap ? 1.00 - value : value;
 	}
 
 	private Arbitrary<Boolean> bool() {
-		return Arbitraries.integers().between(0, 1).map(i -> i == 0);
+		return Arbitraries.of(true, false);
 	}
 
 	private Arbitrary<Double> corner() {
-		return doubles().between(0.99, 1);
+		return doubles().between(0.99, 1.00);
 	}
 
 	private boolean isCorner(RelativePosition pos) {
 		return 0.5 + abs(0.5 - pos.getX()) >= 0.99 && 0.5 + abs(0.5 - pos.getY()) >= 0.99;
 	}
 
-	private SizableArbitrary<List<RelativePosition>> kickoffPositions(AtomicLong ts) {
+	private Arbitrary<List<RelativePosition>> kickoffPositions(AtomicLong ts) {
 		return atMiddleLine(ts).list().ofMinSize(1);
 	}
 
-	private SizableArbitrary<List<RelativePosition>> prepareLeftGoal(AtomicLong ts) {
+	private Arbitrary<List<RelativePosition>> prepareLeftGoal(AtomicLong ts) {
 		return frontOfLeftGoal(ts).list().ofMinSize(1);
 	}
 
-	private SizableArbitrary<List<RelativePosition>> prepareRightGoal(AtomicLong ts) {
+	private Arbitrary<List<RelativePosition>> prepareRightGoal(AtomicLong ts) {
 		return frontOfRightGoal(ts).list().ofMinSize(1);
 	}
 
