@@ -48,6 +48,7 @@ import org.hamcrest.Matcher;
 import detection.data.Message;
 import detection.data.Table;
 import detection.data.position.RelativePosition;
+import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.Assume;
 import net.jqwik.api.ForAll;
@@ -61,8 +62,8 @@ import net.jqwik.api.arbitraries.SizableArbitrary;
 class DetectionExamples {
 
 	@Property
-	void ballsOnTableNeverWillRaiseEventsOtherThan(@ForAll("positionsOnTable") List<RelativePosition> positions,
-			@ForAll("table") Table table) {
+	void ballOnTableNeverWillRaiseTeamScoreOrTeamsScoredEvents(
+			@ForAll("positionsOnTable") List<RelativePosition> positions, @ForAll("table") Table table) {
 		statistics(positions);
 		assertThat(process(positions, table).filter(ignoreAllButNot(TEAM_SCORE_LEFT, TEAM_SCORED)).collect(toList()),
 				is(empty()));
@@ -108,6 +109,28 @@ class DetectionExamples {
 				is(asList("1")));
 	}
 
+	@Property
+	void whenBallIsDetectedInAnyCornerAfterALeftHandGoalTheGoalGetsRever(
+			@ForAll("leftGoalsToReverse") List<RelativePosition> positions, @ForAll("table") Table table) {
+		// TODO remove when generator is fixed
+		Assume.that(ballWasOffTableForAtLeast(positions, 2, SECONDS));
+		statistics(positions);
+		assertThat(process(positions, table).filter(TEAM_SCORE_LEFT).map(Message::getPayload).collect(toList()),
+				is(asList("1", "0")));
+	}
+
+	@Property
+	void whenBallIsDetectedInAnyCornerAfterARightHandGoalTheGoalGetsReverted(
+			@ForAll("rightGoalsToReverse") List<RelativePosition> positions, @ForAll("table") Table table) {
+		// TODO remove when generator is fixed
+		Assume.that(ballWasOffTableForAtLeast(positions, 2, SECONDS));
+		statistics(positions);
+		assertThat(process(positions, table).filter(TEAM_SCORE_RIGHT).map(Message::getPayload).collect(toList()),
+				is(asList("1", "0")));
+	}
+
+	// TODO remove when generator is fixed
+	@Deprecated
 	private boolean ballWasOffTableForAtLeast(List<RelativePosition> positions, int duration, TimeUnit timeUnit) {
 		int firstOffTable = findOffTable(positions);
 		return positions.get(findNotOffTable(positions, firstOffTable) - 1).getTimestamp() //
@@ -261,9 +284,35 @@ class DetectionExamples {
 			return join(asList( //
 					kickoffPositions(ts), //
 					anywhereOnTable(ts).list(), //
-					preareRightGoal(ts), //
+					prepareRightGoal(ts), //
 					offTablePositions(ts), //
 					notInCorner(ts) //
+			));
+		});
+	}
+
+	@Provide
+	Arbitrary<List<RelativePosition>> leftGoalsToReverse() {
+		return longs().map(AtomicLong::new).flatMap(ts -> {
+			return join(asList( //
+					kickoffPositions(ts), //
+					anywhereOnTable(ts).list(), //
+					prepareLeftGoal(ts), //
+					offTablePositions(ts), //
+					corner(ts) //
+			));
+		});
+	}
+
+	@Provide
+	Arbitrary<List<RelativePosition>> rightGoalsToReverse() {
+		return longs().map(AtomicLong::new).flatMap(ts -> {
+			return join(asList( //
+					kickoffPositions(ts), //
+					anywhereOnTable(ts).list(), //
+					prepareRightGoal(ts), //
+					offTablePositions(ts), //
+					corner(ts) //
 			));
 		});
 	}
@@ -275,8 +324,22 @@ class DetectionExamples {
 				.filter(c -> c.isEmpty() || !isCorner(c.get(0)));
 	}
 
+	private Arbitrary<List<RelativePosition>> corner(AtomicLong ts) {
+		return combine(diffInMillis(), corner(), corner(), bool(), bool()) //
+				.as((millis, x, y, swapX, swapY) //
+				-> create(ts.addAndGet(millis), swapX ? 1.0 - x : x, swapY ? 1.0 - y : y)).list().ofMinSize(1);
+	}
+
+	private Arbitrary<Boolean> bool() {
+		return Arbitraries.integers().between(0, 1).map(i -> i == 0);
+	}
+
+	private Arbitrary<Double> corner() {
+		return doubles().between(0.99, 1);
+	}
+
 	private boolean isCorner(RelativePosition pos) {
-		return 0.5 + abs(0.5 - pos.getX()) >= 0.95 && 0.5 + abs(0.5 - pos.getY()) >= 0.95;
+		return 0.5 + abs(0.5 - pos.getX()) >= 0.99 && 0.5 + abs(0.5 - pos.getY()) >= 0.99;
 	}
 
 	private SizableArbitrary<List<RelativePosition>> kickoffPositions(AtomicLong ts) {
@@ -287,7 +350,7 @@ class DetectionExamples {
 		return frontOfLeftGoal(ts).list().ofMinSize(1);
 	}
 
-	private SizableArbitrary<List<RelativePosition>> preareRightGoal(AtomicLong ts) {
+	private SizableArbitrary<List<RelativePosition>> prepareRightGoal(AtomicLong ts) {
 		return frontOfRightGoal(ts).list().ofMinSize(1);
 	}
 
