@@ -41,7 +41,7 @@ public abstract class RelativePosition implements Position {
 		}
 
 		@Override
-		public boolean isRightHandSide() {
+		public boolean isLeftHandSide() {
 			throw new UnsupportedOperationException();
 		}
 
@@ -81,8 +81,8 @@ public abstract class RelativePosition implements Position {
 			return create(getTimestamp(), x, centerY() + abs(centerY() - y));
 		}
 
-		public boolean isRightHandSide() {
-			return getX() >= centerX();
+		public boolean isLeftHandSide() {
+			return getX() < centerX();
 		}
 
 		private double centerX() {
@@ -118,7 +118,7 @@ public abstract class RelativePosition implements Position {
 
 	public abstract RelativePosition normalizeY();
 
-	public abstract boolean isRightHandSide();
+	public abstract boolean isLeftHandSide();
 
 	public boolean equalsPosition(RelativePosition other) {
 		return Double.doubleToLongBits(getX()) == Double.doubleToLongBits(other.getX()) //

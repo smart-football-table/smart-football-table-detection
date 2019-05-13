@@ -276,8 +276,8 @@ public class SFTDetectionTest {
 		givenFrontOfGoalPercentage(20);
 		givenInputToProcessIs(ball().prepareForRightGoal().then().score());
 		whenInputWasProcessed();
-		thenGoalForTeamIsPublished(0);
-		thenGameScoreForTeamIsPublished(0, 1);
+		thenGoalForTeamIsPublished(1);
+		thenGameScoreForTeamIsPublished(1, 1);
 	}
 
 	@Test
@@ -286,7 +286,7 @@ public class SFTDetectionTest {
 		givenFrontOfGoalPercentage(20);
 		givenInputToProcessIs(ball().prepareForLeftGoal().score());
 		whenInputWasProcessed();
-		thenGoalForTeamIsPublished(1);
+		thenGoalForTeamIsPublished(0);
 	}
 
 	@Test
@@ -316,8 +316,8 @@ public class SFTDetectionTest {
 				.prepareForLeftGoal().then().score() //
 		);
 		whenInputWasProcessed();
-		thenPayloadsWithTopicAre("team/scored", times("1", 3));
-		thenPayloadsWithTopicAre("team/score/1", "1", "2", "3");
+		thenPayloadsWithTopicAre("team/scored", times("0", 3));
+		thenPayloadsWithTopicAre("team/score/0", "1", "2", "3");
 	}
 
 	@Test
@@ -353,7 +353,7 @@ public class SFTDetectionTest {
 		givenTimeWithoutBallTilGoal(0, MILLISECONDS);
 		givenInputToProcessIs(ball().prepareForLeftGoal().then().score());
 		whenInputWasProcessed();
-		thenGoalForTeamIsPublished(1);
+		thenGoalForTeamIsPublished(0);
 	}
 
 	@Test
@@ -362,7 +362,7 @@ public class SFTDetectionTest {
 		givenFrontOfGoalPercentage(20);
 		givenInputToProcessIs(ball().prepareForLeftGoal().then().score().then(anyCorner()));
 		whenInputWasProcessed();
-		thenPayloadsWithTopicAre("team/score/1", "1", "0");
+		thenPayloadsWithTopicAre("team/score/0", "1", "0");
 	}
 
 	@Test
@@ -378,7 +378,7 @@ public class SFTDetectionTest {
 				.prepareForLeftGoal().then().score() //
 		);
 		whenInputWasProcessed();
-		thenWinnerAre(1);
+		thenWinnerAre(0);
 	}
 
 	@Test
@@ -480,36 +480,36 @@ public class SFTDetectionTest {
 						.collect(toList()), //
 				is(asList( //
 						message("game/start", ""), //
-						message("team/scored", 1), //
-						message("team/score/1", 1), //
 						message("team/scored", 0), //
 						message("team/score/0", 1), //
 						message("team/scored", 1), //
-						message("team/score/1", 2), //
+						message("team/score/1", 1), //
 						message("team/scored", 0), //
 						message("team/score/0", 2), //
 						message("team/scored", 1), //
-						message("team/score/1", 3), //
+						message("team/score/1", 2), //
 						message("team/scored", 0), //
 						message("team/score/0", 3), //
 						message("team/scored", 1), //
-						message("team/score/1", 4), //
+						message("team/score/1", 3), //
 						message("team/scored", 0), //
 						message("team/score/0", 4), //
 						message("team/scored", 1), //
-						message("team/score/1", 5), //
+						message("team/score/1", 4), //
 						message("team/scored", 0), //
 						message("team/score/0", 5), //
+						message("team/scored", 1), //
+						message("team/score/1", 5), //
 						message("game/gameover", winners(0, 1)), //
 						message("game/start", ""), //
-						message("team/scored", 1), //
-						message("team/score/1", 1), //
-						message("team/scored", 1), //
-						message("team/score/1", 2), //
 						message("team/scored", 0), //
 						message("team/score/0", 1), //
 						message("team/scored", 0), //
-						message("team/score/0", 2))));
+						message("team/score/0", 2), //
+						message("team/scored", 1), //
+						message("team/score/1", 1), //
+						message("team/scored", 1), //
+						message("team/score/1", 2))));
 	}
 
 	@Test
@@ -584,8 +584,8 @@ public class SFTDetectionTest {
 		// when resetting the game the game/start message is sent immediately as well
 		// when the ball is then detected at the middle line
 		thenPayloadsWithTopicAre("game/start", times("", 2));
-		thenPayloadsWithTopicAre("team/score/0", "1", "2");
-		thenNoMessageWithTopicIsSent("team/score/1");
+		thenPayloadsWithTopicAre("team/score/1", "1", "2");
+		thenNoMessageWithTopicIsSent("team/score/0");
 	}
 
 	public void setInProgressConsumer(Consumer<RelativePosition> inProgressConsumer) {

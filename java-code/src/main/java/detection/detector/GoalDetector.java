@@ -143,7 +143,7 @@ public class GoalDetector implements Detector {
 		public GoalDetector.State update(AbsolutePosition pos) {
 			RelativePosition relPos = pos.getRelativePosition();
 			return isFrontOfGoal(relPos) ? //
-					new FrontOfGoal(relPos.isRightHandSide() ? 0 : 1) : //
+					new FrontOfGoal(relPos.isLeftHandSide() ? 0 : 1) : //
 					this;
 		}
 

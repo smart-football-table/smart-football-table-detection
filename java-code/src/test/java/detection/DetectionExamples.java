@@ -6,8 +6,8 @@ import static detection.Topic.BALL_POSITION_ABS;
 import static detection.Topic.BALL_POSITION_REL;
 import static detection.Topic.BALL_VELOCITY_KMH;
 import static detection.Topic.BALL_VELOCITY_MPS;
-import static detection.Topic.TEAM_LEFT;
-import static detection.Topic.TEAM_RIGHT;
+import static detection.Topic.TEAM_ID_LEFT;
+import static detection.Topic.TEAM_ID_RIGHT;
 import static detection.Topic.TEAM_SCORED;
 import static detection.Topic.TEAM_SCORE_LEFT;
 import static detection.Topic.TEAM_SCORE_RIGHT;
@@ -75,7 +75,7 @@ class DetectionExamples {
 		Assume.that(ballWasOffTableForAtLeast(positions, 2, SECONDS));
 		statistics(positions);
 		assertThat(process(positions, table).filter(TEAM_SCORED).map(Message::getPayload).collect(toList()),
-				is(asList(TEAM_LEFT)));
+				is(asList(TEAM_ID_LEFT)));
 	}
 
 	@Property
@@ -95,7 +95,7 @@ class DetectionExamples {
 		Assume.that(ballWasOffTableForAtLeast(positions, 2, SECONDS));
 		statistics(positions);
 		assertThat(process(positions, table).filter(TEAM_SCORED).map(Message::getPayload).collect(toList()),
-				is(asList(TEAM_RIGHT)));
+				is(asList(TEAM_ID_RIGHT)));
 	}
 
 	@Property

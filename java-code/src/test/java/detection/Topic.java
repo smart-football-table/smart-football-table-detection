@@ -15,12 +15,12 @@ public enum Topic implements Predicate<Message> {
 	GAME_START(DetectionExamples.topicStartsWith("game/start")), //
 	GAME_FOUL(DetectionExamples.topicStartsWith("game/foul")), //
 	GAME_IDLE(DetectionExamples.topicStartsWith("game/idle")), //
-	TEAM_SCORE_LEFT(DetectionExamples.topicStartsWith("team/score/" + Topic.TEAM_LEFT)), //
-	TEAM_SCORE_RIGHT(DetectionExamples.topicStartsWith("team/score/" + Topic.TEAM_RIGHT)), //
+	TEAM_SCORE_LEFT(DetectionExamples.topicStartsWith("team/score/" + Topic.TEAM_ID_LEFT)), //
+	TEAM_SCORE_RIGHT(DetectionExamples.topicStartsWith("team/score/" + Topic.TEAM_ID_RIGHT)), //
 	TEAM_SCORED(DetectionExamples.topicStartsWith("team/scored")); //
 
-	public static final String TEAM_LEFT = "1";
-	public static final String TEAM_RIGHT = "0";
+	public static final String TEAM_ID_LEFT = "0";
+	public static final String TEAM_ID_RIGHT = "1";
 	
 	private final Predicate<Message> predicate;
 
