@@ -37,6 +37,11 @@ class RelativePositionTest {
 		assertThat(pos.normalizeY(), is(pos));
 	}
 
+	@Test
+	void viaCreateCreatedInstanceIsNoPositionInstance() {
+		assertThat(RelativePosition.create(anyTimestamp(), -1, -1).isNull(), is(true));
+	}
+
 	private long anyTimestamp() {
 		return 123;
 	}
