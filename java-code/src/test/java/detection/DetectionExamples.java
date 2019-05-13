@@ -2,6 +2,8 @@ package detection;
 
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.isJson;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.withJsonPath;
+import static detection.DetectionExamples.GameSituationBuilder.anywhereOnTable;
+import static detection.DetectionExamples.GameSituationBuilder.kickoff;
 import static detection.Topic.BALL_POSITION_ABS;
 import static detection.Topic.BALL_POSITION_REL;
 import static detection.Topic.BALL_VELOCITY_KMH;
@@ -27,7 +29,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.core.Every.everyItem;
 import static org.junit.Assert.assertThat;
@@ -39,6 +40,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.function.IntPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -150,10 +152,10 @@ class DetectionExamples {
 	}
 
 	@Property
-	void ballPositionRelForEveryPosition(@ForAll("positionsOnTable") List<RelativePosition> positions,
+	boolean ballPositionRelForEveryPosition(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		statistics(positions);
-		assertThat(process(positions, table).filter(BALL_POSITION_REL).collect(toList()), hasSize(positions.size()));
+		return process(positions, table).filter(BALL_POSITION_REL).count() == positions.size();
 	}
 
 	@Property
@@ -162,14 +164,14 @@ class DetectionExamples {
 		statistics(positions);
 		assertThat(process(positions, table).filter(BALL_POSITION_REL).map(Message::getPayload).collect(toList()),
 				everyItem( //
-						allOf(hasNumberBetween("x", 0, 1), hasNumberBetween("y", 0, 1))));
+						allOf(hasJsonNumberBetween("x", 0, 1), hasJsonNumberBetween("y", 0, 1))));
 	}
 
 	@Property
-	void ballPositionAbsForEveryPosition(@ForAll("positionsOnTable") List<RelativePosition> positions,
+	boolean ballPositionAbsForEveryPosition(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		statistics(positions);
-		assertThat(process(positions, table).filter(BALL_POSITION_ABS).collect(toList()), hasSize(positions.size()));
+		return process(positions, table).filter(BALL_POSITION_ABS).count() == positions.size();
 	}
 
 	@Property
@@ -178,16 +180,15 @@ class DetectionExamples {
 		statistics(positions);
 		assertThat(process(positions, table).filter(BALL_POSITION_ABS).map(Message::getPayload).collect(toList()),
 				everyItem( //
-						allOf(hasNumberBetween("x", 0, table.getWidth()),
-								hasNumberBetween("y", 0, table.getHeight()))));
+						allOf(hasJsonNumberBetween("x", 0, table.getWidth()),
+								hasJsonNumberBetween("y", 0, table.getHeight()))));
 	}
 
 	@Property
-	void ballVelocityKmhForEveryPositionChange(@ForAll("positionsOnTable") List<RelativePosition> positions,
+	boolean ballVelocityKmhForEveryPositionChange(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		statistics(positions);
-		assertThat(process(positions, table).filter(BALL_VELOCITY_KMH).collect(toList()),
-				hasSize(positions.size() - 1));
+		return process(positions, table).filter(BALL_VELOCITY_KMH).count() == positions.size() - 1;
 	}
 
 	@Property
@@ -199,11 +200,10 @@ class DetectionExamples {
 	}
 
 	@Property
-	void ballVelocityMpsForEveryPositionChange(@ForAll("positionsOnTable") List<RelativePosition> positions,
+	boolean ballVelocityMpsForEveryPositionChange(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		statistics(positions);
-		assertThat(process(positions, table).filter(BALL_VELOCITY_MPS).collect(toList()),
-				hasSize(positions.size() - 1));
+		return process(positions, table).filter(BALL_VELOCITY_MPS).count() == positions.size() - 1;
 	}
 
 	@Property
@@ -218,7 +218,7 @@ class DetectionExamples {
 		Statistics.collect(col.size() < 10 ? "<10" : col.size() < 30 ? "<30" : ">=30");
 	}
 
-	private Matcher<Object> hasNumberBetween(String name, int min, int max) {
+	private Matcher<Object> hasJsonNumberBetween(String name, int min, int max) {
 		return allOf( //
 				isJson(withJsonPath("$." + name, instanceOf(Number.class))), //
 				isJson(withJsonPath("$[?(@." + name + " >= " + min + " && @." + name + " <= " + max + ")]")) //
@@ -261,157 +261,179 @@ class DetectionExamples {
 
 	@Provide
 	Arbitrary<List<RelativePosition>> positionsOnTable() {
-		return longs().map(AtomicLong::new).flatMap(ts -> anywhereOnTable(ts).list().ofMinSize(2));
+		return arbitrary(ts -> anywhereOnTable(ts).build().filter(l -> l.size() >= 2));
 	}
 
 	@Provide
 	Arbitrary<List<RelativePosition>> goalSituationsLeft() {
-		return longs().map(AtomicLong::new).flatMap(ts -> {
-			return join(asList( //
-					kickoffPositions(ts), //
-					anywhereOnTable(ts).list(), //
-					prepareLeftGoal(ts), //
-					offTablePositions(ts), //
-					notInCorner(ts) //
-			));
-		});
+		return arbitrary(ts -> kickoff(ts).scoreLeft().ballNotInCorner().build());
 	}
 
 	@Provide
 	Arbitrary<List<RelativePosition>> goalSituationsRight() {
-		return longs().map(AtomicLong::new).flatMap(ts -> {
-			return join(asList( //
-					kickoffPositions(ts), //
-					anywhereOnTable(ts).list(), //
-					prepareRightGoal(ts), //
-					offTablePositions(ts), //
-					notInCorner(ts) //
-			));
-		});
+		return arbitrary(ts -> kickoff(ts).scoreRight().ballNotInCorner().build());
 	}
 
 	@Provide
 	Arbitrary<List<RelativePosition>> leftGoalsToReverse() {
-		return longs().map(AtomicLong::new).flatMap(ts -> {
-			return join(asList( //
-					kickoffPositions(ts), //
-					anywhereOnTable(ts).list(), //
-					prepareLeftGoal(ts), //
-					offTablePositions(ts), //
-					corner(ts) //
-			));
-		});
+		return arbitrary(ts -> kickoff(ts).scoreLeft().ballInCorner().build());
 	}
 
 	@Provide
 	Arbitrary<List<RelativePosition>> rightGoalsToReverse() {
-		return longs().map(AtomicLong::new).flatMap(ts -> {
-			return join(asList( //
-					kickoffPositions(ts), //
-					anywhereOnTable(ts).list(), //
-					prepareRightGoal(ts), //
-					offTablePositions(ts), //
-					corner(ts) //
-			));
-		});
+		return arbitrary(ts -> kickoff(ts).scoreRight().ballInCorner().build());
 	}
 
-	private Arbitrary<List<RelativePosition>> notInCorner(AtomicLong ts) {
-		return combine(diffInMillis(), wholeTable(), wholeTable()) //
-				.as((millis, x, y) //
-				-> create(ts.addAndGet(millis), x, y)).list().ofMinSize(1)
-				.filter(c -> c.isEmpty() || !isCorner(c.get(0)));
+	private Arbitrary<List<RelativePosition>> arbitrary(
+			Function<AtomicLong, Arbitrary<List<RelativePosition>>> mapper) {
+		return longs().map(AtomicLong::new).flatMap(mapper);
 	}
 
-	private Arbitrary<List<RelativePosition>> corner(AtomicLong ts) {
-		return combine(diffInMillis(), corner(), corner(), bool(), bool()) //
-				.as((millis, x, y, swapX, swapY) //
-				-> create(ts.addAndGet(millis), possiblySwap(x, swapX), possiblySwap(y, swapY))).list().ofMinSize(1);
-	}
+	static class GameSituationBuilder {
 
-	private double possiblySwap(double value, boolean swap) {
-		return swap ? 1.00 - value : value;
-	}
+		private final AtomicLong timestamp;
+		private final List<Arbitrary<List<RelativePosition>>> arbitraries = new ArrayList<>();
 
-	private Arbitrary<Boolean> bool() {
-		return Arbitraries.of(true, false);
-	}
+		public GameSituationBuilder(AtomicLong timestamp) {
+			this.timestamp = timestamp;
+		}
 
-	private Arbitrary<Double> corner() {
-		return doubles().between(0.99, 1.00);
-	}
+		public Arbitrary<List<RelativePosition>> build() {
+			return combine(arbitraries).as(p -> p.stream().flatMap(Collection::stream).collect(toList()));
+		}
 
-	private boolean isCorner(RelativePosition pos) {
-		return 0.5 + abs(0.5 - pos.getX()) >= 0.99 && 0.5 + abs(0.5 - pos.getY()) >= 0.99;
-	}
+		static GameSituationBuilder kickoff(AtomicLong timestamp) {
+			return new GameSituationBuilder(timestamp).kickoff();
+		}
 
-	private Arbitrary<List<RelativePosition>> kickoffPositions(AtomicLong ts) {
-		return atMiddleLine(ts).list().ofMinSize(1);
-	}
+		static GameSituationBuilder anywhereOnTable(AtomicLong timestamp) {
+			return new GameSituationBuilder(timestamp).anywhereOnTable();
+		}
 
-	private Arbitrary<List<RelativePosition>> prepareLeftGoal(AtomicLong ts) {
-		return frontOfLeftGoal(ts).list().ofMinSize(1);
-	}
+		public GameSituationBuilder kickoff() {
+			return add(kickoffPositions(timestamp)).anywhereOnTable();
+		}
 
-	private Arbitrary<List<RelativePosition>> prepareRightGoal(AtomicLong ts) {
-		return frontOfRightGoal(ts).list().ofMinSize(1);
-	}
+		private static boolean isCorner(RelativePosition pos) {
+			return 0.5 + abs(0.5 - pos.getX()) >= 0.99 && 0.5 + abs(0.5 - pos.getY()) >= 0.99;
+		}
 
-	private Arbitrary<List<RelativePosition>> offTablePositions(AtomicLong timestamp) {
-		// TODO create as many positions as needed (2000ms between first and last)
-		return offTablePosition(timestamp).list().ofSize(10);
-	}
+		private static Arbitrary<RelativePosition> offTablePosition(AtomicLong timestamp) {
+			return diffInMillis().map(millis -> noPosition(timestamp.addAndGet(millis)));
+		}
 
-	private static Arbitrary<RelativePosition> anywhereOnTable(AtomicLong timestamp) {
-		return combine(diffInMillis(), wholeTable(), wholeTable()) //
-				.as((millis, x, y) //
-				-> create(timestamp.addAndGet(millis), x, y));
-	}
+		private static LongArbitrary diffInMillis() {
+			return longs().between(MILLISECONDS.toMillis(1), SECONDS.toMillis(10));
+		}
 
-	private static Arbitrary<RelativePosition> offTablePosition(AtomicLong timestamp) {
-		return diffInMillis().map(millis -> noPosition(timestamp.addAndGet(millis)));
-	}
+		private GameSituationBuilder anywhereOnTable() {
+			return add(combine(diffInMillis(), wholeTable(), wholeTable()) //
+					.as((millis, x, y) //
+					-> create(timestamp.addAndGet(millis), x, y)).list());
+		}
 
-	private static Arbitrary<RelativePosition> atMiddleLine(AtomicLong timestamp) {
-		return combine(diffInMillis(), middleLine(), wholeTable()) //
-				.as((millis, x, y) //
-				-> create(timestamp.addAndGet(millis), x, y));
-	}
+		public GameSituationBuilder scoreLeft() {
+			return add(prepareLeftGoal(timestamp)).add(offTablePositions(timestamp));
+		}
 
-	private static Arbitrary<RelativePosition> frontOfLeftGoal(AtomicLong timestamp) {
-		return combine(diffInMillis(), frontOfLeftGoal(), wholeTable()) //
-				.as((millis, x, y) //
-				-> create(timestamp.addAndGet(millis), x, y));
-	}
+		public GameSituationBuilder scoreRight() {
+			return add(prepareRightGoal(timestamp)).add(offTablePositions(timestamp));
+		}
 
-	private static Arbitrary<RelativePosition> frontOfRightGoal(AtomicLong timestamp) {
-		return combine(diffInMillis(), frontOfRightGoal(), wholeTable()) //
-				.as((millis, x, y) //
-				-> create(timestamp.addAndGet(millis), x, y));
-	}
+		private static Arbitrary<List<RelativePosition>> offTablePositions(AtomicLong timestamp) {
+			// TODO create as many positions as needed (2000ms between first and last)
+			return offTablePosition(timestamp).list().ofSize(10);
+		}
 
-	private static LongArbitrary diffInMillis() {
-		return longs().between(MILLISECONDS.toMillis(1), SECONDS.toMillis(10));
-	}
+		public GameSituationBuilder ballNotInCorner() {
+			arbitraries.add(notCorner(timestamp));
+			return this;
 
-	private static DoubleArbitrary wholeTable() {
-		return doubles().between(0, 1);
-	}
+		}
 
-	private static DoubleArbitrary middleLine() {
-		return doubles().between(0.45, 0.55);
-	}
+		public GameSituationBuilder ballInCorner() {
+			arbitraries.add(corner(timestamp));
+			return this;
 
-	private static DoubleArbitrary frontOfLeftGoal() {
-		return doubles().between(0, 0.3);
-	}
+		}
 
-	private static DoubleArbitrary frontOfRightGoal() {
-		return doubles().between(0.7, 1);
-	}
+		public GameSituationBuilder add(Arbitrary<List<RelativePosition>> arbitrary) {
+			arbitraries.add(arbitrary);
+			return this;
+		}
 
-	private static Arbitrary<List<RelativePosition>> join(List<Arbitrary<List<RelativePosition>>> arbitraries) {
-		return combine(arbitraries).as(p -> p.stream().flatMap(Collection::stream).collect(toList()));
+		private static Arbitrary<List<RelativePosition>> kickoffPositions(AtomicLong timestamp) {
+			return atMiddleLine(timestamp).list().ofMinSize(1);
+		}
+
+		private static Arbitrary<List<RelativePosition>> prepareLeftGoal(AtomicLong timestamp) {
+			return frontOfLeftGoal(timestamp).list().ofMinSize(1);
+		}
+
+		private static Arbitrary<List<RelativePosition>> prepareRightGoal(AtomicLong timestamp) {
+			return frontOfRightGoal(timestamp).list().ofMinSize(1);
+		}
+
+		private static Arbitrary<RelativePosition> frontOfLeftGoal(AtomicLong timestamp) {
+			return combine(diffInMillis(), frontOfLeftGoal(), wholeTable()) //
+					.as((millis, x, y) //
+					-> create(timestamp.addAndGet(millis), x, y));
+		}
+
+		private static Arbitrary<RelativePosition> frontOfRightGoal(AtomicLong timestamp) {
+			return combine(diffInMillis(), frontOfRightGoal(), wholeTable()) //
+					.as((millis, x, y) //
+					-> create(timestamp.addAndGet(millis), x, y));
+		}
+
+		private static Arbitrary<RelativePosition> atMiddleLine(AtomicLong timestamp) {
+			return combine(diffInMillis(), middleLine(), wholeTable()) //
+					.as((millis, x, y) //
+					-> create(timestamp.addAndGet(millis), x, y));
+		}
+
+		private static Arbitrary<List<RelativePosition>> notCorner(AtomicLong timestamp) {
+			return combine(diffInMillis(), wholeTable(), wholeTable()) //
+					.as((millis, x, y) //
+					-> create(timestamp.addAndGet(millis), x, y)).list().ofMinSize(1)
+					.filter(c -> c.isEmpty() || !isCorner(c.get(0)));
+		}
+
+		private static Arbitrary<List<RelativePosition>> corner(AtomicLong timestamp) {
+			return combine(diffInMillis(), corner(), corner(), bool(), bool()) //
+					.as((millis, x, y, swapX, swapY) //
+					-> create(timestamp.addAndGet(millis), possiblySwap(x, swapX), possiblySwap(y, swapY))).list()
+					.ofMinSize(1);
+		}
+
+		private static double possiblySwap(double value, boolean swap) {
+			return swap ? 1.00 - value : value;
+		}
+
+		private static Arbitrary<Double> corner() {
+			return doubles().between(0.99, 1.00);
+		}
+
+		private static DoubleArbitrary wholeTable() {
+			return doubles().between(0, 1);
+		}
+
+		private static DoubleArbitrary middleLine() {
+			return doubles().between(0.45, 0.55);
+		}
+
+		private static DoubleArbitrary frontOfLeftGoal() {
+			return doubles().between(0, 0.3);
+		}
+
+		private static DoubleArbitrary frontOfRightGoal() {
+			return doubles().between(0.7, 1);
+		}
+
+		private static Arbitrary<Boolean> bool() {
+			return Arbitraries.of(true, false);
+		}
+
 	}
 
 }
