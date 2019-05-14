@@ -11,10 +11,11 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.IntStream.range;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTimeout;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -45,6 +46,8 @@ import io.moquette.server.Server;
 import io.moquette.server.config.MemoryConfig;
 
 class MainTestIT {
+
+	private static Duration timeout = ofSeconds(30);
 
 	private static final String LOCALHOST = "localhost";
 
@@ -128,7 +131,7 @@ class MainTestIT {
 	@Test
 	void onResetTheNewGameIsStartedImmediatelyAndWithoutTableInteraction()
 			throws IOException, MqttPersistenceException, MqttException, InterruptedException {
-		assertTimeout(ofSeconds(30), () -> {
+		assertTimeoutPreemptively(timeout, () -> {
 			sut.process(positions(42));
 			messagesReceived.clear();
 			sendReset();
@@ -141,7 +144,7 @@ class MainTestIT {
 	@Test
 	void doesReconnectAndResubscribe()
 			throws IOException, InterruptedException, MqttPersistenceException, MqttException {
-		assertTimeout(ofSeconds(30), () -> {
+		assertTimeoutPreemptively(timeout, () -> {
 			sut.process(positions(42));
 			restartBroker();
 			waitUntil(secondClient, IMqttClient::isConnected);
