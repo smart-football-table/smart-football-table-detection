@@ -321,10 +321,11 @@ class DetectionExamples {
 
 		private static final double TABLE_MIN = 0.0;
 		private static final double TABLE_MAX = 1.0;
-		private static final double CENTER = 0.50;
-		private static final double CORNER = 0.99;
-		private static final double MIDDLE_LINE = 0.05;
-		private static final double FRONT_OF_GOAL = 0.3;
+		private static final double CENTER = TABLE_MAX / 2;
+
+		private static final double MIDDLE_LINE_DRIFT = 0.05;
+		private static final double FRONT_OF_GOAL_DRIFT = 0.3;
+		private static final double CORNER_DRIFT = 0.01;
 
 		class Sizeable {
 
@@ -375,7 +376,8 @@ class DetectionExamples {
 		}
 
 		private static boolean isCorner(RelativePosition pos) {
-			return CENTER + abs(CENTER - pos.getX()) >= CORNER && CENTER + abs(CENTER - pos.getY()) >= CORNER;
+			return CENTER + abs(CENTER - pos.getX()) >= TABLE_MAX - CORNER_DRIFT
+					&& CENTER + abs(CENTER - pos.getY()) >= TABLE_MAX - CORNER_DRIFT;
 		}
 
 		private Arbitrary<RelativePosition> offTablePosition(AtomicLong timestamp) {
@@ -471,7 +473,7 @@ class DetectionExamples {
 		}
 
 		private static Arbitrary<Double> corner() {
-			return doubles().between(CORNER, TABLE_MAX);
+			return doubles().between(TABLE_MAX - CORNER_DRIFT, TABLE_MAX);
 		}
 
 		private static DoubleArbitrary wholeTable() {
@@ -479,7 +481,7 @@ class DetectionExamples {
 		}
 
 		private static DoubleArbitrary middleLine() {
-			return doubles().between(CENTER - MIDDLE_LINE, CENTER + MIDDLE_LINE);
+			return doubles().between(CENTER - MIDDLE_LINE_DRIFT, CENTER + MIDDLE_LINE_DRIFT);
 		}
 
 		private static Arbitrary<Double> frontOfLeftGoal() {
@@ -491,7 +493,7 @@ class DetectionExamples {
 		}
 
 		private static Arbitrary<Double> frontOfGoal() {
-			return doubles().between(0, FRONT_OF_GOAL);
+			return doubles().between(0, FRONT_OF_GOAL_DRIFT);
 		}
 
 		private static Arbitrary<Boolean> bool() {
