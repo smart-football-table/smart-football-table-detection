@@ -263,7 +263,7 @@ class DetectionExamples {
 	Arbitrary<List<RelativePosition>> positionsOnTable() {
 		return anyTimestamp(ts -> a(gameSituation(ts) //
 				.withSamplingFrequency(MILLISECONDS, defaultFrequency()) //
-				.anywhereOnTableBuilder().elementsMin(2).addSequence()));
+				.anywhereOnTableSizeable().elementsMin(2).addSequence()));
 	}
 
 	@Provide
@@ -319,6 +319,13 @@ class DetectionExamples {
 
 	static class GameSituationBuilder {
 
+		private static final double TABLE_MIN = 0.0;
+		private static final double TABLE_MAX = 1.0;
+		private static final double CENTER = 0.50;
+		private static final double CORNER = 0.99;
+		private static final double MIDDLE_LINE = 0.05;
+		private static final double FRONT_OF_GOAL = 0.3;
+
 		class Sizeable {
 
 			private SizableArbitrary<List<RelativePosition>> arbitrary;
@@ -364,21 +371,25 @@ class DetectionExamples {
 		}
 
 		public GameSituationBuilder addKickoffSequence() {
-			return addSequence(kickoffPositions(timestamp)).anywhereOnTableBuilder().addSequence();
+			return addSequence(kickoffPositions(timestamp)).anywhereOnTableSizeable().addSequence();
 		}
 
 		private static boolean isCorner(RelativePosition pos) {
-			return 0.5 + abs(0.5 - pos.getX()) >= 0.99 && 0.5 + abs(0.5 - pos.getY()) >= 0.99;
+			return CENTER + abs(CENTER - pos.getX()) >= CORNER && CENTER + abs(CENTER - pos.getY()) >= CORNER;
 		}
 
 		private Arbitrary<RelativePosition> offTablePosition(AtomicLong timestamp) {
 			return samplingFrequency.map(millis -> noPosition(timestamp.addAndGet(millis)));
 		}
 
-		private Sizeable anywhereOnTableBuilder() {
-			return new Sizeable(combine(samplingFrequency, wholeTable(), wholeTable()) //
+		private Sizeable anywhereOnTableSizeable() {
+			return asSizeable(combine(samplingFrequency, wholeTable(), wholeTable()) //
 					.as((millis, x, y) //
 					-> create(timestamp.addAndGet(millis), x, y)));
+		}
+
+		private Sizeable asSizeable(Arbitrary<RelativePosition> as) {
+			return new Sizeable(as);
 		}
 
 		public GameSituationBuilder addScoreLeftSequence() {
@@ -452,27 +463,35 @@ class DetectionExamples {
 		}
 
 		private static double possiblySwap(double value, boolean swap) {
-			return swap ? 1.00 - value : value;
+			return swap ? swap(value) : value;
+		}
+
+		private static double swap(double value) {
+			return TABLE_MAX - value;
 		}
 
 		private static Arbitrary<Double> corner() {
-			return doubles().between(0.99, 1.00);
+			return doubles().between(CORNER, TABLE_MAX);
 		}
 
 		private static DoubleArbitrary wholeTable() {
-			return doubles().between(0, 1);
+			return doubles().between(TABLE_MIN, TABLE_MAX);
 		}
 
 		private static DoubleArbitrary middleLine() {
-			return doubles().between(0.45, 0.55);
+			return doubles().between(CENTER - MIDDLE_LINE, CENTER + MIDDLE_LINE);
 		}
 
-		private static DoubleArbitrary frontOfLeftGoal() {
-			return doubles().between(0, 0.3);
+		private static Arbitrary<Double> frontOfLeftGoal() {
+			return frontOfGoal();
 		}
 
-		private static DoubleArbitrary frontOfRightGoal() {
-			return doubles().between(0.7, 1);
+		private static Arbitrary<Double> frontOfRightGoal() {
+			return frontOfGoal().map(GameSituationBuilder::swap);
+		}
+
+		private static Arbitrary<Double> frontOfGoal() {
+			return doubles().between(0, FRONT_OF_GOAL);
 		}
 
 		private static Arbitrary<Boolean> bool() {
