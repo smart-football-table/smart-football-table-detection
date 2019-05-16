@@ -1,5 +1,6 @@
 package detection.detector;
 
+import static java.lang.Math.abs;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import detection.data.position.AbsolutePosition;
@@ -36,7 +37,7 @@ public class FoulDetector implements Detector {
 	public void detect(AbsolutePosition pos) {
 		if (noMovementSince == null) {
 			if (!pos.isNull()) {
-				noMovementSince = pos.getRelativePosition().normalizeX();
+				noMovementSince = pos.getRelativePosition();
 			}
 		} else if (pos.isNull() || xChanged(pos)) {
 			noMovementSince = null;
@@ -58,7 +59,7 @@ public class FoulDetector implements Detector {
 	}
 
 	private double xDiff(AbsolutePosition pos) {
-		return pos.getRelativePosition().normalizeX().getX() - noMovementSince.getX();
+		return abs(pos.getRelativePosition().getX() - noMovementSince.getX());
 	}
 
 }
