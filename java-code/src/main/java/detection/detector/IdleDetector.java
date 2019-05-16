@@ -16,17 +16,22 @@ public class IdleDetector implements Detector {
 
 	private class Movement implements IdleDetector.State {
 
-		private final AbsolutePosition lastMovement;
+		private AbsolutePosition lastMovement;
 
 		public Movement(AbsolutePosition lastMovement) {
 			this.lastMovement = lastMovement;
+		}
+
+		public Movement lastMovement(AbsolutePosition lastMovement) {
+			this.lastMovement = lastMovement;
+			return this;
 		}
 
 		@Override
 		public State update(AbsolutePosition pos) {
 			return pos.isNull() || pos.getRelativePosition().equalsPosition(lastMovement.getRelativePosition())
 					? new NoMovement(pos)
-					: new Movement(pos);
+					: lastMovement(pos);
 		}
 
 	}
