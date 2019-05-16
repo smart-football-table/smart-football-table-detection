@@ -4,8 +4,7 @@ import java.util.function.Predicate;
 
 import detection.data.Message;
 
-public enum Topic implements Predicate<Message> {
-	
+public enum Topic {
 
 	BALL_POSITION_ABS(DetectionExamples.topicStartsWith("ball/position/abs")), //
 	BALL_POSITION_REL(DetectionExamples.topicStartsWith("ball/position/rel")), //
@@ -21,7 +20,7 @@ public enum Topic implements Predicate<Message> {
 
 	public static final String TEAM_ID_LEFT = "0";
 	public static final String TEAM_ID_RIGHT = "1";
-	
+
 	private final Predicate<Message> predicate;
 
 	Topic(Predicate<Message> predicate) {
@@ -30,11 +29,6 @@ public enum Topic implements Predicate<Message> {
 
 	Predicate<Message> getPredicate() {
 		return predicate;
-	}
-
-	@Override
-	public boolean test(Message message) {
-		return predicate.test(message);
 	}
 
 }
