@@ -7,6 +7,8 @@ import static detection.Topic.BALL_POSITION_ABS;
 import static detection.Topic.BALL_POSITION_REL;
 import static detection.Topic.BALL_VELOCITY_KMH;
 import static detection.Topic.BALL_VELOCITY_MPS;
+import static detection.Topic.GAME_FOUL;
+import static detection.Topic.GAME_IDLE;
 import static detection.Topic.TEAM_ID_LEFT;
 import static detection.Topic.TEAM_ID_RIGHT;
 import static detection.Topic.TEAM_SCORED;
@@ -17,8 +19,11 @@ import static detection.data.position.RelativePosition.noPosition;
 import static java.lang.Math.abs;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.IntStream.range;
 import static java.util.stream.IntStream.rangeClosed;
 import static net.jqwik.api.Arbitraries.doubles;
 import static net.jqwik.api.Arbitraries.integers;
@@ -36,7 +41,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
@@ -56,7 +64,9 @@ import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
 import net.jqwik.api.Statistics;
+import net.jqwik.api.Tuple;
 import net.jqwik.api.arbitraries.DoubleArbitrary;
+import net.jqwik.api.arbitraries.IntegerArbitrary;
 import net.jqwik.api.arbitraries.LongArbitrary;
 import net.jqwik.api.arbitraries.SizableArbitrary;
 
@@ -76,7 +86,7 @@ class DetectionExamples {
 		// TODO remove when generator is fixed
 		Assume.that(ballWasOffTableForAtLeast(positions, 2, SECONDS));
 		statistics(positions);
-		assertThat(process(positions, table).filter(TEAM_SCORED).map(Message::getPayload).collect(toList()),
+		assertThat(process(positions, table).filter(topicIs(TEAM_SCORED)).map(Message::getPayload).collect(toList()),
 				is(asList(TEAM_ID_LEFT)));
 	}
 
@@ -86,7 +96,8 @@ class DetectionExamples {
 		// TODO remove when generator is fixed
 		Assume.that(ballWasOffTableForAtLeast(positions, 2, SECONDS));
 		statistics(positions);
-		assertThat(process(positions, table).filter(TEAM_SCORE_LEFT).map(Message::getPayload).collect(toList()),
+		assertThat(
+				process(positions, table).filter(topicIs(TEAM_SCORE_LEFT)).map(Message::getPayload).collect(toList()),
 				is(asList("1")));
 	}
 
@@ -96,7 +107,7 @@ class DetectionExamples {
 		// TODO remove when generator is fixed
 		Assume.that(ballWasOffTableForAtLeast(positions, 2, SECONDS));
 		statistics(positions);
-		assertThat(process(positions, table).filter(TEAM_SCORED).map(Message::getPayload).collect(toList()),
+		assertThat(process(positions, table).filter(topicIs(TEAM_SCORED)).map(Message::getPayload).collect(toList()),
 				is(asList(TEAM_ID_RIGHT)));
 	}
 
@@ -106,7 +117,8 @@ class DetectionExamples {
 		// TODO remove when generator is fixed
 		Assume.that(ballWasOffTableForAtLeast(positions, 2, SECONDS));
 		statistics(positions);
-		assertThat(process(positions, table).filter(TEAM_SCORE_RIGHT).map(Message::getPayload).collect(toList()),
+		assertThat(
+				process(positions, table).filter(topicIs(TEAM_SCORE_RIGHT)).map(Message::getPayload).collect(toList()),
 				is(asList("1")));
 	}
 
@@ -116,7 +128,8 @@ class DetectionExamples {
 		// TODO remove when generator is fixed
 		Assume.that(ballWasOffTableForAtLeast(positions, 2, SECONDS));
 		statistics(positions);
-		assertThat(process(positions, table).filter(TEAM_SCORE_LEFT).map(Message::getPayload).collect(toList()),
+		assertThat(
+				process(positions, table).filter(topicIs(TEAM_SCORE_LEFT)).map(Message::getPayload).collect(toList()),
 				is(asList("1", "0")));
 	}
 
@@ -126,8 +139,32 @@ class DetectionExamples {
 		// TODO remove when generator is fixed
 		Assume.that(ballWasOffTableForAtLeast(positions, 2, SECONDS));
 		statistics(positions);
-		assertThat(process(positions, table).filter(TEAM_SCORE_RIGHT).map(Message::getPayload).collect(toList()),
+		assertThat(
+				process(positions, table).filter(topicIs(TEAM_SCORE_RIGHT)).map(Message::getPayload).collect(toList()),
 				is(asList("1", "0")));
+	}
+
+	@Property
+	void whenBallDoesNotMoveForMoreThanOneMinuteTheGameGoesToIdleMode(
+			@ForAll("idleWhereBallMaybeGone") List<RelativePosition> positions, @ForAll("table") Table table) {
+		statistics(positions);
+		assertThat(process(positions, table).filter(topicIs(GAME_IDLE).and(payloadIs("true"))).count(), is(1L));
+	}
+
+	private Predicate<Message> topicIs(Topic topic) {
+		return topic.getPredicate();
+	}
+
+	@Property
+	// TODO could produce falls positives: some random data could contain fouls
+	void noIdleWithoutFoul(@ForAll("idle") List<RelativePosition> positions, @ForAll("table") Table table) {
+		statistics(positions);
+		List<Message> messages = process(positions, table).collect(toList());
+		Map<String, Long> data = new HashMap<>();
+		data.put("foul", messages.stream().filter(topicIs(GAME_FOUL)).count());
+		data.put("idleOn", messages.stream().filter(topicIs(GAME_IDLE).and(payloadIs("true"))).count());
+		data.put("idleOff", messages.stream().filter(topicIs(GAME_IDLE).and(payloadIs("false"))).count());
+		assertThat("Amount of messages not equal" + data, new HashSet<>(data.values()).size() == 1, is(true));
 	}
 
 	// TODO remove when generator is fixed
@@ -155,14 +192,15 @@ class DetectionExamples {
 	boolean ballPositionRelForEveryPosition(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		statistics(positions);
-		return process(positions, table).filter(BALL_POSITION_REL).count() == positions.size();
+		return process(positions, table).filter(topicIs(BALL_POSITION_REL)).count() == positions.size();
 	}
 
 	@Property
 	void allRelPositionAreBetween0And1(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		statistics(positions);
-		assertThat(process(positions, table).filter(BALL_POSITION_REL).map(Message::getPayload).collect(toList()),
+		assertThat(
+				process(positions, table).filter(topicIs(BALL_POSITION_REL)).map(Message::getPayload).collect(toList()),
 				everyItem( //
 						allOf(hasJsonNumberBetween("x", 0, 1), hasJsonNumberBetween("y", 0, 1))));
 	}
@@ -171,14 +209,15 @@ class DetectionExamples {
 	boolean ballPositionAbsForEveryPosition(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		statistics(positions);
-		return process(positions, table).filter(BALL_POSITION_ABS).count() == positions.size();
+		return process(positions, table).filter(topicIs(BALL_POSITION_ABS)).count() == positions.size();
 	}
 
 	@Property
 	void allAbsPositionAreBetween0AndTableSize(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		statistics(positions);
-		assertThat(process(positions, table).filter(BALL_POSITION_ABS).map(Message::getPayload).collect(toList()),
+		assertThat(
+				process(positions, table).filter(topicIs(BALL_POSITION_ABS)).map(Message::getPayload).collect(toList()),
 				everyItem( //
 						allOf(hasJsonNumberBetween("x", 0, table.getWidth()),
 								hasJsonNumberBetween("y", 0, table.getHeight()))));
@@ -188,30 +227,30 @@ class DetectionExamples {
 	boolean ballVelocityKmhForEveryPositionChange(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		statistics(positions);
-		return process(positions, table).filter(BALL_VELOCITY_KMH).count() == positions.size() - 1;
+		return process(positions, table).filter(topicIs(BALL_VELOCITY_KMH)).count() == positions.size() - 1;
 	}
 
 	@Property
 	void allBallPositionVelocitiesArePositive(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		statistics(positions);
-		assertThat(process(positions, table).filter(BALL_VELOCITY_KMH).map(Message::getPayload).map(Double::parseDouble)
-				.collect(toList()), everyItem(is(positive())));
+		assertThat(process(positions, table).filter(topicIs(BALL_VELOCITY_KMH)).map(Message::getPayload)
+				.map(Double::parseDouble).collect(toList()), everyItem(is(positive())));
 	}
 
 	@Property
 	boolean ballVelocityMpsForEveryPositionChange(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		statistics(positions);
-		return process(positions, table).filter(BALL_VELOCITY_MPS).count() == positions.size() - 1;
+		return process(positions, table).filter(topicIs(BALL_VELOCITY_MPS)).count() == positions.size() - 1;
 	}
 
 	@Property
 	void ballVelocityMpsForArePositive(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		statistics(positions);
-		assertThat(process(positions, table).filter(BALL_VELOCITY_MPS).map(Message::getPayload).map(Double::parseDouble)
-				.collect(toList()), everyItem(is(positive())));
+		assertThat(process(positions, table).filter(topicIs(BALL_VELOCITY_MPS)).map(Message::getPayload)
+				.map(Double::parseDouble).collect(toList()), everyItem(is(positive())));
 	}
 
 	private void statistics(Collection<?> col) {
@@ -245,6 +284,10 @@ class DetectionExamples {
 
 	static Predicate<Message> topicStartsWith(String topic) {
 		return m -> m.getTopic().startsWith(topic);
+	}
+
+	static Predicate<Message> payloadIs(String value) {
+		return m -> m.getPayload().equals(value);
 	}
 
 	private Matcher<Double> positive() {
@@ -304,6 +347,24 @@ class DetectionExamples {
 				.addBallInCornerSequence()));
 	}
 
+	@Provide
+	Arbitrary<List<RelativePosition>> idle() {
+		return anyTimestamp(ts -> {
+			return a(gameSituation(ts) //
+					.withSamplingFrequency(MILLISECONDS, defaultFrequency()) //
+					.addIdleSequence());
+		});
+	}
+
+	@Provide
+	Arbitrary<List<RelativePosition>> idleWhereBallMaybeGone() {
+		return anyTimestamp(ts -> {
+			return a(gameSituation(ts) //
+					.withSamplingFrequency(MILLISECONDS, defaultFrequency()) //
+					.addIdleSequenceBallMaybeGone());
+		});
+	}
+
 	private LongArbitrary defaultFrequency() {
 		return longs().between(5, 1000);
 	}
@@ -329,19 +390,34 @@ class DetectionExamples {
 
 		class Sizeable {
 
-			private SizableArbitrary<List<RelativePosition>> arbitrary;
+			private Arbitrary<RelativePosition> arbitrary;
+			private Integer minSize;
+			private boolean unique;
 
 			public Sizeable(Arbitrary<RelativePosition> arbitrary) {
-				this.arbitrary = arbitrary.list();
+				this.arbitrary = arbitrary;
 			}
 
 			public Sizeable elementsMin(int minSize) {
-				arbitrary = arbitrary.ofMinSize(minSize);
+				this.minSize = minSize;
 				return this;
 			}
 
 			public GameSituationBuilder addSequence() {
-				return GameSituationBuilder.this.addSequence(arbitrary);
+				SizableArbitrary<List<RelativePosition>> list = arbitrary.list();
+				Arbitrary<List<RelativePosition>> seq = minSize == null ? list : list.ofMinSize(minSize);
+				seq = unique ? seq.unique() : seq;
+				return GameSituationBuilder.this.addSequence(seq);
+			}
+
+			public Sizeable filter(Predicate<RelativePosition> predicate) {
+				arbitrary = arbitrary.filter(predicate);
+				return this;
+			}
+
+			public Sizeable unique() {
+				this.unique = true;
+				return this;
 			}
 
 		}
@@ -408,11 +484,26 @@ class DetectionExamples {
 		}
 
 		public GameSituationBuilder addBallInCornerSequence() {
-			return addSequence(corner(timestamp));
+			return addSequence(corner(timestamp)).anywhereOnTableSizeable().addSequence();
 		}
 
 		public GameSituationBuilder addBallNotInCornerSequence() {
-			return addSequence(notCorner(timestamp));
+			return anywhereOnTableSizeable().filter(p -> !isCorner(p)).elementsMin(1).addSequence()
+					.anywhereOnTableSizeable().addSequence();
+		}
+
+		private GameSituationBuilder addIdleSequence() {
+			return idleSequence(noMoveForAtLeast(1, MINUTES));
+		}
+
+		private GameSituationBuilder addIdleSequenceBallMaybeGone() {
+			return idleSequence(noMoveOrNoBallForAtLeast(1, MINUTES));
+		}
+
+		private GameSituationBuilder idleSequence(Arbitrary<List<RelativePosition>> arbitrary) {
+			// add at least two unique elements to ensure idle is over afterwards
+			return anywhereOnTableSizeable().addSequence() //
+					.addSequence(arbitrary).anywhereOnTableSizeable().elementsMin(2).unique().addSequence();
 		}
 
 		public GameSituationBuilder addSequence(Arbitrary<List<RelativePosition>> arbitrary) {
@@ -450,18 +541,36 @@ class DetectionExamples {
 					-> create(timestamp.addAndGet(millis), x, y));
 		}
 
-		private Arbitrary<List<RelativePosition>> notCorner(AtomicLong timestamp) {
-			return combine(samplingFrequency, wholeTable(), wholeTable()) //
-					.as((millis, x, y) //
-					-> create(timestamp.addAndGet(millis), x, y)).list().ofMinSize(1)
-					.filter(c -> c.isEmpty() || !isCorner(c.get(0)));
-		}
-
 		private Arbitrary<List<RelativePosition>> corner(AtomicLong timestamp) {
 			return combine(samplingFrequency, corner(), corner(), bool(), bool()) //
 					.as((millis, x, y, swapX, swapY) //
 					-> create(timestamp.addAndGet(millis), possiblySwap(x, swapX), possiblySwap(y, swapY))).list()
 					.ofMinSize(1);
+		}
+
+		private Arbitrary<List<RelativePosition>> noMoveOrNoBallForAtLeast(int duration, TimeUnit minutes) {
+			return Arbitraries.frequency( //
+					Tuple.of(90, noBallForAtLeast(duration, minutes)), //
+					Tuple.of(90, noMoveForAtLeast(duration, minutes))).flatMap(identity() //
+			);
+		}
+
+		private Arbitrary<List<RelativePosition>> noMoveForAtLeast(int duration, TimeUnit minutes) {
+			// TODO depend on duration
+			IntegerArbitrary amount = integers().between(100, 1_000);
+			Arbitrary<Long> xxxx = longs().between(SECONDS.toMillis(1), SECONDS.toMillis(10));
+			return combine(xxxx, amount, wholeTable(), wholeTable()) //
+					.as((millis, count, x, y) //
+					-> range(0, count).mapToObj(ignore -> create(timestamp.addAndGet(millis), x, y)).collect(toList()));
+		}
+
+		private Arbitrary<List<RelativePosition>> noBallForAtLeast(int duration, TimeUnit minutes) {
+			// TODO depend on duration
+			IntegerArbitrary amount = integers().between(100, 1_000);
+			Arbitrary<Long> xxxx = longs().between(SECONDS.toMillis(1), SECONDS.toMillis(10));
+			return combine(xxxx, amount) //
+					.as((millis, count) //
+					-> range(0, count).mapToObj(ignore -> noPosition(timestamp.addAndGet(millis))).collect(toList()));
 		}
 
 		private static double possiblySwap(double value, boolean swap) {
