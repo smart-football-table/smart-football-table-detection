@@ -2,35 +2,11 @@
 
 This repository contains the detection part of the Smart Football Table project. After getting the position of the ball, calculations are done. The detection is done with a python-script which is called from a java-programm, which handles the position afterwards.
 
-![detection-example](https://github.com/smart-football-table/smart-football-table.github.io/blob/master/modules/smart-football-table-detection/detectionExampleGif.gif)
+![detection-sample-gif](https://github.com/smart-football-table/smart-football-table.github.io/blob/master/modules/smart-football-table-detection/detectionExampleGif.gif)
 
-### Summary
-
-1) Detect the ball
-  * with shape search (OpenCV)
-  * with machine learning (OpenCV+YOLO)
-2) Use ball positions to calculate different things
-  * goal detection
-  * ball velocity
-  * trace
+Visit the documentation at the [Smart Football Table](https://smart-football-table.github.io/services/ball-detection/) website for more information.
   
-### Detection in detail
-
-We are using OpenCV to detect the ball on gamefield. At the moment, there exist two solutions:
-
-* single OpenCV ball detection, with image preprocessing and shape search:
-  * get input image (file or webcam)
-  * convert to hsv color range
-  * mask image to color range
-  * erode and dilate the picture
-  * find contours
-  
-* YOLO ball detection:
-  * get input image (file or webcam)
-  * find objects based on training data, which is he ball in this case
-  * for more, see README in yolo3 folder
-  
-### Arguments for python scripts
+### Arguments for the application
 
 | Argument | Description                                   | Sample Input           | default |
 | -- | --------------------------------------------------- | ---------------------- | ----- |
