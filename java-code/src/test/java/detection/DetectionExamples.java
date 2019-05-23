@@ -51,13 +51,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.hamcrest.Matcher;
 
-import com.fasterxml.jackson.databind.ser.std.StdKeySerializers.Default;
-
-import detection.GameSituationExamples.PositionSequenceBuilder;
 import detection.data.Message;
 import detection.data.Table;
 import detection.data.position.RelativePosition;
@@ -71,7 +69,6 @@ import net.jqwik.api.Tuple;
 import net.jqwik.api.Tuple.Tuple2;
 import net.jqwik.api.arbitraries.DoubleArbitrary;
 import net.jqwik.api.arbitraries.IntegerArbitrary;
-import net.jqwik.api.arbitraries.LongArbitrary;
 import net.jqwik.api.arbitraries.SizableArbitrary;
 
 class DetectionExamples {
@@ -682,6 +679,61 @@ class DetectionExamples {
 
 		static <T> List<T> flatten(List<List<T>> listOfLists) {
 			return listOfLists.stream().flatMap(List<T>::stream).collect(toList());
+		}
+
+	}
+	
+	static class PositionSequenceBuilder {
+
+		public static final long DEFAULT_DURATION = SECONDS.toMillis(1);
+
+		private final Arbitrary<Function<Long, RelativePosition>> positionCreatorArbitrary;
+		private Arbitrary<Long> durationArbitrary = Arbitraries.constant(DEFAULT_DURATION);
+
+		public PositionSequenceBuilder(Arbitrary<Function<Long, RelativePosition>> positionCreatorArbitrary) {
+			this.positionCreatorArbitrary = positionCreatorArbitrary;
+		}
+
+		public PositionSequenceBuilder forDuration(long duration, TimeUnit timeUnit) {
+			return forDuration(Arbitraries.constant(duration), timeUnit);
+		}
+
+		public PositionSequenceBuilder forDuration(Arbitrary<Long> durationArbitrary, TimeUnit timeUnit) {
+			this.durationArbitrary = durationArbitrary.map(timeUnit::toMillis);
+			return this;
+		}
+
+		public Arbitrary<List<Tuple2<Long, Function<Long, RelativePosition>>>> build(
+				Arbitrary<Long> frequencyArbitrary) {
+			Arbitrary<List<Long>> timestamps = durationArbitrary
+					.flatMap(durationMillis -> arbitraryCollect(frequencyArbitrary,
+							base -> durationReached(base, durationMillis)));
+
+			return timestamps.flatMap(stamps -> {
+				// the list of position creators must have the same length
+				Arbitrary<List<Function<Long, RelativePosition>>> positionCreators = positionCreatorArbitrary.list()
+						.ofSize(stamps.size());
+				return positionCreators.map(creators -> zipLists(stamps, creators));
+			});
+
+		}
+
+		private boolean durationReached(List<Long> timestamps, long minDuration) {
+			return !timestamps.isEmpty() && duration(timestamps) >= minDuration;
+		}
+
+		private long duration(List<Long> timestamps) {
+			long lastTimestamp = timestamps.get(timestamps.size() - 1);
+			return timestamps.stream().mapToLong(l -> l).sum() - lastTimestamp;
+		}
+
+		static <T, U> List<Tuple2<T, U>> zipLists(List<T> stamps, List<U> creators) {
+			return IntStream.range(0, stamps.size()).mapToObj(i -> Tuple.of(stamps.get(i), creators.get(i)))
+					.collect(toList());
+		}
+
+		static <T> Arbitrary<List<T>> arbitraryCollect(Arbitrary<T> elementArbitrary, Predicate<List<T>> until) {
+			return new ArbitraryCollect<>(elementArbitrary, until);
 		}
 
 	}
