@@ -184,10 +184,16 @@ def YOLO():
 
         actualPointX = position[0]
         actualPointY = position[1]
+        
+        timeAsString = str(time.time())
 
-
-        print(str(time.time()) + "|" + str(actualPointX) + "|" + str(actualPointY))
-
+    	if len(timeAsString) == 12:
+        	timeAsString = timeAsString + "0"
+        	# dirty hack to avoid missing 0
+    	timeAsString = timeAsString.replace(".", "")
+ 
+    	print(timeAsString + "|" + str(actualPointX) + "|" + str(actualPointY))
+ 
         image = frame_resized
         if not (len(detections) is 0):
             image = cvDrawBall(detections[idOfDetection], frame_resized)
