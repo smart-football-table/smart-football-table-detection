@@ -2,8 +2,8 @@ language: java
 sudo: false
 jdk:
   - oraclejdk8
-  - oraclejdk9
+  - oraclejdk12
   - openjdk8
-  - openjdk9
+  - openjdk12
 script: "cd java-code && mvn clean install"
 
