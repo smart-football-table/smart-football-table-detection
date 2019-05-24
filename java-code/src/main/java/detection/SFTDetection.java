@@ -25,11 +25,11 @@ public class SFTDetection {
 		this.table = table;
 		this.messages = new Messages(consumer);
 		this.game = Game.newGame( //
-				onGameStart(() -> messages.gameStart()), //
-				onPositionChange(p -> messages.pos(p)), //
-				onMovement(m -> messages.movement(m)), //
-				onFoul(() -> messages.foul()), //
-				onIdle(b -> messages.idle(b)) //
+				onGameStart(messages::gameStart), //
+				onPositionChange(messages::pos), //
+				onMovement(messages::movement), //
+				onFoul(messages::foul), //
+				onIdle(messages::idle) //
 		).addScoreTracker(scoreTracker(messages, consumer));
 	}
 
