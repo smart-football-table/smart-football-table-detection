@@ -2,7 +2,9 @@ language: java
 sudo: false
 jdk:
   - oraclejdk8
-  - oraclejdk12
+  - oraclejdk11
+  # https://github.com/travis-ci/travis-ci/issues/9963
+  # - oraclejdk12
   - openjdk8
   - openjdk12
 script: "cd java-code && mvn clean install"
