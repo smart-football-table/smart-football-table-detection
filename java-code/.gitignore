@@ -1,3 +1,5 @@
+/.classpath
+/.project 
 /target/
 /confFile.txt
 /.jqwik-database

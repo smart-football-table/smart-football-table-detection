@@ -4,6 +4,8 @@ import static com.jayway.jsonpath.matchers.JsonPathMatchers.isJson;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.withJsonPath;
 import static detection.DetectionExamples.GameSequenceBuilder.gameSequence;
 import static detection.DetectionExamples.GameSituationBuilder.gameSituation;
+import static detection.Topic.BALL_DISTANCE_CM;
+import static detection.Topic.BALL_OVERALL_DISTANCE_CM;
 import static detection.Topic.BALL_POSITION_ABS;
 import static detection.Topic.BALL_POSITION_REL;
 import static detection.Topic.BALL_VELOCITY_KMH;
@@ -33,6 +35,7 @@ import static net.jqwik.api.Arbitraries.longs;
 import static net.jqwik.api.Combinators.combine;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.instanceOf;
@@ -45,12 +48,15 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.PrimitiveIterator.OfDouble;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -221,6 +227,38 @@ class DetectionExamples {
 				.map(Double::parseDouble).collect(toList()), everyItem(is(positive())));
 	}
 
+	@Property
+	void ballDistanceForArePositive(@ForAll("positionsOnTable") List<RelativePosition> positions,
+			@ForAll("table") Table table) {
+		statistics(positions);
+		assertThat(process(positions, table).filter(topicIs(BALL_DISTANCE_CM)).map(Message::getPayload)
+				.map(Double::parseDouble).collect(toList()), everyItem(is(positive())));
+	}
+
+	@Property
+	void forEachOverallDistanceThereIsASingleDistance(@ForAll("positionsOnTable") List<RelativePosition> positions,
+			@ForAll("table") Table table) {
+		statistics(positions);
+		List<Message> processed = process(positions, table).collect(toList());
+		assertThat(processed.stream().filter(topicIs(BALL_OVERALL_DISTANCE_CM)).count(),
+				is(processed.stream().filter(topicIs(BALL_DISTANCE_CM)).count()));
+	}
+
+	@Property
+	void overallDistanceIsSumOfSingleDistances(@ForAll("positionsOnTable") List<RelativePosition> positions,
+			@ForAll("table") Table table) {
+		statistics(positions);
+		List<Message> processed = process(positions, table).collect(toList());
+		OfDouble singles = doublePayload(processed, topicIs(BALL_DISTANCE_CM)).iterator();
+		OfDouble overalls = doublePayload(processed, topicIs(BALL_OVERALL_DISTANCE_CM)).iterator();
+
+		double sum = 0.0;
+		while (singles.hasNext() && overalls.hasNext()) {
+			assertThat(overalls.nextDouble(), is(sum += singles.nextDouble()));
+		}
+		assertThat(singles.hasNext(), is(overalls.hasNext()));
+	}
+
 	private void statistics(Collection<?> col) {
 		Statistics.collect(col.size() < 50 ? "<50" : col.size() < 100 ? "<100" : ">=100");
 	}
@@ -250,12 +288,16 @@ class DetectionExamples {
 		return predicates.reduce(Predicate::or).map(Predicate::negate).orElse(m -> true);
 	}
 
-	static Predicate<Message> topicStartsWith(String topic) {
-		return m -> m.getTopic().startsWith(topic);
-	}
-
 	static Predicate<Message> payloadIs(String value) {
 		return m -> m.getPayload().equals(value);
+	}
+
+	DoubleStream doublePayload(List<Message> messages, Predicate<Message> filter) {
+		return doublePayload(messages.stream(), filter);
+	}
+
+	DoubleStream doublePayload(Stream<Message> messages, Predicate<Message> filter) {
+		return messages.filter(filter).map(Message::getPayload).mapToDouble(Double::parseDouble);
 	}
 
 	private Matcher<Double> positive() {
@@ -682,7 +724,7 @@ class DetectionExamples {
 		}
 
 	}
-	
+
 	static class PositionSequenceBuilder {
 
 		public static final long DEFAULT_DURATION = SECONDS.toMillis(1);

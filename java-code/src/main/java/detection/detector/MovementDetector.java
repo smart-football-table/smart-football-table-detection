@@ -1,5 +1,8 @@
 package detection.detector;
 
+import static detection.data.unit.DistanceUnit.CENTIMETER;
+
+import detection.data.Distance;
 import detection.data.Movement;
 import detection.data.position.AbsolutePosition;
 import detection.data.position.RelativePosition;
@@ -18,7 +21,7 @@ public class MovementDetector implements Detector {
 	private final MovementDetector.Listener listener;
 
 	public static interface Listener {
-		void movement(Movement movement);
+		void movement(Movement movement, Distance overallDistance);
 	}
 
 	private MovementDetector(MovementDetector.Listener listener) {
@@ -26,13 +29,15 @@ public class MovementDetector implements Detector {
 	}
 
 	private AbsolutePosition prevPos;
+	private Distance overallDistance = new Distance(0, CENTIMETER);
 
 	@Override
 	public void detect(AbsolutePosition pos) {
 		RelativePosition relPos = pos.getRelativePosition();
 		if (!relPos.isNull()) {
 			if (prevPos != null) {
-				listener.movement(new Movement(prevPos, pos));
+				Movement movement = new Movement(prevPos, pos);
+				listener.movement(movement, (overallDistance = overallDistance.add(movement.distance())));
 			}
 			prevPos = pos;
 		}

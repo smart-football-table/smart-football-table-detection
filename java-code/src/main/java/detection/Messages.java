@@ -9,6 +9,7 @@ import static java.util.stream.Collectors.joining;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
+import detection.data.Distance;
 import detection.data.Message;
 import detection.data.Movement;
 import detection.data.position.AbsolutePosition;
@@ -35,10 +36,11 @@ public class Messages {
 		return "{ \"x\":" + pos.getX() + ", \"y\":" + pos.getY() + " }";
 	}
 
-	public void movement(Movement m) {
-		publish(message("ball/distance/cm", m.distance(CENTIMETER)));
-		publish(message("ball/velocity/mps", m.velocity(MPS)));
-		publish(message("ball/velocity/kmh", m.velocity(KMH)));
+	public void movement(Movement movement, Distance overallDistance) {
+		publish(message("ball/distance/cm", movement.distance(CENTIMETER)));
+		publish(message("ball/velocity/mps", movement.velocity(MPS)));
+		publish(message("ball/velocity/kmh", movement.velocity(KMH)));
+		publish(message("ball/distance/overall/cm", overallDistance.value(CENTIMETER)));
 	}
 
 	public void teamScored(int teamid, int score) {

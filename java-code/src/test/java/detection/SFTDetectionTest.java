@@ -265,9 +265,20 @@ class SFTDetectionTest {
 	@Test
 	void whenTwoPositionsAreRead_VelocityGetsPublished() throws IOException {
 		givenATableOfSize(100, 80);
-		givenInputToProcessIs(ball().at(anyCorner()).thenAfter(1, SECONDS).at(lowerRightCorner()));
+		givenInputToProcessIs(ball().at(upperLeftCorner()).thenAfter(1, SECONDS).at(lowerRightCorner()));
 		whenInputWasProcessed();
-		thenDistanceInCentimetersAndVelocityArePublished(128.06248474865697, 1.2806248474865697, 4.610249450951652);
+		assertOneMessageWithPayload(messagesWithTopic("ball/distance/cm"), is(String.valueOf(128.06248474865697)));
+		assertOneMessageWithPayload(messagesWithTopic("ball/velocity/mps"), is(String.valueOf(1.2806248474865697)));
+		assertOneMessageWithPayload(messagesWithTopic("ball/velocity/kmh"), is(String.valueOf(4.610249450951652)));
+	}
+
+	@Test
+	void overallDistance() throws IOException {
+		givenATableOfSize(100, 80);
+		BallPosBuilder base = kickoff();
+		givenInputToProcessIs(ball().at(base).at(base.left(0.1)).at(base.right(0.1)));
+		whenInputWasProcessed();
+		thenPayloadsWithTopicAre("ball/distance/overall/cm", String.valueOf(10.0), String.valueOf(20.0));
 	}
 
 	@Test
@@ -590,12 +601,6 @@ class SFTDetectionTest {
 
 	public void setInProgressConsumer(Consumer<RelativePosition> inProgressConsumer) {
 		this.inProgressConsumer = inProgressConsumer;
-	}
-
-	private void thenDistanceInCentimetersAndVelocityArePublished(double centimeters, double mps, double kmh) {
-		assertOneMessageWithPayload(messagesWithTopic("ball/distance/cm"), is(String.valueOf(centimeters)));
-		assertOneMessageWithPayload(messagesWithTopic("ball/velocity/mps"), is(String.valueOf(mps)));
-		assertOneMessageWithPayload(messagesWithTopic("ball/velocity/kmh"), is(String.valueOf(kmh)));
 	}
 
 	private double centerX() {
