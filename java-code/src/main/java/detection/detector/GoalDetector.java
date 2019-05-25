@@ -80,6 +80,7 @@ public class GoalDetector implements Detector {
 	private class WaitForBallAfterGoal implements GoalDetector.State {
 
 		private final int teamid;
+		private WaitForBallOnMiddleLine waitForBallOnMiddleLine = new WaitForBallOnMiddleLine();
 
 		public WaitForBallAfterGoal(int teamid) {
 			this.teamid = teamid;
@@ -90,14 +91,16 @@ public class GoalDetector implements Detector {
 			if (pos.isNull()) {
 				return this;
 			}
-			return ballIsInCorner(pos) ? //
-					new RevertGoal(teamid) : //
-					new WaitForBallOnMiddleLine().update(pos);
+			return ballIsInCorner(pos) //
+					? new RevertGoal(teamid) //
+					: waitForBallOnMiddleLine.ballAtMiddleLine(pos) //
+							? waitForBallOnMiddleLine.update(pos) //
+							: this;
 		}
 
 		private boolean ballIsInCorner(AbsolutePosition pos) {
 			RelativePosition normalized = pos.getRelativePosition().normalizeX().normalizeY();
-			return normalized.getX() >= 0.99 && normalized.getY() >= 0.99;
+			return normalized.getX() >= 1.00 - 0.10 && normalized.getY() >= 1.00 - 0.10;
 		}
 
 	}

@@ -27,7 +27,11 @@ public class Movement {
 	}
 
 	public double distance(DistanceUnit target) {
-		return distance.value(target);
+		return distance().value(target);
+	}
+
+	public Distance distance() {
+		return distance;
 	}
 
 	public long duration(TimeUnit target) {

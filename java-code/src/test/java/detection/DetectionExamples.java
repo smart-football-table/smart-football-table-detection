@@ -4,6 +4,8 @@ import static com.jayway.jsonpath.matchers.JsonPathMatchers.isJson;
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.withJsonPath;
 import static detection.DetectionExamples.GameSequenceBuilder.gameSequence;
 import static detection.DetectionExamples.GameSituationBuilder.gameSituation;
+import static detection.Topic.BALL_DISTANCE_CM;
+import static detection.Topic.BALL_OVERALL_DISTANCE_CM;
 import static detection.Topic.BALL_POSITION_ABS;
 import static detection.Topic.BALL_POSITION_REL;
 import static detection.Topic.BALL_VELOCITY_KMH;
@@ -17,7 +19,6 @@ import static detection.Topic.TEAM_SCORE_LEFT;
 import static detection.Topic.TEAM_SCORE_RIGHT;
 import static detection.data.position.RelativePosition.create;
 import static detection.data.position.RelativePosition.noPosition;
-import static java.lang.Math.abs;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -47,10 +48,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.PrimitiveIterator.OfDouble;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -145,15 +148,15 @@ class DetectionExamples {
 	}
 
 	@Property
-	// TODO could produce falls positives: some random data could contain fouls
+	// TODO could produce falls positives: random data could contain fouls
 	void noIdleWithoutFoul(@ForAll("idle") List<RelativePosition> positions, @ForAll("table") Table table) {
 		statistics(positions);
 		List<Message> messages = process(positions, table).collect(toList());
-		Map<String, Long> data = new HashMap<>();
-		data.put("foul", messages.stream().filter(topicIs(GAME_FOUL)).count());
-		data.put("idleOn", messages.stream().filter(topicIs(GAME_IDLE).and(payloadIs("true"))).count());
-		data.put("idleOff", messages.stream().filter(topicIs(GAME_IDLE).and(payloadIs("false"))).count());
-		assertThat("Amount of messages not equal" + data, new HashSet<>(data.values()).size() == 1, is(true));
+		Map<String, Long> counts = new HashMap<>();
+		counts.put("foul", messages.stream().filter(topicIs(GAME_FOUL)).count());
+		counts.put("idleOn", messages.stream().filter(topicIs(GAME_IDLE).and(payloadIs("true"))).count());
+		counts.put("idleOff", messages.stream().filter(topicIs(GAME_IDLE).and(payloadIs("false"))).count());
+		assertThat("Amount of messages not equal" + counts, new HashSet<>(counts.values()).size() == 1, is(true));
 	}
 
 	@Property
@@ -221,6 +224,38 @@ class DetectionExamples {
 				.map(Double::parseDouble).collect(toList()), everyItem(is(positive())));
 	}
 
+	@Property
+	void ballDistanceForArePositive(@ForAll("positionsOnTable") List<RelativePosition> positions,
+			@ForAll("table") Table table) {
+		statistics(positions);
+		assertThat(process(positions, table).filter(topicIs(BALL_DISTANCE_CM)).map(Message::getPayload)
+				.map(Double::parseDouble).collect(toList()), everyItem(is(positive())));
+	}
+
+	@Property
+	void forEachOverallDistanceThereIsASingleDistance(@ForAll("positionsOnTable") List<RelativePosition> positions,
+			@ForAll("table") Table table) {
+		statistics(positions);
+		List<Message> processed = process(positions, table).collect(toList());
+		assertThat(processed.stream().filter(topicIs(BALL_OVERALL_DISTANCE_CM)).count(),
+				is(processed.stream().filter(topicIs(BALL_DISTANCE_CM)).count()));
+	}
+
+	@Property
+	void overallDistanceIsSumOfSingleDistances(@ForAll("positionsOnTable") List<RelativePosition> positions,
+			@ForAll("table") Table table) {
+		statistics(positions);
+		List<Message> processed = process(positions, table).collect(toList());
+		OfDouble singles = doublePayload(processed, topicIs(BALL_DISTANCE_CM)).iterator();
+		OfDouble overalls = doublePayload(processed, topicIs(BALL_OVERALL_DISTANCE_CM)).iterator();
+
+		double sum = 0.0;
+		while (singles.hasNext() && overalls.hasNext()) {
+			assertThat(overalls.nextDouble(), is(sum += singles.nextDouble()));
+		}
+		assertThat(singles.hasNext(), is(overalls.hasNext()));
+	}
+
 	private void statistics(Collection<?> col) {
 		Statistics.collect(col.size() < 50 ? "<50" : col.size() < 100 ? "<100" : ">=100");
 	}
@@ -250,12 +285,16 @@ class DetectionExamples {
 		return predicates.reduce(Predicate::or).map(Predicate::negate).orElse(m -> true);
 	}
 
-	static Predicate<Message> topicStartsWith(String topic) {
-		return m -> m.getTopic().startsWith(topic);
-	}
-
 	static Predicate<Message> payloadIs(String value) {
 		return m -> m.getPayload().equals(value);
+	}
+
+	DoubleStream doublePayload(List<Message> messages, Predicate<Message> filter) {
+		return doublePayload(messages.stream(), filter);
+	}
+
+	DoubleStream doublePayload(Stream<Message> messages, Predicate<Message> filter) {
+		return messages.filter(filter).map(Message::getPayload).mapToDouble(Double::parseDouble);
 	}
 
 	private Matcher<Double> positive() {
@@ -294,7 +333,8 @@ class DetectionExamples {
 	private Arbitrary<List<RelativePosition>> goalSituationsLeft() {
 		return anyTimestamp(ts -> //
 		gameSituation(ts) //
-				.aKickoffSequence().ofDuration(longs().between(1, 1_000), MILLISECONDS).add(ts).addScoreLeftSequence() //
+				.aKickoffSequence().ofDuration(longs().between(1, 1_000), MILLISECONDS).add(ts) //
+				.addScoreLeftSequence() //
 				.addBallNotInCornerSequence().build());
 	}
 
@@ -302,7 +342,8 @@ class DetectionExamples {
 	private Arbitrary<List<RelativePosition>> goalSituationsRight() {
 		return anyTimestamp(ts -> //
 		gameSituation(ts) //
-				.aKickoffSequence().ofDuration(longs().between(1, 1_000), MILLISECONDS).add(ts).addScoreRightSequence() //
+				.aKickoffSequence().ofDuration(longs().between(1, 1_000), MILLISECONDS).add(ts) //
+				.addScoreRightSequence() //
 				.addBallNotInCornerSequence().build());
 	}
 
@@ -353,7 +394,7 @@ class DetectionExamples {
 
 		private static final double MIDDLE_LINE_DRIFT = 0.05;
 		private static final double FRONT_OF_GOAL_DRIFT = 0.3;
-		private static final double CORNER_DRIFT = 0.01;
+		private static final double CORNER_DRIFT = 0.10;
 
 		private class DurationSequence extends Sequence {
 
@@ -370,8 +411,8 @@ class DetectionExamples {
 			}
 
 			private Arbitrary<List<RelativePosition>> collect(Arbitrary<RelativePosition> positionArbitrary) {
-				return forDuration.flatMap(minDuration -> arbitraryCollect(positionArbitrary,
-						positions -> durationReached(positions, minDuration)));
+				return forDuration.flatMap(
+						minDuration -> positionArbitrary.collect(positions -> durationReached(positions, minDuration)));
 			}
 
 			private boolean durationReached(List<RelativePosition> positions, long minDuration) {
@@ -385,10 +426,6 @@ class DetectionExamples {
 				RelativePosition first = positions.get(0);
 				RelativePosition last = positions.get(positions.size() - 1);
 				return last.getTimestamp() - first.getTimestamp();
-			}
-
-			private <T> Arbitrary<List<T>> arbitraryCollect(Arbitrary<T> elementArbitrary, Predicate<List<T>> until) {
-				return new ArbitraryCollect<>(elementArbitrary, until);
 			}
 
 		}
@@ -414,7 +451,7 @@ class DetectionExamples {
 		class Sizeable {
 
 			private Arbitrary<RelativePosition> arbitrary;
-			private Integer minSize;
+			private Integer minSize, maxSize;
 			private boolean unique;
 
 			private Sizeable(Arbitrary<RelativePosition> arbitrary) {
@@ -426,9 +463,16 @@ class DetectionExamples {
 				return this;
 			}
 
+			private Sizeable between(int minSize, int maxSize) {
+				this.minSize = minSize;
+				this.maxSize = maxSize;
+				return this;
+			}
+
 			private GameSituationBuilder addSequence() {
 				SizableArbitrary<List<RelativePosition>> list = arbitrary.list();
-				Arbitrary<List<RelativePosition>> seq = minSize == null ? list : list.ofMinSize(minSize);
+				list = minSize == null ? list : list.ofMinSize(minSize);
+				Arbitrary<List<RelativePosition>> seq = maxSize == null ? list : list.ofMaxSize(maxSize);
 				seq = unique ? seq.unique() : seq;
 				return GameSituationBuilder.this.addSequence(seq);
 			}
@@ -471,8 +515,9 @@ class DetectionExamples {
 		}
 
 		static boolean isCorner(RelativePosition pos) {
-			return CENTER + abs(CENTER - pos.getX()) >= TABLE_MAX - CORNER_DRIFT
-					&& CENTER + abs(CENTER - pos.getY()) >= TABLE_MAX - CORNER_DRIFT;
+			RelativePosition normalized = pos.normalizeX().normalizeY();
+			return normalized.getX() >= (TABLE_MAX - CORNER_DRIFT) //
+					&& normalized.getY() >= (TABLE_MAX - CORNER_DRIFT);
 		}
 
 		Sizeable anywhereOnTableSizeable() {
@@ -502,8 +547,7 @@ class DetectionExamples {
 		}
 
 		GameSituationBuilder addBallNotInCornerSequence() {
-			return anywhereOnTableSizeable().filter(p -> !isCorner(p)).elementsMin(1).addSequence()
-					.anywhereOnTableSizeable().addSequence();
+			return anywhereOnTableSizeable().filter(p -> !isCorner(p)).between(0, 50).addSequence();
 		}
 
 		GameSituationBuilder addIdleSequence() {
@@ -682,7 +726,7 @@ class DetectionExamples {
 		}
 
 	}
-	
+
 	static class PositionSequenceBuilder {
 
 		public static final long DEFAULT_DURATION = SECONDS.toMillis(1);
@@ -705,9 +749,8 @@ class DetectionExamples {
 
 		public Arbitrary<List<Tuple2<Long, Function<Long, RelativePosition>>>> build(
 				Arbitrary<Long> frequencyArbitrary) {
-			Arbitrary<List<Long>> timestamps = durationArbitrary
-					.flatMap(durationMillis -> arbitraryCollect(frequencyArbitrary,
-							base -> durationReached(base, durationMillis)));
+			Arbitrary<List<Long>> timestamps = durationArbitrary.flatMap(
+					durationMillis -> frequencyArbitrary.collect(base -> durationReached(base, durationMillis)));
 
 			return timestamps.flatMap(stamps -> {
 				// the list of position creators must have the same length
@@ -730,10 +773,6 @@ class DetectionExamples {
 		static <T, U> List<Tuple2<T, U>> zipLists(List<T> stamps, List<U> creators) {
 			return IntStream.range(0, stamps.size()).mapToObj(i -> Tuple.of(stamps.get(i), creators.get(i)))
 					.collect(toList());
-		}
-
-		static <T> Arbitrary<List<T>> arbitraryCollect(Arbitrary<T> elementArbitrary, Predicate<List<T>> until) {
-			return new ArbitraryCollect<>(elementArbitrary, until);
 		}
 
 	}

@@ -16,4 +16,12 @@ public class Distance {
 		return distanceUnit.convert(value, target);
 	}
 
+	public Distance add(Distance other) {
+		if (other.distanceUnit == distanceUnit) {
+			return new Distance(other.value + value, distanceUnit);
+		}
+		// TODO convert to lower of other.distanceUnit and distanceUnit and add
+		throw new IllegalStateException("not yet impleemnted");
+	}
+
 }
