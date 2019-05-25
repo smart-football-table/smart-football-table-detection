@@ -411,8 +411,8 @@ class DetectionExamples {
 			}
 
 			private Arbitrary<List<RelativePosition>> collect(Arbitrary<RelativePosition> positionArbitrary) {
-				return forDuration.flatMap(minDuration -> arbitraryCollect(positionArbitrary,
-						positions -> durationReached(positions, minDuration)));
+				return forDuration.flatMap(
+						minDuration -> positionArbitrary.collect(positions -> durationReached(positions, minDuration)));
 			}
 
 			private boolean durationReached(List<RelativePosition> positions, long minDuration) {
@@ -426,10 +426,6 @@ class DetectionExamples {
 				RelativePosition first = positions.get(0);
 				RelativePosition last = positions.get(positions.size() - 1);
 				return last.getTimestamp() - first.getTimestamp();
-			}
-
-			private <T> Arbitrary<List<T>> arbitraryCollect(Arbitrary<T> elementArbitrary, Predicate<List<T>> until) {
-				return new ArbitraryCollect<>(elementArbitrary, until);
 			}
 
 		}
@@ -753,9 +749,8 @@ class DetectionExamples {
 
 		public Arbitrary<List<Tuple2<Long, Function<Long, RelativePosition>>>> build(
 				Arbitrary<Long> frequencyArbitrary) {
-			Arbitrary<List<Long>> timestamps = durationArbitrary
-					.flatMap(durationMillis -> arbitraryCollect(frequencyArbitrary,
-							base -> durationReached(base, durationMillis)));
+			Arbitrary<List<Long>> timestamps = durationArbitrary.flatMap(
+					durationMillis -> frequencyArbitrary.collect(base -> durationReached(base, durationMillis)));
 
 			return timestamps.flatMap(stamps -> {
 				// the list of position creators must have the same length
@@ -778,10 +773,6 @@ class DetectionExamples {
 		static <T, U> List<Tuple2<T, U>> zipLists(List<T> stamps, List<U> creators) {
 			return IntStream.range(0, stamps.size()).mapToObj(i -> Tuple.of(stamps.get(i), creators.get(i)))
 					.collect(toList());
-		}
-
-		static <T> Arbitrary<List<T>> arbitraryCollect(Arbitrary<T> elementArbitrary, Predicate<List<T>> until) {
-			return new ArbitraryCollect<>(elementArbitrary, until);
 		}
 
 	}
