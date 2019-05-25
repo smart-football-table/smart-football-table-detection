@@ -37,7 +37,6 @@ import java.util.stream.Stream;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.Test;
 
-import detection.SFTDetection;
 import detection.SFTDetectionTest.StdInBuilder.BallPosBuilder;
 import detection.data.Message;
 import detection.data.Table;
@@ -372,6 +371,15 @@ class SFTDetectionTest {
 		givenATableOfAnySize();
 		givenFrontOfGoalPercentage(20);
 		givenInputToProcessIs(ball().prepareForLeftGoal().then().score().then(anyCorner()));
+		whenInputWasProcessed();
+		thenPayloadsWithTopicAre("team/score/0", "1", "0");
+	}
+
+	@Test
+	void alsoRevertsIfBallIsDetectedSomewhereElseAfterGoalAndThenInTheCorner() throws IOException {
+		givenATableOfAnySize();
+		givenFrontOfGoalPercentage(20);
+		givenInputToProcessIs(ball().prepareForLeftGoal().then().score().then(pos(0.0, 0.5)).then(anyCorner()));
 		whenInputWasProcessed();
 		thenPayloadsWithTopicAre("team/score/0", "1", "0");
 	}
