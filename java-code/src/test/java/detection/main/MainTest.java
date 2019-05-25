@@ -15,8 +15,6 @@ import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
 
-import detection.main.Main;
-
 class MainTest {
 
 	@Test

@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.function.Consumer;
 
-import detection.SFTDetection;
 import detection.data.Message;
 import detection.data.Table;
 import detection.detector.GoalDetector;
