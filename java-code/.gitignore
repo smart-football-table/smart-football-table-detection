@@ -3,3 +3,4 @@
 /target/
 /confFile.txt
 /.jqwik-database
+/bin/
