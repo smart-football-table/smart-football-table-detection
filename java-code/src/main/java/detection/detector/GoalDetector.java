@@ -100,7 +100,7 @@ public class GoalDetector implements Detector {
 
 		private boolean ballIsInCorner(AbsolutePosition pos) {
 			RelativePosition normalized = pos.getRelativePosition().normalizeX().normalizeY();
-			return normalized.getX() >= 0.99 && normalized.getY() >= 0.99;
+			return normalized.getX() >= 1.00 - 0.10 && normalized.getY() >= 1.00 - 0.10;
 		}
 
 	}

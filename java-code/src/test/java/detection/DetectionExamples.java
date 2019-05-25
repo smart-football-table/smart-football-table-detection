@@ -19,7 +19,6 @@ import static detection.Topic.TEAM_SCORE_LEFT;
 import static detection.Topic.TEAM_SCORE_RIGHT;
 import static detection.data.position.RelativePosition.create;
 import static detection.data.position.RelativePosition.noPosition;
-import static java.lang.Math.abs;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -35,7 +34,6 @@ import static net.jqwik.api.Arbitraries.longs;
 import static net.jqwik.api.Combinators.combine;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.instanceOf;
@@ -48,7 +46,6 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.PrimitiveIterator.OfDouble;
@@ -151,15 +148,15 @@ class DetectionExamples {
 	}
 
 	@Property
-	// TODO could produce falls positives: some random data could contain fouls
+	// TODO could produce falls positives: random data could contain fouls
 	void noIdleWithoutFoul(@ForAll("idle") List<RelativePosition> positions, @ForAll("table") Table table) {
 		statistics(positions);
 		List<Message> messages = process(positions, table).collect(toList());
-		Map<String, Long> data = new HashMap<>();
-		data.put("foul", messages.stream().filter(topicIs(GAME_FOUL)).count());
-		data.put("idleOn", messages.stream().filter(topicIs(GAME_IDLE).and(payloadIs("true"))).count());
-		data.put("idleOff", messages.stream().filter(topicIs(GAME_IDLE).and(payloadIs("false"))).count());
-		assertThat("Amount of messages not equal" + data, new HashSet<>(data.values()).size() == 1, is(true));
+		Map<String, Long> counts = new HashMap<>();
+		counts.put("foul", messages.stream().filter(topicIs(GAME_FOUL)).count());
+		counts.put("idleOn", messages.stream().filter(topicIs(GAME_IDLE).and(payloadIs("true"))).count());
+		counts.put("idleOff", messages.stream().filter(topicIs(GAME_IDLE).and(payloadIs("false"))).count());
+		assertThat("Amount of messages not equal" + counts, new HashSet<>(counts.values()).size() == 1, is(true));
 	}
 
 	@Property
@@ -336,7 +333,8 @@ class DetectionExamples {
 	private Arbitrary<List<RelativePosition>> goalSituationsLeft() {
 		return anyTimestamp(ts -> //
 		gameSituation(ts) //
-				.aKickoffSequence().ofDuration(longs().between(1, 1_000), MILLISECONDS).add(ts).addScoreLeftSequence() //
+				.aKickoffSequence().ofDuration(longs().between(1, 1_000), MILLISECONDS).add(ts) //
+				.addScoreLeftSequence() //
 				.addBallNotInCornerSequence().build());
 	}
 
@@ -344,7 +342,8 @@ class DetectionExamples {
 	private Arbitrary<List<RelativePosition>> goalSituationsRight() {
 		return anyTimestamp(ts -> //
 		gameSituation(ts) //
-				.aKickoffSequence().ofDuration(longs().between(1, 1_000), MILLISECONDS).add(ts).addScoreRightSequence() //
+				.aKickoffSequence().ofDuration(longs().between(1, 1_000), MILLISECONDS).add(ts) //
+				.addScoreRightSequence() //
 				.addBallNotInCornerSequence().build());
 	}
 
@@ -395,7 +394,7 @@ class DetectionExamples {
 
 		private static final double MIDDLE_LINE_DRIFT = 0.05;
 		private static final double FRONT_OF_GOAL_DRIFT = 0.3;
-		private static final double CORNER_DRIFT = 0.01;
+		private static final double CORNER_DRIFT = 0.10;
 
 		private class DurationSequence extends Sequence {
 
@@ -456,7 +455,7 @@ class DetectionExamples {
 		class Sizeable {
 
 			private Arbitrary<RelativePosition> arbitrary;
-			private Integer minSize;
+			private Integer minSize, maxSize;
 			private boolean unique;
 
 			private Sizeable(Arbitrary<RelativePosition> arbitrary) {
@@ -468,9 +467,16 @@ class DetectionExamples {
 				return this;
 			}
 
+			private Sizeable between(int minSize, int maxSize) {
+				this.minSize = minSize;
+				this.maxSize = maxSize;
+				return this;
+			}
+
 			private GameSituationBuilder addSequence() {
 				SizableArbitrary<List<RelativePosition>> list = arbitrary.list();
-				Arbitrary<List<RelativePosition>> seq = minSize == null ? list : list.ofMinSize(minSize);
+				list = minSize == null ? list : list.ofMinSize(minSize);
+				Arbitrary<List<RelativePosition>> seq = maxSize == null ? list : list.ofMaxSize(maxSize);
 				seq = unique ? seq.unique() : seq;
 				return GameSituationBuilder.this.addSequence(seq);
 			}
@@ -513,8 +519,9 @@ class DetectionExamples {
 		}
 
 		static boolean isCorner(RelativePosition pos) {
-			return CENTER + abs(CENTER - pos.getX()) >= TABLE_MAX - CORNER_DRIFT
-					&& CENTER + abs(CENTER - pos.getY()) >= TABLE_MAX - CORNER_DRIFT;
+			RelativePosition normalized = pos.normalizeX().normalizeY();
+			return normalized.getX() >= (TABLE_MAX - CORNER_DRIFT) //
+					&& normalized.getY() >= (TABLE_MAX - CORNER_DRIFT);
 		}
 
 		Sizeable anywhereOnTableSizeable() {
@@ -544,8 +551,7 @@ class DetectionExamples {
 		}
 
 		GameSituationBuilder addBallNotInCornerSequence() {
-			return anywhereOnTableSizeable().filter(p -> !isCorner(p)).elementsMin(1).addSequence()
-					.anywhereOnTableSizeable().addSequence();
+			return anywhereOnTableSizeable().filter(p -> !isCorner(p)).between(0, 50).addSequence();
 		}
 
 		GameSituationBuilder addIdleSequence() {
