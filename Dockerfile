@@ -1,15 +1,22 @@
-# base image
-FROM valian/docker-python-opencv-ffmpeg
+# our base build image
+FROM maven:3.6-jdk-8 as maven
 
-COPY requirements.txt ./
-RUN pip install -r requirements.txt
+WORKDIR /project
+COPY ./java-code/pom.xml ./pom.xml
+COPY ./java-code/src ./src
+RUN mvn package
+RUN mvn dependency:copy-dependencies -DincludeScope=runtime -DoutputDirectory=/project/target/copy-dependencies-lib
 
-# add code
-RUN mkdir /usr/src/sft
-COPY . /usr/src/sft
 
-RUN apt-get update
-RUN apt-get install -y openjdk-8-jdk
-RUN apt-get install -y maven
+FROM nvidia/cuda
+COPY --from=maven /project/target/copy-dependencies-lib /app/lib
+COPY --from=maven /project/target/detection-*.jar /app/app.jar
+RUN apt-get update && apt-get -y install openjdk-8-jre
 
-RUN mvn -f /usr/src/sft/java-code -T 4 clean install
+# copy python-code, git ckone darknet
+# COPY requirements.txt ./
+# RUN pip install -r requirements.txt
+
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+CMD []
+
