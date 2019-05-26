@@ -118,13 +118,6 @@ def YOLO():
         except Exception:
             pass
     cap = cv2.VideoCapture(pathToFile)
-    #cap = cv2.VideoCapture("/home/marco/Schreibtisch/testvideos/testVid_ballUpperLeft.avi")
-    #cap.set(3, 1280)
-    #cap.set(4, 720)
-    #out = cv2.VideoWriter(
-    #    "output.avi", cv2.VideoWriter_fourcc(*"MJPG"), 10.0,
-    #    (darknet.network_width(netMain), darknet.network_height(netMain)))
-    #print("Starting the YOLO loop...")
 
     width = int(cap.get(3))  # float
     height = int(cap.get(4)) # float
@@ -182,8 +175,12 @@ def YOLO():
             cv2.line(frame_resized, pts[i - 1], pts[i], (0, 255, 0), thickness)
 
 
-        actualPointX = position[0]
-        actualPointY = position[1]
+        if(position[0]==-1):
+            actualPointX = position[0]
+            actualPointY = position[1]
+        else:
+            actualPointX = position[0]/frame_resized.shape[1]
+            actualPointY = position[1]/frame_resized.shape[0]
         
         timeAsString = str(time.time())
 
