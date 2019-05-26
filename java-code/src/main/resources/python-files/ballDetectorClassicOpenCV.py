@@ -87,7 +87,7 @@ while(True):
         pts.appendleft(position)
     
     # loop over the set of tracked points
-    for i in xrange(1, len(pts)):
+    for i in range(1, len(pts)):
         # if either of the tracked points are None, ignore
         # them
         if pts[i - 1] is None or pts[i] is None:
@@ -97,9 +97,13 @@ while(True):
         # draw the connecting lines
         thickness = int(np.sqrt(200 / float(i + 1)) * 2)
         cv.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
-        
-    actualPointX = position[0]
-    actualPointY = position[1]
+    
+    if(position[0]==-1):
+        actualPointX = position[0]
+        actualPointY = position[1]
+    else:
+        actualPointX = position[0]/frame.shape[1]
+        actualPointY = position[1]/frame.shape[0]
 
     timeAsString = str(time.time())
 
@@ -109,8 +113,6 @@ while(True):
     timeAsString = timeAsString.replace(".", "")
  
     print(timeAsString + "|" + str(actualPointX) + "|" + str(actualPointY))
- 
-        
     if args["record"] is not 'empty':
         out.write(frame)
     # uncomment to see vid through test
