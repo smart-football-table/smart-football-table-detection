@@ -613,13 +613,13 @@ class DetectionExamples {
 
 		Arbitrary<List<RelativePosition>> noMoveOrNoBallForAtLeast(int duration, TimeUnit minutes) {
 			return frequency( //
-					Tuple.of(90, noBallForAtLeast(duration, minutes)), //
-					Tuple.of(90, noMoveForAtLeast(duration, minutes))).flatMap(identity() //
-			);
+					Tuple.of(10, noBallForAtLeast(duration, minutes)), //
+					Tuple.of(90, noMoveForAtLeast(duration, minutes)) //
+			).flatMap(identity());
 		}
 
 		Arbitrary<List<RelativePosition>> noMoveForAtLeast(int duration, TimeUnit minutes) {
-			// TODO depend on duration
+			// TODO use #until
 			IntegerArbitrary amount = integers().between(100, 1_000);
 			Arbitrary<Long> xxxx = longs().between(SECONDS.toMillis(1), SECONDS.toMillis(10));
 			return combine(xxxx, amount, wholeTable(), wholeTable()) //
@@ -628,7 +628,7 @@ class DetectionExamples {
 		}
 
 		Arbitrary<List<RelativePosition>> noBallForAtLeast(int duration, TimeUnit minutes) {
-			// TODO depend on duration
+			// TODO use #until
 			IntegerArbitrary amount = integers().between(100, 1_000);
 			Arbitrary<Long> xxxx = longs().between(SECONDS.toMillis(1), SECONDS.toMillis(10));
 			return combine(xxxx, amount) //
