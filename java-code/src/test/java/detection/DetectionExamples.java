@@ -19,6 +19,7 @@ import static detection.Topic.TEAM_SCORE_LEFT;
 import static detection.Topic.TEAM_SCORE_RIGHT;
 import static detection.data.position.RelativePosition.create;
 import static detection.data.position.RelativePosition.noPosition;
+import static detection.data.unit.DistanceUnit.CENTIMETER;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -59,6 +60,7 @@ import java.util.stream.Stream;
 
 import org.hamcrest.Matcher;
 
+import detection.data.Distance;
 import detection.data.Message;
 import detection.data.Table;
 import detection.data.position.RelativePosition;
@@ -172,8 +174,8 @@ class DetectionExamples {
 		statistics(positions);
 		assertThat(
 				process(positions, table).filter(topicIs(BALL_POSITION_REL)).map(Message::getPayload).collect(toList()),
-				everyItem( //
-						allOf(hasJsonNumberBetween("x", 0, 1), hasJsonNumberBetween("y", 0, 1))));
+				everyItem(allOf( //
+						hasJsonNumberBetween("x", 0, 1), hasJsonNumberBetween("y", 0, 1))));
 	}
 
 	@Property
@@ -189,9 +191,9 @@ class DetectionExamples {
 		statistics(positions);
 		assertThat(
 				process(positions, table).filter(topicIs(BALL_POSITION_ABS)).map(Message::getPayload).collect(toList()),
-				everyItem( //
-						allOf(hasJsonNumberBetween("x", 0, table.getWidth()),
-								hasJsonNumberBetween("y", 0, table.getHeight()))));
+				everyItem(allOf( //
+						hasJsonNumberBetween("x", 0, table.getWidth().value(CENTIMETER)),
+						hasJsonNumberBetween("y", 0, table.getHeight().value(CENTIMETER)))));
 	}
 
 	@Property
@@ -260,7 +262,7 @@ class DetectionExamples {
 		Statistics.collect(col.size() < 50 ? "<50" : col.size() < 100 ? "<100" : ">=100");
 	}
 
-	private Matcher<Object> hasJsonNumberBetween(String name, int min, int max) {
+	private Matcher<Object> hasJsonNumberBetween(String name, double min, double max) {
 		return allOf( //
 				isJson(withJsonPath("$." + name, instanceOf(Number.class))), //
 				isJson(withJsonPath("$[?(@." + name + " >= " + min + " && @." + name + " <= " + max + ")]")) //
@@ -306,7 +308,8 @@ class DetectionExamples {
 		return combine( //
 				integers().greaterOrEqual(1), //
 				integers().greaterOrEqual(1)) //
-						.as((width, height) -> new Table(width, height));
+						.as((width, height) -> //
+						new Table(new Distance(width, CENTIMETER), new Distance(height, CENTIMETER)));
 	}
 
 	@Provide

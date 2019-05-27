@@ -3,6 +3,7 @@ package detection.main;
 import static detection.data.Message.message;
 import static detection.data.position.RelativePosition.create;
 import static detection.data.position.RelativePosition.noPosition;
+import static detection.data.unit.DistanceUnit.CENTIMETER;
 import static io.moquette.BrokerConstants.HOST_PROPERTY_NAME;
 import static io.moquette.BrokerConstants.PORT_PROPERTY_NAME;
 import static java.lang.System.currentTimeMillis;
@@ -37,6 +38,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import detection.SFTDetection;
+import detection.data.Distance;
 import detection.data.Message;
 import detection.data.Table;
 import detection.data.position.RelativePosition;
@@ -66,7 +68,7 @@ class MainTestIT {
 		broker = newMqttServer(LOCALHOST, brokerPort);
 		secondClient = newMqttClient(LOCALHOST, brokerPort, "client2");
 		mqttConsumer = new MqttConsumer(LOCALHOST, brokerPort);
-		sut = new SFTDetection(new Table(120, 68), mqttConsumer) //
+		sut = new SFTDetection(new Table(new Distance(120, CENTIMETER), new Distance(68, CENTIMETER)), mqttConsumer) //
 				.receiver(mqttConsumer) //
 				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40));
 

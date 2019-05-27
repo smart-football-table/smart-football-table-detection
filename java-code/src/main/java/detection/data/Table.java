@@ -7,17 +7,15 @@ import detection.data.position.RelativePosition;
 
 public class Table {
 
-	private final int width;
-	private final int height;
+	private final double widthInCm, heightInCm;
 
-	public Table(int widthInCm, int heightInCm) {
-		this.width = widthInCm;
-		this.height = heightInCm;
+	private Table(double widthInCm, double heightInCm) {
+		this.widthInCm = widthInCm;
+		this.heightInCm = heightInCm;
 	}
 
 	public Table(Distance width, Distance height) {
-		this.width = (int) width.value(CENTIMETER);
-		this.height = (int) height.value(CENTIMETER);
+		this(width.value(CENTIMETER), height.value(CENTIMETER));
 	}
 
 	public AbsolutePosition toAbsolute(RelativePosition pos) {
@@ -25,24 +23,24 @@ public class Table {
 	}
 
 	private double convertY(double y) {
-		return height * y;
+		return heightInCm * y;
 	}
 
 	private double convertX(double x) {
-		return width * x;
+		return widthInCm * x;
 	}
 
-	public int getHeight() {
-		return height;
+	public Distance getHeight() {
+		return new Distance(heightInCm, CENTIMETER);
 	}
 
-	public int getWidth() {
-		return width;
+	public Distance getWidth() {
+		return new Distance(widthInCm, CENTIMETER);
 	}
 
 	@Override
 	public String toString() {
-		return "Table [width=" + width + ", height=" + height + "]";
+		return "Table [width=" + widthInCm + ", height=" + heightInCm + "]";
 	}
 
 }
