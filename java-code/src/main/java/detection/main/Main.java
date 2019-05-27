@@ -23,6 +23,9 @@ import detection.queue.QueueConsumer;
 
 public class Main {
 
+	private static final int TABLE_WIDTH = 120;
+	private static final int TABLE_HEIGHT = 68;
+
 	private String pythonModule = "/home/nonroot/darknet/darknet_video.py";
 //	private String pythonModule = "src/main/resources/python-files/ballDetectorClassicOpenCV.py";
 
@@ -36,9 +39,10 @@ public class Main {
 
 	public Main(String... args) throws IOException {
 		MqttConsumer mqtt = mqtt("localhost", 1883);
-		SFTDetection detection = new SFTDetection(new Table(120, 68), new QueueConsumer<Message>(mqtt, 300))
-				.receiver(mqtt).withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40));
-		detection.process(process(pythonModule, args).map(oldPythonFormatParser()));
+		SFTDetection detection = new SFTDetection(new Table(TABLE_WIDTH, TABLE_HEIGHT),
+				new QueueConsumer<Message>(mqtt, 300)).receiver(mqtt)
+						.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40));
+		detection.process(process(pythonModule, args).map(fromPythonFormat()));
 	}
 
 	protected static Stream<String> process(String module, String... args) throws IOException {
@@ -59,7 +63,7 @@ public class Main {
 		return new MqttConsumer(host, port);
 	}
 
-	public static Function<String, RelativePosition> oldPythonFormatParser() {
+	public static Function<String, RelativePosition> fromPythonFormat() {
 		return new Function<String, RelativePosition>() {
 			@Override
 			public RelativePosition apply(String line) {
