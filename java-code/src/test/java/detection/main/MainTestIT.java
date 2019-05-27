@@ -38,7 +38,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import detection.SFTDetection;
-import detection.data.Distance;
 import detection.data.Message;
 import detection.data.Table;
 import detection.data.position.RelativePosition;
@@ -68,7 +67,7 @@ class MainTestIT {
 		broker = newMqttServer(LOCALHOST, brokerPort);
 		secondClient = newMqttClient(LOCALHOST, brokerPort, "client2");
 		mqttConsumer = new MqttConsumer(LOCALHOST, brokerPort);
-		sut = new SFTDetection(new Table(new Distance(120, CENTIMETER), new Distance(68, CENTIMETER)), mqttConsumer) //
+		sut = new SFTDetection(new Table(120, 68, CENTIMETER), mqttConsumer) //
 				.receiver(mqttConsumer) //
 				.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40));
 

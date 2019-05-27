@@ -1,21 +1,18 @@
 package detection.data;
 
-import static detection.data.unit.DistanceUnit.CENTIMETER;
-
 import detection.data.position.AbsolutePosition;
 import detection.data.position.RelativePosition;
+import detection.data.unit.DistanceUnit;
 
 public class Table {
 
-	private final double widthInCm, heightInCm;
+	private final double width, height;
+	private final DistanceUnit distanceUnit;
 
-	private Table(double widthInCm, double heightInCm) {
-		this.widthInCm = widthInCm;
-		this.heightInCm = heightInCm;
-	}
-
-	public Table(Distance width, Distance height) {
-		this(width.value(CENTIMETER), height.value(CENTIMETER));
+	public Table(double width, double height, DistanceUnit distanceUnit) {
+		this.width = width;
+		this.height = height;
+		this.distanceUnit = distanceUnit;
 	}
 
 	public AbsolutePosition toAbsolute(RelativePosition pos) {
@@ -23,24 +20,28 @@ public class Table {
 	}
 
 	private double convertY(double y) {
-		return heightInCm * y;
+		return height * y;
 	}
 
 	private double convertX(double x) {
-		return widthInCm * x;
+		return width * x;
 	}
 
 	public Distance getHeight() {
-		return new Distance(heightInCm, CENTIMETER);
+		return new Distance(height, distanceUnit);
 	}
 
 	public Distance getWidth() {
-		return new Distance(widthInCm, CENTIMETER);
+		return new Distance(width, distanceUnit);
+	}
+
+	public DistanceUnit getDistanceUnit() {
+		return distanceUnit;
 	}
 
 	@Override
 	public String toString() {
-		return "Table [width=" + widthInCm + ", height=" + heightInCm + "]";
+		return "Table [width=" + width + ", height=" + height + ", distanceUnit=" + distanceUnit + "]";
 	}
 
 }

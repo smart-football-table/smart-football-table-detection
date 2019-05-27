@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.function.Consumer;
 
-import detection.data.Distance;
 import detection.data.Message;
 import detection.data.Table;
 import detection.detector.GoalDetector;
@@ -27,7 +26,7 @@ public class PythonOutputProcessingMain {
 
 		try (BufferedReader reader = new BufferedReader(
 				new InputStreamReader(new FileInputStream(new File("python_output_opencv.txt"))))) {
-			new SFTDetection(new Table(new Distance(120, CENTIMETER), new Distance(68, CENTIMETER)), sysout)
+			new SFTDetection(new Table(120, 68, CENTIMETER), sysout)
 					.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40))
 					.process(reader.lines().map(Main.fromPythonFormat()));
 		}

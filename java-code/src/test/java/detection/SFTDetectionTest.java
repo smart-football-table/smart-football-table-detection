@@ -39,10 +39,10 @@ import org.hamcrest.Matcher;
 import org.junit.jupiter.api.Test;
 
 import detection.SFTDetectionTest.StdInBuilder.BallPosBuilder;
-import detection.data.Distance;
 import detection.data.Message;
 import detection.data.Table;
 import detection.data.position.RelativePosition;
+import detection.data.unit.DistanceUnit;
 import detection.detector.GoalDetector;
 import detection.parser.LineParser;
 import detection.parser.RelativeValueParser;
@@ -231,7 +231,7 @@ class SFTDetectionTest {
 
 	@Test
 	void relativeValuesGetsConvertedToAbsolutesAtKickoff() throws IOException {
-		givenATableOfSize(new Distance(100, CENTIMETER), new Distance(80, CENTIMETER));
+		givenATableOfSize(100, 80, CENTIMETER);
 		givenInputToProcessIs(ball().at(kickoff()));
 		whenInputWasProcessed();
 		thenTheRelativePositionOnTheTableIsPublished(centerX(), centerY());
@@ -240,7 +240,7 @@ class SFTDetectionTest {
 
 	@Test
 	void relativeValuesGetsConvertedToAbsolutes() throws IOException {
-		givenATableOfSize(new Distance(100, CENTIMETER), new Distance(80, CENTIMETER));
+		givenATableOfSize(100, 80, CENTIMETER);
 		givenInputToProcessIs(ball().at(pos(0.0, 1.0)));
 		whenInputWasProcessed();
 		thenTheRelativePositionOnTheTableIsPublished(0.0, 1.0);
@@ -265,7 +265,7 @@ class SFTDetectionTest {
 
 	@Test
 	void whenTwoPositionsAreRead_VelocityGetsPublished() throws IOException {
-		givenATableOfSize(new Distance(100, CENTIMETER), new Distance(80, CENTIMETER));
+		givenATableOfSize(100, 80, CENTIMETER);
 		givenInputToProcessIs(ball().at(upperLeftCorner()).thenAfter(1, SECONDS).at(lowerRightCorner()));
 		whenInputWasProcessed();
 		assertOneMessageWithPayload(messagesWithTopic("ball/distance/cm"), is(String.valueOf(128.06248474865697)));
@@ -275,7 +275,7 @@ class SFTDetectionTest {
 
 	@Test
 	void overallDistance() throws IOException {
-		givenATableOfSize(new Distance(100, CENTIMETER), new Distance(80, CENTIMETER));
+		givenATableOfSize(100, 80, CENTIMETER);
 		BallPosBuilder base = kickoff();
 		givenInputToProcessIs(ball().at(base).at(base.left(0.1)).at(base.right(0.1)));
 		whenInputWasProcessed();
@@ -621,12 +621,12 @@ class SFTDetectionTest {
 		return 0.5;
 	}
 
-	private void givenATableOfSize(Distance width, Distance height) {
-		this.sut = new SFTDetection(new Table(width, height), messageCollector);
+	private void givenATableOfSize(double width, double height, DistanceUnit distanceUnit) {
+		this.sut = new SFTDetection(new Table(width, height, distanceUnit), messageCollector);
 	}
 
 	private void givenATableOfAnySize() {
-		givenATableOfSize(new Distance(123, CENTIMETER), new Distance(45, CENTIMETER));
+		givenATableOfSize(123, 45, CENTIMETER);
 	}
 
 	private void givenInputToProcessIs(String... messages) {

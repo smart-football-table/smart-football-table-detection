@@ -60,7 +60,6 @@ import java.util.stream.Stream;
 
 import org.hamcrest.Matcher;
 
-import detection.data.Distance;
 import detection.data.Message;
 import detection.data.Table;
 import detection.data.position.RelativePosition;
@@ -192,8 +191,8 @@ class DetectionExamples {
 		assertThat(
 				process(positions, table).filter(topicIs(BALL_POSITION_ABS)).map(Message::getPayload).collect(toList()),
 				everyItem(allOf( //
-						hasJsonNumberBetween("x", 0, table.getWidth().value(CENTIMETER)),
-						hasJsonNumberBetween("y", 0, table.getHeight().value(CENTIMETER)))));
+						hasJsonNumberBetween("x", 0, table.getWidth().value(table.getDistanceUnit())),
+						hasJsonNumberBetween("y", 0, table.getHeight().value(table.getDistanceUnit())))));
 	}
 
 	@Property
@@ -308,8 +307,7 @@ class DetectionExamples {
 		return combine( //
 				integers().greaterOrEqual(1), //
 				integers().greaterOrEqual(1)) //
-						.as((width, height) -> //
-						new Table(new Distance(width, CENTIMETER), new Distance(height, CENTIMETER)));
+						.as((width, height) -> new Table(width, height, CENTIMETER));
 	}
 
 	@Provide

@@ -15,7 +15,6 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import detection.SFTDetection;
-import detection.data.Distance;
 import detection.data.Message;
 import detection.data.Table;
 import detection.data.position.RelativePosition;
@@ -26,8 +25,9 @@ import detection.queue.QueueConsumer;
 
 public class Main {
 
-	private static final Distance TABLE_WIDTH = new Distance(120, CENTIMETER);
-	private static final Distance TABLE_HEIGHT = new Distance(68, CENTIMETER);
+	private static final int TABLE_WIDTH = 120;
+	private static final int TABLE_HEIGHT = 68;
+	private static final DistanceUnit TABLE_UNIT = CENTIMETER;
 
 	private String pythonModule = "/home/nonroot/darknet/darknet_video.py";
 //	private String pythonModule = "src/main/resources/python-files/ballDetectorClassicOpenCV.py";
@@ -42,7 +42,7 @@ public class Main {
 
 	public Main(String... args) throws IOException {
 		MqttConsumer mqtt = mqtt("localhost", 1883);
-		SFTDetection detection = new SFTDetection(new Table(TABLE_WIDTH, TABLE_HEIGHT),
+		SFTDetection detection = new SFTDetection(new Table(TABLE_WIDTH, TABLE_HEIGHT, TABLE_UNIT),
 				new QueueConsumer<Message>(mqtt, 300)).receiver(mqtt)
 						.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40));
 		detection.process(process(pythonModule, args).map(fromPythonFormat()));
