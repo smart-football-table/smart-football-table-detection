@@ -64,14 +64,8 @@ public class Main {
 			@Override
 			public RelativePosition apply(String line) {
 				String[] values = line.split("\\|");
-				if (values.length == 3) {
-					System.out.println(line);
-					Long timestamp = toLong(values[0]+"0");
-					Double y = toDouble(values[2]);
-					Double x = toDouble(values[1]);
-					return create(timestamp, x == -1 ? -1 : x / 820, y == -1 ? -1 : y / 760);
-				}
-				return null;
+				return values.length == 3 ? create(toLong(values[0]) * 10, toDouble(values[1]), toDouble(values[2]))
+						: null;
 			}
 
 			private Double toDouble(String val) {
