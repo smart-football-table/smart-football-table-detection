@@ -1,6 +1,7 @@
 package detection.main;
 
 import static detection.data.position.RelativePosition.create;
+import static detection.data.unit.DistanceUnit.CENTIMETER;
 import static java.util.Collections.addAll;
 
 import java.io.BufferedReader;
@@ -14,17 +15,19 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import detection.SFTDetection;
+import detection.data.Distance;
 import detection.data.Message;
 import detection.data.Table;
 import detection.data.position.RelativePosition;
+import detection.data.unit.DistanceUnit;
 import detection.detector.GoalDetector;
 import detection.mqtt.MqttConsumer;
 import detection.queue.QueueConsumer;
 
 public class Main {
 
-	private static final int TABLE_WIDTH = 120;
-	private static final int TABLE_HEIGHT = 68;
+	private static final Distance TABLE_WIDTH = new Distance(120, CENTIMETER);
+	private static final Distance TABLE_HEIGHT = new Distance(68, CENTIMETER);
 
 	private String pythonModule = "/home/nonroot/darknet/darknet_video.py";
 //	private String pythonModule = "src/main/resources/python-files/ballDetectorClassicOpenCV.py";

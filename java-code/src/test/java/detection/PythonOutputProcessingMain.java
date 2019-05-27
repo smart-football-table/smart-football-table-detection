@@ -26,7 +26,7 @@ public class PythonOutputProcessingMain {
 				new InputStreamReader(new FileInputStream(new File("python_output_opencv.txt"))))) {
 			new SFTDetection(new Table(120, 68), sysout)
 					.withGoalConfig(new GoalDetector.Config().frontOfGoalPercentage(40))
-					.process(reader.lines().map(Main.oldPythonFormatParser()));
+					.process(reader.lines().map(Main.fromPythonFormat()));
 		}
 	}
 

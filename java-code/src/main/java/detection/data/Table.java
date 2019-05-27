@@ -1,5 +1,7 @@
 package detection.data;
 
+import static detection.data.unit.DistanceUnit.CENTIMETER;
+
 import detection.data.position.AbsolutePosition;
 import detection.data.position.RelativePosition;
 
@@ -8,9 +10,14 @@ public class Table {
 	private final int width;
 	private final int height;
 
-	public Table(int width, int height) {
-		this.width = width;
-		this.height = height;
+	public Table(int widthInCm, int heightInCm) {
+		this.width = widthInCm;
+		this.height = heightInCm;
+	}
+
+	public Table(Distance width, Distance height) {
+		this.width = (int) width.value(CENTIMETER);
+		this.height = (int) height.value(CENTIMETER);
 	}
 
 	public AbsolutePosition toAbsolute(RelativePosition pos) {
