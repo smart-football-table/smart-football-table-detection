@@ -63,11 +63,13 @@ import org.hamcrest.Matcher;
 import detection.data.Message;
 import detection.data.Table;
 import detection.data.position.RelativePosition;
+import net.jqwik.api.AfterFailureMode;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
+import net.jqwik.api.ShrinkingMode;
 import net.jqwik.api.Statistics;
 import net.jqwik.api.Tuple;
 import net.jqwik.api.Tuple.Tuple2;
@@ -184,15 +186,15 @@ class DetectionExamples {
 		return process(positions, table).filter(topicIs(BALL_POSITION_ABS)).count() == positions.size();
 	}
 
-	@Property
+	@Property(shrinking = ShrinkingMode.OFF, afterFailure = AfterFailureMode.SAMPLE_ONLY)
 	void allAbsPositionAreBetween0AndTableSize(@ForAll("positionsOnTable") List<RelativePosition> positions,
 			@ForAll("table") Table table) {
 		statistics(positions);
 		assertThat(
 				process(positions, table).filter(topicIs(BALL_POSITION_ABS)).map(Message::getPayload).collect(toList()),
 				everyItem(allOf( //
-						hasJsonNumberBetween("x", 0, table.getWidth().value(table.getDistanceUnit())),
-						hasJsonNumberBetween("y", 0, table.getHeight().value(table.getDistanceUnit())))));
+						hasJsonNumberBetween("x", 0, (int) table.getWidth().value(table.getDistanceUnit())),
+						hasJsonNumberBetween("y", 0, (int) table.getHeight().value(table.getDistanceUnit())))));
 	}
 
 	@Property
@@ -261,7 +263,7 @@ class DetectionExamples {
 		Statistics.collect(col.size() < 50 ? "<50" : col.size() < 100 ? "<100" : ">=100");
 	}
 
-	private Matcher<Object> hasJsonNumberBetween(String name, double min, double max) {
+	private Matcher<Object> hasJsonNumberBetween(String name, int min, int max) {
 		return allOf( //
 				isJson(withJsonPath("$." + name, instanceOf(Number.class))), //
 				isJson(withJsonPath("$[?(@." + name + " >= " + min + " && @." + name + " <= " + max + ")]")) //

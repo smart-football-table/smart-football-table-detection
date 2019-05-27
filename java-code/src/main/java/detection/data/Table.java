@@ -19,12 +19,12 @@ public class Table {
 		return new AbsolutePosition(pos, convertX(pos.getX()), convertY(pos.getY()));
 	}
 
-	private double convertY(double y) {
-		return height * y;
+	private int convertY(double y) {
+		return (int) (height * y);
 	}
 
-	private double convertX(double x) {
-		return width * x;
+	private int convertX(double x) {
+		return (int) (width * x);
 	}
 
 	public Distance getHeight() {
