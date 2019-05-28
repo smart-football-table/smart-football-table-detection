@@ -29,9 +29,9 @@ public class IdleDetector implements Detector {
 
 		@Override
 		public State update(AbsolutePosition pos) {
-			return pos.isNull() || pos.getRelativePosition().equalsPosition(lastMovement.getRelativePosition())
-					? new NoMovement(pos)
-					: lastMovement(pos);
+			return changed(pos, lastMovement) //
+					? lastMovement(pos) //
+					: new NoMovement(lastMovement).update(pos);
 		}
 
 	}
@@ -46,11 +46,11 @@ public class IdleDetector implements Detector {
 
 		@Override
 		public State update(AbsolutePosition pos) {
-			return pos.getRelativePosition().equalsPosition(noMovementSince.getRelativePosition()) //
-					? timeoutReached(pos, noMovementSince.getTimestamp()) //
+			return changed(pos, noMovementSince) //
+					? new Movement(pos) //
+					: timeoutReached(pos, noMovementSince.getTimestamp()) //
 							? new Idle(pos) //
-							: this //
-					: new Movement(pos);
+							: this;
 		}
 
 	}
@@ -100,10 +100,14 @@ public class IdleDetector implements Detector {
 	}
 
 	private final IdleDetector.Listener listener;
-	private State state = p -> new Movement(p);
+	private State state = Movement::new;
 
 	private IdleDetector(IdleDetector.Listener listener) {
 		this.listener = listener;
+	}
+
+	private static boolean changed(AbsolutePosition pos1, AbsolutePosition pos2) {
+		return !pos1.getRelativePosition().equalsPosition(pos2.getRelativePosition());
 	}
 
 	@Override
