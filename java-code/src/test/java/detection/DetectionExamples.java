@@ -26,7 +26,6 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.IntStream.range;
 import static net.jqwik.api.Arbitraries.constant;
 import static net.jqwik.api.Arbitraries.doubles;
 import static net.jqwik.api.Arbitraries.frequency;
@@ -74,7 +73,7 @@ import net.jqwik.api.Statistics;
 import net.jqwik.api.Tuple;
 import net.jqwik.api.Tuple.Tuple2;
 import net.jqwik.api.arbitraries.DoubleArbitrary;
-import net.jqwik.api.arbitraries.IntegerArbitrary;
+import net.jqwik.api.arbitraries.LongArbitrary;
 import net.jqwik.api.arbitraries.SizableArbitrary;
 
 class DetectionExamples {
@@ -150,7 +149,7 @@ class DetectionExamples {
 		return topic.getPredicate();
 	}
 
-	@Property
+	@Property(shrinking = ShrinkingMode.OFF, afterFailure = AfterFailureMode.SAMPLE_ONLY)
 	// TODO could produce falls positives: random data could contain fouls
 	void noIdleWithoutFoul(@ForAll("idle") List<RelativePosition> positions, @ForAll("table") Table table) {
 		statistics(positions);
@@ -369,10 +368,7 @@ class DetectionExamples {
 
 	@Provide
 	Arbitrary<List<RelativePosition>> idle() {
-		return anyTimestamp(ts -> {
-			return a(gameSituation(ts) //
-					.addIdleSequence());
-		});
+		return anyTimestamp(ts -> a(gameSituation(ts).addIdleSequence()));
 	}
 
 	@Provide
@@ -409,8 +405,8 @@ class DetectionExamples {
 			}
 
 			@Override
-			GameSituationBuilder add(AtomicLong timestamp) {
-				return addSequence(collect(base));
+			Arbitrary<List<RelativePosition>> build() {
+				return collect(base);
 			}
 
 			private Arbitrary<List<RelativePosition>> collect(Arbitrary<RelativePosition> positionArbitrary) {
@@ -441,8 +437,12 @@ class DetectionExamples {
 				this.base = base;
 			}
 
-			GameSituationBuilder add(AtomicLong timestamp) {
-				return addSequence(base.list().ofMinSize(1));
+			public GameSituationBuilder add(AtomicLong ts) {
+				return addSequence(build());
+			}
+
+			Arbitrary<List<RelativePosition>> build() {
+				return base.list().ofMinSize(1);
 			}
 
 			private Sequence ofDuration(Arbitrary<Long> between, TimeUnit timeUnit) {
@@ -542,7 +542,7 @@ class DetectionExamples {
 		}
 
 		GameSituationBuilder offTablePositions(AtomicLong timestamp) {
-			return offTableSequence().ofDuration(longs().between(2, 15), SECONDS).add(timestamp);
+			return addSequence(offTableSequence().ofDuration(longs().between(2, 15), SECONDS).build());
 		}
 
 		GameSituationBuilder addBallInCornerSequence() {
@@ -554,11 +554,36 @@ class DetectionExamples {
 		}
 
 		GameSituationBuilder addIdleSequence() {
-			return idleSequence(noMoveForAtLeast(1, MINUTES));
+			// TODO should we add at least one pos before?
+			// addSequence(noMoveOrNoBallForAtLeast(longs().between(1, 1_000),
+			// MILLISECONDS)) //
+			return addSequence(noMoveForAtLeast(longs().between(1, 5), MINUTES).build()) //
+					.anywhereOnTableSizeable().elementsMin(2).unique().addSequence();
+		}
+
+		private Sequence noMoveForAtLeast(LongArbitrary between, TimeUnit timeUnit) {
+//			Arbitrary<List<RelativePosition>> arbitrary = between
+//					.flatMap(min -> longs().between(SECONDS.toMillis(1), SECONDS.toMillis(10)).map(timeUnit::toMillis)
+//							.collect(l -> (l.get(l.size() - 1) - l.get(0)) >= min))
+//					.map(millis -> millis.stream().map(m -> create(timestamp.addAndGet(m), 0.12345, 0.54321))
+//							.collect(toList()));
+			Arbitrary<RelativePosition> base = longs().between(SECONDS.toMillis(1), SECONDS.toMillis(10)) //
+					.flatMap(millis -> {
+						return combine(wholeTable(), wholeTable()).as((x, y) -> {
+							// TODO howto get x and y that will not change?
+							return create(timestamp.addAndGet(millis), 0.12345, 0.54321);
+						});
+					});
+			return new Sequence(base).ofDuration(between, timeUnit);
+		}
+
+		private Sequence noBallForAtLeast(LongArbitrary between, TimeUnit timeUnit) {
+			return new Sequence(longs().between(SECONDS.toMillis(1), SECONDS.toMillis(10))
+					.map(millis -> noPosition(timestamp.addAndGet(millis)))).ofDuration(between, timeUnit);
 		}
 
 		GameSituationBuilder addIdleSequenceBallMaybeGone() {
-			return idleSequence(noMoveOrNoBallForAtLeast(1, MINUTES));
+			return idleSequence(noMoveOrNoBallForAtLeast(longs().between(1, 5), MINUTES));
 		}
 
 		GameSituationBuilder idleSequence(Arbitrary<List<RelativePosition>> arbitrary) {
@@ -613,29 +638,11 @@ class DetectionExamples {
 					.ofMinSize(1);
 		}
 
-		Arbitrary<List<RelativePosition>> noMoveOrNoBallForAtLeast(int duration, TimeUnit minutes) {
+		Arbitrary<List<RelativePosition>> noMoveOrNoBallForAtLeast(LongArbitrary between, TimeUnit timeUnit) {
 			return frequency( //
-					Tuple.of(10, noBallForAtLeast(duration, minutes)), //
-					Tuple.of(90, noMoveForAtLeast(duration, minutes)) //
+					Tuple.of(10, noBallForAtLeast(between, timeUnit).build()), //
+					Tuple.of(90, noMoveForAtLeast(between, timeUnit).build()) //
 			).flatMap(identity());
-		}
-
-		Arbitrary<List<RelativePosition>> noMoveForAtLeast(int duration, TimeUnit minutes) {
-			// TODO use #until
-			IntegerArbitrary amount = integers().between(100, 1_000);
-			Arbitrary<Long> xxxx = longs().between(SECONDS.toMillis(1), SECONDS.toMillis(10));
-			return combine(xxxx, amount, wholeTable(), wholeTable()) //
-					.as((millis, count, x, y) //
-					-> range(0, count).mapToObj(ignore -> create(timestamp.addAndGet(millis), x, y)).collect(toList()));
-		}
-
-		Arbitrary<List<RelativePosition>> noBallForAtLeast(int duration, TimeUnit minutes) {
-			// TODO use #until
-			IntegerArbitrary amount = integers().between(100, 1_000);
-			Arbitrary<Long> xxxx = longs().between(SECONDS.toMillis(1), SECONDS.toMillis(10));
-			return combine(xxxx, amount) //
-					.as((millis, count) //
-					-> range(0, count).mapToObj(ignore -> noPosition(timestamp.addAndGet(millis))).collect(toList()));
 		}
 
 		static double possiblySwap(double value, boolean swap) {
