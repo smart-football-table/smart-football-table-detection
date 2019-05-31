@@ -5,7 +5,6 @@ import static java.util.Collections.emptyList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.kohsuke.args4j.spi.OptionHandler;
@@ -16,15 +15,13 @@ public final class EnvVars {
 		super();
 	}
 
-	public static Stream<String> readEnvVars(@SuppressWarnings("rawtypes") List<OptionHandler> options) {
-		@SuppressWarnings("rawtypes")
-		Function<OptionHandler, List<String>> mapper = EnvVars::readEnvVar;
-		return options.stream().map(mapper).flatMap(Collection::stream);
+	public static Stream<String> readEnvVars(@SuppressWarnings("rawtypes") List<OptionHandler> handlers) {
+		return handlers.stream().map(EnvVars::readEnvVar).flatMap(Collection::stream);
 	}
 
-	private static List<String> readEnvVar(@SuppressWarnings("rawtypes") OptionHandler h) {
-		String envVar = System.getenv(h.option.metaVar());
-		return envVar == null ? emptyList() : Arrays.asList(h.option.toString(), envVar);
+	private static List<String> readEnvVar(@SuppressWarnings("rawtypes") OptionHandler handler) {
+		String envVar = System.getenv(handler.option.metaVar());
+		return envVar == null ? emptyList() : Arrays.asList(handler.option.toString(), envVar);
 	}
 
 }
