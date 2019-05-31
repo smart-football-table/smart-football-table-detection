@@ -15,6 +15,8 @@ public class FoulDetector implements Detector {
 	private static final long TIMEOUT = SECONDS.toMillis(15);
 	private static final double MOVEMENT_GREATER_THAN = 0.05;
 
+	private RelativePosition lastMovingPos;
+
 	public static FoulDetector onFoul(Listener listener) {
 		return new FoulDetector(listener);
 	}
@@ -26,32 +28,73 @@ public class FoulDetector implements Detector {
 
 	private final FoulDetector.Listener listener;
 
-	private RelativePosition noMovementSince;
-	private boolean foulInProgress;
+	private State state = new Moving();
 
 	private FoulDetector(FoulDetector.Listener listener) {
 		this.listener = listener;
 	}
 
-	@Override
-	public void detect(AbsolutePosition pos) {
-		if (noMovementSince == null) {
-			if (!pos.isNull()) {
-				noMovementSince = pos.getRelativePosition();
-			}
-		} else if (pos.isNull() || xChanged(pos)) {
-			noMovementSince = null;
-			foulInProgress = false;
-		} else if (noMovementDurationInMillis(pos) >= TIMEOUT) {
-			if (!foulInProgress) {
-				listener.foulHappenend();
-				foulInProgress = true;
-			}
+	static interface State {
+		State update(AbsolutePosition pos);
+
+		default boolean isFoul() {
+			return false;
 		}
 	}
 
-	private long noMovementDurationInMillis(AbsolutePosition pos) {
-		return pos.getTimestamp() - noMovementSince.getTimestamp();
+	class Foul implements State {
+
+		@Override
+		public boolean isFoul() {
+			return true;
+		}
+
+		@Override
+		public State update(AbsolutePosition pos) {
+			return xChanged(pos) ? new Moving() : this;
+		}
+
+	}
+
+	class NotMoving implements State {
+
+		@Override
+		public State update(AbsolutePosition pos) {
+			return xChanged(pos) //
+					? new Moving() //
+					: timeout(pos) >= TIMEOUT //
+							? new Foul() //
+							: this;
+		}
+
+		private long timeout(AbsolutePosition pos) {
+			return pos.getTimestamp() - lastMovingPos.getTimestamp();
+		}
+
+	}
+
+	class Moving implements State {
+
+		@Override
+		public State update(AbsolutePosition pos) {
+			if (FoulDetector.this.lastMovingPos != null) {
+				if (!xChanged(pos)) {
+					return new NotMoving();
+				}
+			}
+			setLastPos(pos);
+			return this;
+		}
+
+	}
+
+	@Override
+	public void detect(AbsolutePosition pos) {
+		boolean wasFoul = state.isFoul();
+		state = state.update(pos);
+		if (!wasFoul && state.isFoul()) {
+			listener.foulHappenend();
+		}
 	}
 
 	private boolean xChanged(AbsolutePosition pos) {
@@ -59,7 +102,11 @@ public class FoulDetector implements Detector {
 	}
 
 	private double xDiff(AbsolutePosition pos) {
-		return abs(pos.getRelativePosition().getX() - noMovementSince.getX());
+		return abs(pos.getRelativePosition().getX() - lastMovingPos.getX());
+	}
+
+	private void setLastPos(AbsolutePosition pos) {
+		this.lastMovingPos = pos.getRelativePosition();
 	}
 
 }
