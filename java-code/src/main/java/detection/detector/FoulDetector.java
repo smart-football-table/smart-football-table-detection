@@ -77,12 +77,10 @@ public class FoulDetector implements Detector {
 
 		@Override
 		public State update(AbsolutePosition pos) {
-			if (FoulDetector.this.lastMovingPos != null) {
-				if (!xChanged(pos)) {
-					return new NotMoving();
-				}
+			if (FoulDetector.this.lastMovingPos != null && !xChanged(pos)) {
+				return new NotMoving();
 			}
-			setLastPos(pos);
+			FoulDetector.this.lastMovingPos = pos.getRelativePosition();
 			return this;
 		}
 
@@ -103,10 +101,6 @@ public class FoulDetector implements Detector {
 
 	private double xDiff(AbsolutePosition pos) {
 		return abs(pos.getRelativePosition().getX() - lastMovingPos.getX());
-	}
-
-	private void setLastPos(AbsolutePosition pos) {
-		this.lastMovingPos = pos.getRelativePosition();
 	}
 
 }
