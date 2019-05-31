@@ -46,7 +46,7 @@ import detection.mqtt.MqttConsumer;
 import io.moquette.server.Server;
 import io.moquette.server.config.MemoryConfig;
 
-class MainTestIT {
+class SFTDetectionIT {
 
 	private static Duration timeout = ofSeconds(30);
 

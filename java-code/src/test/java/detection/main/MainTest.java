@@ -1,40 +1,49 @@
 package detection.main;
 
-import static java.io.File.createTempFile;
-import static java.nio.file.Files.write;
-import static java.util.Arrays.asList;
-import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
+import static com.github.stefanbirkner.systemlambda.SystemLambda.tapSystemErr;
+import static com.github.stefanbirkner.systemlambda.SystemLambda.withEnvironmentVariable;
+import static detection.data.unit.DistanceUnit.CENTIMETER;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
 
 class MainTest {
 
+	private static final String MQTTPORT = "MQTTPORT";
+	private static final String MQTTHOST = "MQTTHOST";
+	private static final String TABLEHEIGHT = "TABLEHEIGHT";
+	private static final String TABLEWIDTH = "TABLEWIDTH";
+	private static final String TABLEUNIT = "TABLEUNIT";
+
 	@Test
-	void canCallPython() throws IOException {
-		String module = tmpFileWithContent( //
-				"import sys", //
-				"print('Hello, world! ', str(sys.argv))" //
-		).getAbsolutePath();
-		assertThat(Main.process(module, "-foo", "bar").collect(toList()),
-				is(asList("('Hello, world! ', \"['" + module + "', '-foo', 'bar']\")")));
+	void printsHelpOnMinusH() throws Exception {
+		assertThat(tapSystemErr(() -> Main.main("-h")), allOf(//
+				containsString("-mqttHost " + MQTTHOST), //
+				containsString("-mqttPort " + MQTTPORT), //
+				containsString("-tableWidth " + TABLEWIDTH), //
+				containsString("-tableHeight " + TABLEHEIGHT), //
+				containsString("-tableUnit") // TODO bug in args4j?
+//				containsString("-tableUnit " + TABLEUNIT) // TODO bug in args4j?
+		));
 	}
 
-	private static File tmpFileWithContent(String... content) throws IOException {
-		File file = writeContent(createTempFile("tmp-" + MainTest.class.getName(), ".py").toPath(), content);
-		file.deleteOnExit();
-		return file;
-	}
-
-	private static File writeContent(Path path, String... content) throws IOException {
-		return write(path, stream(content).collect(joining("\n")).getBytes()).toFile();
+	@Test
+	void canReadEnvVars() throws Exception {
+		Main main = new Main();
+		withEnvironmentVariable(MQTTPORT, "1") //
+				.and(MQTTHOST, "someHostname") //
+				.and(TABLEHEIGHT, "2") //
+				.and(TABLEWIDTH, "3") //
+				.and(TABLEUNIT, CENTIMETER.name()) //
+				.execute(() -> assertThat(main.parseArgs(), is(true)));
+		assertThat(main.mqttPort, is(1));
+		assertThat(main.mqttHost, is("someHostname"));
+		assertThat(main.tableHeight, is(2));
+		assertThat(main.tableWidth, is(3));
+		assertThat(main.tableUnit, is(CENTIMETER));
 	}
 
 }
