@@ -2,10 +2,8 @@ package detection.main;
 
 import static detection.data.position.RelativePosition.create;
 import static detection.data.unit.DistanceUnit.CENTIMETER;
-import static detection.main.EnvVars.readEnvVars;
-import static java.util.Arrays.stream;
+import static detection.main.EnvVars.envVarsAndArgs;
 import static java.util.Collections.addAll;
-import static java.util.stream.Stream.concat;
 import static org.kohsuke.args4j.OptionHandlerFilter.ALL;
 import static org.kohsuke.args4j.ParserProperties.defaults;
 
@@ -40,16 +38,16 @@ public class Main {
 	@Option(name = "-h", help = true)
 	boolean help;
 
-	@Option(name = "-tableWidth", metaVar = "TABLEWIDTH", usage = "width of the table")
+	@Option(name = "-tableWidth", usage = "width of the table")
 	int tableWidth = 120;
-	@Option(name = "-tableHeight", metaVar = "TABLEHEIGHT", usage = "height of the table")
+	@Option(name = "-tableHeight", usage = "height of the table")
 	int tableHeight = 68;
-	@Option(name = "-tableUnit", metaVar = "TABLEUNIT", usage = "distance unit of the table")
+	@Option(name = "-tableUnit", usage = "distance unit of the table")
 	DistanceUnit tableUnit = CENTIMETER;
 
-	@Option(name = "-mqttHost", metaVar = "MQTTHOST", usage = "hostname of the mqtt broker")
+	@Option(name = "-mqttHost", usage = "hostname of the mqtt broker")
 	String mqttHost = "localhost";
-	@Option(name = "-mqttPort", metaVar = "MQTTPORT", usage = "port of the mqtt broker")
+	@Option(name = "-mqttPort", usage = "port of the mqtt broker")
 	int mqttPort = 1883;
 
 	public static void main(String... args) throws IOException {
@@ -66,7 +64,7 @@ public class Main {
 	boolean parseArgs(String... args) {
 		CmdLineParser parser = new CmdLineParser(this, defaults().withUsageWidth(80));
 		try {
-			parser.parseArgument(concat(readEnvVars(parser.getOptions()), stream(args)).toArray(String[]::new));
+			parser.parseArgument(envVarsAndArgs(parser, args));
 			if (!help) {
 				return true;
 			}
@@ -91,7 +89,7 @@ public class Main {
 		System.err.println("java " + mainClassName + " [options...] arguments...");
 		parser.printUsage(System.err);
 		System.err.println();
-		System.err.println("  Example: java " + getClass().getName() + parser.printExample(ALL));
+		System.err.println("  Example: java " + mainClassName + parser.printExample(ALL));
 	}
 
 	protected static Stream<String> process(String module, String... args) throws IOException {

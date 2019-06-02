@@ -21,13 +21,11 @@ class MainTest {
 	@Test
 	void printsHelpOnMinusH() throws Exception {
 		assertThat(tapSystemErr(() -> Main.main("-h")), allOf(//
-				containsString("-mqttHost " + MQTTHOST), //
-				containsString("-mqttPort " + MQTTPORT), //
-				containsString("-tableWidth " + TABLEWIDTH), //
-				containsString("-tableHeight " + TABLEHEIGHT), //
-				containsString("-tableUnit") // TODO bug in args4j?
-//				containsString("-tableUnit " + TABLEUNIT) // TODO bug in args4j?
-		));
+				containsString("-mqttHost "), //
+				containsString("-mqttPort "), //
+				containsString("-tableWidth "), //
+				containsString("-tableHeight "), //
+				containsString("-tableUnit ")));
 	}
 
 	@Test
