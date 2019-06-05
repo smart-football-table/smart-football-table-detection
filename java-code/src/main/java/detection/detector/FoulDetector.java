@@ -28,7 +28,12 @@ public class FoulDetector implements Detector {
 
 	private final FoulDetector.Listener listener;
 
-	private State state = new Moving();
+	private State state = new State() {
+		@Override
+		public State update(AbsolutePosition pos) {
+			return new Moving(pos);
+		}
+	};
 
 	private FoulDetector(FoulDetector.Listener listener) {
 		this.listener = listener;
@@ -51,7 +56,7 @@ public class FoulDetector implements Detector {
 
 		@Override
 		public State update(AbsolutePosition pos) {
-			return xChanged(pos) ? new Moving() : this;
+			return xChanged(pos) ? new Moving(pos) : this;
 		}
 
 	}
@@ -61,7 +66,7 @@ public class FoulDetector implements Detector {
 		@Override
 		public State update(AbsolutePosition pos) {
 			return xChanged(pos) //
-					? new Moving() //
+					? new Moving(pos) //
 					: timeout(pos) >= TIMEOUT //
 							? new Foul() //
 							: this;
@@ -74,6 +79,10 @@ public class FoulDetector implements Detector {
 	}
 
 	class Moving implements State {
+
+		public Moving(AbsolutePosition pos) {
+			FoulDetector.this.lastMovingPos = pos.getRelativePosition();
+		}
 
 		@Override
 		public State update(AbsolutePosition pos) {
