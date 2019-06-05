@@ -1,21 +1,20 @@
 package detection.detector;
 
-import static detection.data.unit.DistanceUnit.CENTIMETER;
-
 import detection.data.Distance;
 import detection.data.Movement;
 import detection.data.position.AbsolutePosition;
 import detection.data.position.RelativePosition;
+import detection.data.unit.DistanceUnit;
 
 public class MovementDetector implements Detector {
 
-	public static MovementDetector onMovement(Listener listener) {
-		return new MovementDetector(listener);
+	public static MovementDetector onMovement(DistanceUnit distanceUnit, Listener listener) {
+		return new MovementDetector(distanceUnit, listener);
 	}
 
 	@Override
 	public MovementDetector newInstance() {
-		return new MovementDetector(listener);
+		return new MovementDetector(overallDistance.unit(), listener);
 	}
 
 	private final MovementDetector.Listener listener;
@@ -24,19 +23,20 @@ public class MovementDetector implements Detector {
 		void movement(Movement movement, Distance overallDistance);
 	}
 
-	private MovementDetector(MovementDetector.Listener listener) {
+	private MovementDetector(DistanceUnit distanceUnit, MovementDetector.Listener listener) {
 		this.listener = listener;
+		this.overallDistance = new Distance(0, distanceUnit);
 	}
 
 	private AbsolutePosition prevPos;
-	private Distance overallDistance = new Distance(0, CENTIMETER);
+	private Distance overallDistance;
 
 	@Override
 	public void detect(AbsolutePosition pos) {
 		RelativePosition relPos = pos.getRelativePosition();
 		if (!relPos.isNull()) {
 			if (prevPos != null) {
-				Movement movement = new Movement(prevPos, pos);
+				Movement movement = new Movement(prevPos, pos, overallDistance.unit());
 				listener.movement(movement, (overallDistance = overallDistance.add(movement.distance())));
 			}
 			prevPos = pos;
