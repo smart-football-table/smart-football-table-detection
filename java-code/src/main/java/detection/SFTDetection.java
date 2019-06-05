@@ -23,11 +23,11 @@ public class SFTDetection {
 
 	public SFTDetection(Table table, Consumer<Message> consumer) {
 		this.table = table;
-		this.messages = new Messages(consumer);
+		this.messages = new Messages(consumer, table.getDistanceUnit());
 		this.game = Game.newGame( //
 				onGameStart(messages::gameStart), //
 				onPositionChange(messages::pos), //
-				onMovement(messages::movement), //
+				onMovement(table.getDistanceUnit(), messages::movement), //
 				onFoul(messages::foul), //
 				onIdle(messages::idle) //
 		).addScoreTracker(scoreTracker(messages, consumer));

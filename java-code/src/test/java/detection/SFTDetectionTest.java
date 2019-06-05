@@ -10,6 +10,7 @@ import static detection.SFTDetectionTest.StdInBuilder.BallPosBuilder.pos;
 import static detection.SFTDetectionTest.StdInBuilder.BallPosBuilder.upperLeftCorner;
 import static detection.data.Message.message;
 import static detection.data.unit.DistanceUnit.CENTIMETER;
+import static detection.data.unit.DistanceUnit.INCH;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -275,11 +276,22 @@ class SFTDetectionTest {
 
 	@Test
 	void overallDistance() throws IOException {
-		givenATableOfSize(100, 80, CENTIMETER);
+		makeDiamondMoveOnTableIn(CENTIMETER);
+		thenPayloadsWithTopicAre("ball/distance/overall/cm", "8.0", "18.0", "26.0", "36.0");
+	}
+
+	@Test
+	void overallDistanceIsSentInInchWhenTableIsInch() throws IOException {
+		makeDiamondMoveOnTableIn(INCH);
+		thenPayloadsWithTopicAre("ball/distance/overall/inch", "8.0", "18.0", "26.0", "36.0");
+	}
+
+	private void makeDiamondMoveOnTableIn(DistanceUnit distanceUnit) throws IOException {
+		givenATableOfSize(100, 80, distanceUnit);
 		BallPosBuilder base = kickoff();
-		givenInputToProcessIs(ball().at(base).at(base.left(0.1)).at(base.right(0.1)));
+		givenInputToProcessIs(
+				ball().at(base.left(0.1)).at(base.up(0.1)).at(base.right(0.1)).at(base.down(0.1)).at(base.left(0.1)));
 		whenInputWasProcessed();
-		thenPayloadsWithTopicAre("ball/distance/overall/cm", String.valueOf(10.0), String.valueOf(20.0));
 	}
 
 	@Test

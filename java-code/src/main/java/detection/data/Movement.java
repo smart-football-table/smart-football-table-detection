@@ -1,6 +1,5 @@
 package detection.data;
 
-import static detection.data.unit.DistanceUnit.CENTIMETER;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -17,8 +16,8 @@ public class Movement {
 	private final Velocity velocity;
 	private final Distance distance;
 
-	public Movement(Position pos1, Position pos2) {
-		this.distance = new Distance(sqrt(pow2(diffX(pos1, pos2)) + pow2(diffY(pos1, pos2))), CENTIMETER);
+	public Movement(Position pos1, Position pos2, DistanceUnit distanceUnit) {
+		this.distance = new Distance(sqrt(pow2(diffX(pos1, pos2)) + pow2(diffY(pos1, pos2))), distanceUnit);
 		this.durationInMillis = pos2.getTimestamp() - pos1.getTimestamp();
 		if (this.durationInMillis < 0) {
 			throw new IllegalStateException("timestamp of pos2 (" + pos2 + ") before pos1 (" + pos1 + ")");

@@ -1,7 +1,6 @@
 package detection;
 
 import static detection.data.Message.message;
-import static detection.data.unit.DistanceUnit.CENTIMETER;
 import static detection.data.unit.SpeedUnit.KMH;
 import static detection.data.unit.SpeedUnit.MPS;
 import static java.util.stream.Collectors.joining;
@@ -14,13 +13,16 @@ import detection.data.Message;
 import detection.data.Movement;
 import detection.data.position.AbsolutePosition;
 import detection.data.position.Position;
+import detection.data.unit.DistanceUnit;
 
 public class Messages {
 
 	private final Consumer<Message> consumer;
+	private final DistanceUnit distanceUnit;
 
-	public Messages(Consumer<Message> consumer) {
+	public Messages(Consumer<Message> consumer, DistanceUnit distanceUnit) {
 		this.consumer = consumer;
+		this.distanceUnit = distanceUnit;
 	}
 
 	public void gameStart() {
@@ -37,10 +39,10 @@ public class Messages {
 	}
 
 	public void movement(Movement movement, Distance overallDistance) {
-		publish(message("ball/distance/cm", movement.distance(CENTIMETER)));
+		publish(message("ball/distance/" + distanceUnit.symbol(), movement.distance(distanceUnit)));
 		publish(message("ball/velocity/mps", movement.velocity(MPS)));
 		publish(message("ball/velocity/kmh", movement.velocity(KMH)));
-		publish(message("ball/distance/overall/cm", overallDistance.value(CENTIMETER)));
+		publish(message("ball/distance/overall/" + distanceUnit.symbol(), overallDistance.value(distanceUnit)));
 	}
 
 	public void teamScored(int teamid, int score) {
