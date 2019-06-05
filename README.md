@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/smart-football-table/smart-football-table-detection.svg?branch=master)](https://travis-ci.org/smart-football-table/smart-football-table-detection)
 [![BCH compliance](https://bettercodehub.com/edge/badge/smart-football-table/smart-football-table-detection?branch=master)](https://bettercodehub.com/)
 
-This repository contains the detection part of the Smart Football Table project. After getting the position of the ball, calculations are done. The detection is done with a python-script which is called from a java-programm, which handles the position afterwards.
+This repository contains the detection part of the Smart Football Table project. The position of the ball gets detected and published to the mqtt broker. 
 
 ![detection-sample-gif](https://github.com/smart-football-table/smart-football-table.github.io/blob/master/modules/smart-football-table-detection/detectionExampleGif.gif)
 

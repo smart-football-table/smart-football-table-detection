@@ -19,24 +19,6 @@ WORKDIR darknet
 RUN sed -i 's/GPU=0/GPU=1/;s/OPENCV=0/OPENCV=1/;s/LIBSO=0/LIBSO=1/' Makefile
 RUN make
 
-
-
-
-
-FROM maven:3.6-jdk-8 as maven
-
-WORKDIR /project
-COPY ./java-code/pom.xml ./pom.xml
-COPY ./java-code/src ./src
-RUN mvn package
-RUN mvn dependency:copy-dependencies -DincludeScope=runtime -DoutputDirectory=/project/target/copy-dependencies-lib
-
-
-FROM nvidia/cuda
-COPY --from=maven /project/target/copy-dependencies-lib /app/lib
-COPY --from=maven /project/target/detection-*.jar /app/app.jar
-RUN apt-get update && apt-get -y install openjdk-8-jre
-
 # copy python-code, git clone darknet
 # COPY requirements.txt ./
 # RUN pip install -r requirements.txt
@@ -44,6 +26,6 @@ RUN apt-get update && apt-get -y install openjdk-8-jre
 ### TODO copy opencv / yolo from cuda-devel
 
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+#ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 CMD []
 
