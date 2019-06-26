@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/smart-football-table/smart-football-table-detection.svg?branch=master)](https://travis-ci.org/smart-football-table/smart-football-table-detection)
 [![BCH compliance](https://bettercodehub.com/edge/badge/smart-football-table/smart-football-table-detection?branch=master)](https://bettercodehub.com/)
 [![Known Vulnerabilities](https://snyk.io/test/github/smart-football-table/smart-football-table-detection/badge.svg?targetFile=requirements.txt)](https://snyk.io/test/github/smart-football-table/smart-football-table-detection?targetFile=requirements.txt)
+[![GitLicense](https://gitlicense.com/badge/smart-football-table/smart-football-table-detection)](https://gitlicense.com/license/smart-football-table/smart-football-table-detection)
 
 This repository contains the detection part of the Smart Football Table project. The position of the ball gets detected and published to the mqtt broker. 
 
