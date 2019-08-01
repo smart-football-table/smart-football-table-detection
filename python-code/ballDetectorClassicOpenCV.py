@@ -7,7 +7,6 @@ import os
 import numpy as np
 import paho.mqtt.client as mqtt
 
-
 def drawDetection(int, x, cv, frame, center, y, radius):
     cv.circle(frame, (int(x), int(y)), int(radius), (255, 255, 255), 2)
     cv.circle(frame, (center[0], center[1]), 5, (0, 0, 255), -1)
