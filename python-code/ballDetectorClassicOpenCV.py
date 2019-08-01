@@ -5,7 +5,7 @@ import imutils
 import time
 import os
 import numpy as np
-
+import paho.mqtt.client as mqtt
 
 
 def drawDetection(int, x, cv, frame, center, y, radius):
@@ -20,8 +20,12 @@ def prepareFrame(colorLower, colorUpper, frameSize, cv, frame):
     mask = cv.dilate(mask, None, iterations=2)
     return mask, frame
 
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code " + str(rc))
+
 pathToFile = 0
 bufferSize = 200
+mqttport = 1883
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -30,6 +34,7 @@ ap.add_argument("-b", "--buffer", type=int, default=200, help="max buffer size f
 ap.add_argument("-i", "--camindex", default=0, type=int, help="index of camera")
 ap.add_argument("-c", "--color", default='0,0,0,0,0,0', help="color values comma seperated")
 ap.add_argument("-r", "--record", default='empty', help="switch on recording with following file name")
+ap.add_argument("-m", "--mqttport", default='1883', help="sets the mqtt broker port")
 args = vars(ap.parse_args())
 
 x = args["color"].split(",")
@@ -49,12 +54,16 @@ else:
     
 if args["buffer"] is not 'empty':
     bufferSize = args["buffer"]
+    
+if args["mqttport"] is not 'empty':
+    mqttport = args["mqttport"]
 
 if args["record"] is not 'empty':
     fileName = args["record"]
     fourcc = cv.cv.FOURCC(*'XVID')
     out = cv.VideoWriter((str(fileName)+'.avi'),fourcc, 20.0, (800,600))
 
+#define framevars
 frameSize = 800
 
 pts = deque(maxlen=bufferSize)
@@ -63,11 +72,19 @@ cap = cv.VideoCapture(pathToFile)
 
 cap.set(28, 0)
 
+#start mqttclient
+client = mqtt.Client()
+client.on_connect = on_connect
+
+client.connect("localhost", mqttport, 60)
+
+client.loop_start()
+
 
 while(True):
     # Capture frame-by-frame
     ret, frame = cap.read()
-
+    
     mask, frame = prepareFrame(colorLower, colorUpper, frameSize, cv, frame)
    
     position = (-1,-1)
@@ -100,15 +117,9 @@ while(True):
         
     actualPointX = position[0]
     actualPointY = position[1]
-
-    timeAsString = str(time.time())
-
-    if len(timeAsString) == 12:
-        timeAsString = timeAsString + "0"
-        # dirty hack to avoid missing 0
-    timeAsString = timeAsString.replace(".", "")
- 
-    print(timeAsString + "|" + str(actualPointX) + "|" + str(actualPointY))
+    
+    client.publish("ball/position/abs", str(actualPointX) + "," + str(actualPointY))
+    client.publish("ball/position/rel", str(float(actualPointX)/frame.shape[0]) + "," + str(float(actualPointY)/frame.shape[1]))
  
         
     if args["record"] is not 'empty':
