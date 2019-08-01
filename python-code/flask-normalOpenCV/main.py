@@ -38,14 +38,26 @@ def prepareFrame(colorLower, colorUpper, frameSize, cv, frame):
     mask = cv.dilate(mask, None, iterations=2)
     return mask, frame
 
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code " + str(rc))
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
 def gen(camera):
+    
+    #start mqttclient
+    client = mqtt.Client()
+    client.on_connect = on_connect
+
+    mqttport = 1883
+    client.connect("localhost", mqttport, 60)
+
+    client.loop_start()
+    
     while True:
         ret, frame = camera.frame.read()
-        
         
         #define framevars
         frameSize = 800
@@ -53,6 +65,7 @@ def gen(camera):
         pts = deque(maxlen=bufferSize)
         colorLower = (20, 100, 100)
         colorUpper = (30, 255, 255)
+        
         
         mask, frame = prepareFrame(colorLower, colorUpper, frameSize, cv, frame)
    
@@ -83,6 +96,12 @@ def gen(camera):
             # draw the connecting lines
             thickness = int(np.sqrt(200 / float(i + 1)) * 2)
             cv.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
+        
+        actualPointX = position[0]
+        actualPointY = position[1]
+    
+        client.publish("ball/position/abs", str(actualPointX) + "," + str(actualPointY))
+        client.publish("ball/position/rel", str(float(actualPointX)/frame.shape[0]) + "," + str(float(actualPointY)/frame.shape[1]))
         
         ret, jpeg = cv.imencode('.jpg', frame)
         frame = jpeg.tobytes()
