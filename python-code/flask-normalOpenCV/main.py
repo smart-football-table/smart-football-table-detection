@@ -61,11 +61,7 @@ def gen(camera):
         
         #define framevars
         frameSize = 800
-        bufferSize = 200
         pts = deque(maxlen=bufferSize)
-        colorLower = (20, 100, 100)
-        colorUpper = (30, 255, 255)
-        
         
         mask, frame = prepareFrame(colorLower, colorUpper, frameSize, cv, frame)
    
@@ -111,8 +107,50 @@ def gen(camera):
 
 @app.route('/video_feed')
 def video_feed():
-    return Response(gen(VideoCamera()),
+    return Response(gen(VideoCamera(pathToFile)),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
+    import argparse
+    
+    pathToFile = 0
+    bufferSize = 200
+    mqttport = 1883
+    
+    # construct the argument parse and parse the arguments
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-v", "--video", default='empty', help="path to the (optional) video file")
+    ap.add_argument("-b", "--buffer", type=int, default=200, help="max buffer size for lightning track")
+    ap.add_argument("-i", "--camindex", default=0, type=int, help="index of camera")
+    ap.add_argument("-c", "--color", default='0,0,0,0,0,0', help="color values comma seperated")
+    ap.add_argument("-r", "--record", default='empty', help="switch on recording with following file name")
+    ap.add_argument("-m", "--mqttport", default='1883', help="sets the mqtt broker port")
+    args = vars(ap.parse_args())
+    
+    x = args["color"].split(",")
+    hsvminh = int(x[0])
+    hsvmins = int(x[1])
+    hsvminv = int(x[2])
+    hsvmaxh = int(x[3])
+    hsvmaxs = int(x[4])
+    hsvmaxv = int(x[5])
+    colorLower = (hsvminh, hsvmins, hsvminv)
+    colorUpper = (hsvmaxh, hsvmaxs, hsvmaxv)
+        
+    if args["video"] is not 'empty':
+        pathToFile = args["video"]
+    else:
+        pathToFile = args["camindex"]
+        
+    if args["buffer"] is not 'empty':
+        bufferSize = args["buffer"]
+        
+    if args["mqttport"] is not 'empty':
+        mqttport = args["mqttport"]
+    
+    if args["record"] is not 'empty':
+        fileName = args["record"]
+        fourcc = cv.cv.FOURCC(*'XVID')
+        out = cv.VideoWriter((str(fileName)+'.avi'),fourcc, 20.0, (800,600))
+        
     app.run(host='0.0.0.0', debug=True)
