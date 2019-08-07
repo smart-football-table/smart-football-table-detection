@@ -56,12 +56,13 @@ def gen(camera):
 
     client.loop_start()
     
+    pts = deque(maxlen=bufferSize)
+    
     while True:
         ret, frame = camera.frame.read()
         
         #define framevars
         frameSize = 800
-        pts = deque(maxlen=bufferSize)
         
         mask, frame = prepareFrame(colorLower, colorUpper, frameSize, cv, frame)
    
@@ -93,12 +94,18 @@ def gen(camera):
             thickness = int(np.sqrt(200 / float(i + 1)) * 2)
             cv.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
         
-        actualPointX = position[0]
-        actualPointY = position[1]
-    
-        client.publish("ball/position/abs", str(actualPointX) + "," + str(actualPointY))
-        client.publish("ball/position/rel", str(float(actualPointX)/frame.shape[0]) + "," + str(float(actualPointY)/frame.shape[1]))
-        
+        client.publish("ball/position/abs", str(position[0]) + "," + str(position[1]))
+
+        if(position[0]==-1):
+            relPointX = position[0]
+            relPointY = position[1]
+        else:
+            relPointX = float(position[0])/frame.shape[1]
+            relPointY = float(position[1])/frame.shape[0] #0=rows
+
+        client.publish("ball/position/rel", str(relPointX) + "," + str(relPointY))
+
+
         ret, jpeg = cv.imencode('.jpg', frame)
         frame = jpeg.tobytes()
         
