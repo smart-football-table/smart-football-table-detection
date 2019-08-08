@@ -29,6 +29,7 @@ COPY requirements.txt .
 RUN pip3 install -r requirements.txt
 
 WORKDIR /darknet
+ENV LD_LIBRARY_PATH /usr/local/cuda-10.1/compat/
 ENTRYPOINT ["python", "-u", "./darknet_video.py"]
 CMD []
 
