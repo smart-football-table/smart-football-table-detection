@@ -9,6 +9,7 @@ import customDarknet as darknet
 from collections import deque
 import imutils
 import argparse
+import paho.mqtt.client as mqtt
 
 def convertBack(x, y, w, h):
     xmin = int(round(x - (w / 2)))
@@ -45,6 +46,9 @@ def getIDHighestDetection(detections):
 
     return idOfMaxProbability
 
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code " + str(rc))
+
 netMain = None
 metaMain = None
 altNames = None
@@ -78,6 +82,15 @@ pts = deque(maxlen=bufferSize)
 
 
 def YOLO():
+
+    #start mqttclient
+    client = mqtt.Client()
+    client.on_connect = on_connect
+
+    mqttport = 1883
+    client.connect("localhost", mqttport, 60)
+
+    client.loop_start()
 
     global metaMain, netMain, altNames
     configPath = "/home/marco/dev/alexeyab/darknet/cfg/obj.cfg"
@@ -174,22 +187,16 @@ def YOLO():
             thickness = int(np.sqrt(200 / float(i + 1)) * 2)
             cv2.line(frame_resized, pts[i - 1], pts[i], (0, 255, 0), thickness)
 
+        client.publish("ball/position/abs", str(position[0]) + "," + str(position[1]))
 
         if(position[0]==-1):
-            actualPointX = position[0]
-            actualPointY = position[1]
+            relPointX = position[0]
+            relPointY = position[1]
         else:
-            actualPointX = position[0]/frame_resized.shape[1]
-            actualPointY = position[1]/frame_resized.shape[0]
-        
-        timeAsString = str(time.time())
+            relPointX = float(position[0])/frame_resized.shape[1]
+            relPointY = float(position[1])/frame_resized.shape[0]
 
-    	if len(timeAsString) == 12:
-        	timeAsString = timeAsString + "0"
-        	# dirty hack to avoid missing 0
-    	timeAsString = timeAsString.replace(".", "")
- 
-    	print(timeAsString + "|" + str(actualPointX) + "|" + str(actualPointY))
+        client.publish("ball/position/rel", str(relPointX) + "," + str(relPointY))
  
         image = frame_resized
         if not (len(detections) is 0):
