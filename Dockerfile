@@ -28,7 +28,7 @@ COPY --from=cuda-build /darknet /darknet
 COPY requirements.txt .
 RUN pip3 install -r requirements.txt
 
-ENV LD_LIBRARY_PATH /darknet
-ENTRYPOINT ["python", "-u", "/darknet/darknet_video.py"]
+WORKDIR /darknet
+ENTRYPOINT ["python", "-u", "./darknet_video.py"]
 CMD []
 
