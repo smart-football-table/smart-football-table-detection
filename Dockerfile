@@ -29,7 +29,13 @@ COPY requirements.txt .
 RUN pip3 install -r requirements.txt
 
 WORKDIR /darknet
-ENV LD_LIBRARY_PATH /usr/local/cuda-10.1/compat/
+ENV LD_LIBRARY_PATH /usr/local/cuda-10.1/compat/:/darknet
+COPY opencv_yolo/darknet_video.py .
+COPY opencv_yolo/customDarknet.py .
+COPY yolov3-models/modelFromCOM19/obj_130000.weights .
+COPY yolov3-models/modelFromCOM19/obj.cfg .
+COPY yolov3-models/modelFromCOM19/obj.data .
+COPY yolov3-models/modelFromCOM19/obj.names .
 ENTRYPOINT ["python", "-u", "./darknet_video.py"]
 CMD []
 
