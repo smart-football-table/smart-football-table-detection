@@ -53,11 +53,8 @@ netMain = None
 metaMain = None
 altNames = None
 
-pathToModel = os.environ['MODEL_PATH']
-try:
-  pathToModel
-except NameError:
-  pathToModel = "yolov3-models/modelFromCOM19/files/"
+pathToModel = os.get.env['MODEL_PATH','yolov3-models/modelFromCOM19/files/']
+
 
 bufferSize = 200
 pathToFile = 0
@@ -93,8 +90,9 @@ def YOLO():
     client = mqtt.Client()
     client.on_connect = on_connect
 
-    mqttport = 1883
-    client.connect("localhost", mqttport, 60)
+    mqtthost = os.get.env['MQTTHOST', 'localhost']
+    mqttport = str(os.get.env['MQTTPORT', '1883'])
+    client.connect(mqtthost, mqttport, 60)
 
     client.loop_start()
 
