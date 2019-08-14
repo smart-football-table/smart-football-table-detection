@@ -23,6 +23,5 @@ Visit the documentation at the [Smart Football Table](https://smart-football-tab
 
 ###### Draft: Commands
 
-pip install setuptools
-pip install paho-mqtt
-pip install flask
+env var = MODEL_PATH
+-e MODEL_PATH=...

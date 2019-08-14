@@ -53,6 +53,8 @@ netMain = None
 metaMain = None
 altNames = None
 
+pathToModel = os.environ['MODEL_PATH']
+
 bufferSize = 200
 pathToFile = 0
 
@@ -93,9 +95,9 @@ def YOLO():
     client.loop_start()
 
     global metaMain, netMain, altNames
-    configPath = "/home/marco/dev/alexeyab/darknet/cfg/obj.cfg"
-    weightPath = "/home/marco/dev/alexeyab/darknet/backup/fourthTry/obj_130000.weights"
-    metaPath = "/home/marco/dev/alexeyab/darknet/obj.data"
+    configPath = os.path.join(pathToModel, 'obj.cfg')
+    weightPath = os.path.join(pathToModel, 'obj.weights')
+    metaPath = os.path.join(pathToModel, 'obj.data')
     if not os.path.exists(configPath):
         raise ValueError("Invalid config path `" +
                          os.path.abspath(configPath)+"`")
@@ -197,7 +199,7 @@ def YOLO():
             relPointY = float(position[1])/frame_resized.shape[0]
 
         client.publish("ball/position/rel", str(relPointX) + "," + str(relPointY))
- 
+
         image = frame_resized
         if not (len(detections) is 0):
             image = cvDrawBall(detections[idOfDetection], frame_resized)
