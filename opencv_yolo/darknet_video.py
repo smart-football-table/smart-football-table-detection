@@ -54,6 +54,10 @@ metaMain = None
 altNames = None
 
 pathToModel = os.environ['MODEL_PATH']
+try:
+  pathToModel
+except NameError:
+  pathToModel = "yolov3-models/modelFromCOM19/files/"
 
 bufferSize = 200
 pathToFile = 0
