@@ -32,7 +32,7 @@ WORKDIR /darknet
 ENV LD_LIBRARY_PATH /usr/local/cuda-10.1/compat/:/darknet
 COPY opencv_yolo/darknet_video.py .
 COPY opencv_yolo/customDarknet.py .
-COPY yolov3-models .
+COPY yolov3-models yolov3-models
 ENV MODEL_PATH /darknet/yolov3-models/modelFromCOM19/files/
 ENTRYPOINT ["python", "-u", "./darknet_video.py"]
 CMD []
