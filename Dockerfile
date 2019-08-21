@@ -34,7 +34,7 @@ COPY opencv_yolo/darknet_video.py .
 COPY opencv_yolo/customDarknet.py .
 COPY yolov3-models yolov3-models
 
-ENV MODEL_PATH /darknet/yolov3-models/modelFromCOM19/files/
-WORKDIR $MODEL_PATH
-ENTRYPOINT ["python", "-u", "/darknet/darknet_video.py"]
+COPY docker-entrypoint.sh .
+
+ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD []

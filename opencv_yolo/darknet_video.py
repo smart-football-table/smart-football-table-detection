@@ -53,9 +53,6 @@ netMain = None
 metaMain = None
 altNames = None
 
-pathToModel = os.getenv('MODEL_PATH','yolov3-models/modelFromCOM19/files/')
-
-
 bufferSize = 200
 pathToFile = 0
 
@@ -97,9 +94,9 @@ def YOLO():
     client.loop_start()
 
     global metaMain, netMain, altNames
-    configPath = os.path.join(pathToModel, 'obj.cfg')
-    weightPath = os.path.join(pathToModel, 'obj.weights')
-    metaPath = os.path.join(pathToModel, 'obj.data')
+    configPath = 'obj.cfg'
+    weightPath = 'obj.weights'
+    metaPath = 'obj.data'
     if not os.path.exists(configPath):
         raise ValueError("Invalid config path `" +
                          os.path.abspath(configPath)+"`")
