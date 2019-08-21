@@ -33,8 +33,8 @@ ENV LD_LIBRARY_PATH /usr/local/cuda-10.1/compat/:/darknet
 COPY opencv_yolo/darknet_video.py .
 COPY opencv_yolo/customDarknet.py .
 COPY yolov3-models yolov3-models
-RUN /bin/sh -c "for f in yolov3-models/*/files/*; do mv $f `dirname $f`/..; done"
 
-ENV MODEL_PATH /darknet/yolov3-models/modelFromCOM19/
-ENTRYPOINT ["python", "-u", "./darknet_video.py"]
+ENV MODEL_PATH /darknet/yolov3-models/modelFromCOM19/files/
+WORKDIR $MODEL_PATH
+ENTRYPOINT ["python", "-u", "/darknet/darknet_video.py"]
 CMD []
