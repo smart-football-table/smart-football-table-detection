@@ -58,12 +58,16 @@ pathToFile = 0
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
+ap.add_argument("-s", "--mqtthost", default='localhost', help="hostname of the mqtt broker")
+ap.add_argument("-p", "--mqttport", type=int, default=1883, help="port of the mqtt broker")
 ap.add_argument("-v", "--video", default='empty', help="path to the (optional) video file")
 ap.add_argument("-b", "--buffer", type=int, default=200, help="max buffer size for lightning track")
 ap.add_argument("-i", "--camindex", default=0, type=int, help="index of camera")
 ap.add_argument("-c", "--color", default='0,0,0,0,0,0', help="not neccessary here, but important for java processbuilder")
 ap.add_argument("-r", "--record", default='empty', help="switch on recording with following file name")
+ap.add_argument("--showvideo", help="if true the video window is shown)")
 args = vars(ap.parse_args())
+
 
 if args["video"] is not 'empty':
     pathToFile = args["video"]
@@ -86,10 +90,7 @@ def YOLO():
     #start mqttclient
     client = mqtt.Client()
     client.on_connect = on_connect
-
-    mqtthost = os.getenv('MQTTHOST', 'localhost')
-    mqttport = str(os.getenv('MQTTPORT', '1883'))
-    client.connect(mqtthost, mqttport, 60)
+    client.connect(args["mqtthost"], args["mqttport"], 60)
 
     client.loop_start()
 
@@ -210,9 +211,9 @@ def YOLO():
         if args["record"] is not 'empty':
             out.write(image)
 
-        cv2.imshow('Demo', image)
-
-        cv2.moveWindow("Demo", 1025,490);
+        if args["showvideo"]: 
+           cv2.imshow('Demo', image)
+           cv2.moveWindow("Demo", 1025,490);
 
         cv2.waitKey(3)
     cap.release()
