@@ -33,7 +33,7 @@ ap.add_argument("-b", "--buffer", type=int, default=200, help="max buffer size f
 ap.add_argument("-i", "--camindex", default=0, type=int, help="index of camera")
 ap.add_argument("-c", "--color", default='0,0,0,0,0,0', help="color values comma seperated")
 ap.add_argument("-r", "--record", default='empty', help="switch on recording with following file name")
-ap.add_argument("-m", "--mqttport", default='1883', help="sets the mqtt broker port")
+ap.add_argument("-m", "--mqttport", default=1883, help="sets the mqtt broker port")
 args = vars(ap.parse_args())
 
 x = args["color"].split(",")
