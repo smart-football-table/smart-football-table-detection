@@ -88,9 +88,10 @@ while(True):
     
     mask, frame = prepareFrame(colorLower, colorUpper, frameSize, cv, frame)
    
-    position = (-1,-1)
+    position = (-1,-1)    
    
     cnts = cv.findContours(mask.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[-2]
+    timepoint = int(time.time()*1000)
  
     if len(cnts) > 0:
         c = max(cnts, key=cv.contourArea)
@@ -116,7 +117,7 @@ while(True):
         thickness = int(np.sqrt(200 / float(i + 1)) * 2)
         cv.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
         
-    client.publish("ball/position/abs", str(position[0]) + "," + str(position[1]))
+    client.publish("ball/position/abs", str(position[0]) + "," + str(position[1]) + "," + str(timepoint))
 
     if(position[0]==-1):
         relPointX = position[0]
@@ -125,7 +126,7 @@ while(True):
         relPointX = float(position[0])/frame.shape[1]
         relPointY = float(position[1])/frame.shape[0] #0=rows
 
-    client.publish("ball/position/rel", str(relPointX) + "," + str(relPointY))
+    client.publish("ball/position/rel", str(relPointX) + "," + str(relPointY) + "," + str(timepoint))
  
         
     if args["record"] is not 'empty':
