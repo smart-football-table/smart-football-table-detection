@@ -26,6 +26,8 @@ pathToFile = 0
 bufferSize = 200
 mqttport = 1883
 
+xrange = range #to run xrange in python 3
+
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video", default='empty', help="path to the (optional) video file")
@@ -128,7 +130,7 @@ while(True):
         
     if args["record"] is not 'empty':
         out.write(frame)
-    # uncomment to see vid through test
+        
     cv.imshow('frame', frame)
 
     if cv.waitKey(20) & 0xFF == ord('q'):
