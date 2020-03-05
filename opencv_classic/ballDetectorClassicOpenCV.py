@@ -1,4 +1,5 @@
 from collections import deque
+import sys
 import cv2 as cv
 import argparse
 import imutils
@@ -130,6 +131,7 @@ while(True):
         out.write(frame)
     # uncomment to see vid through test
     cv.imshow('frame', frame)
+    sys.stdout.write( frame.tostring() )
 
     if cv.waitKey(20) & 0xFF == ord('q'):
 

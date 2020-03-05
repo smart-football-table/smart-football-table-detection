@@ -22,7 +22,7 @@ RUN make
 # fresh image #
 ###############
 FROM nvidia/cuda:10.1-devel
-RUN apt-get update && apt-get install -y python-pip libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev python-dev libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-22-dev
+RUN apt-get update && apt-get install -y python-pip libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev python-dev libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-22-dev ffmpeg netcat-openbsd
 COPY --from=cuda-build /opencv-4.1.0/build/installdir /
 COPY --from=cuda-build /darknet /darknet
 COPY requirements.txt .

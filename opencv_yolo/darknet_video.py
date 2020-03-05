@@ -1,6 +1,7 @@
 from ctypes import *
 import math
 import random
+import sys
 import os
 import cv2
 import numpy as np
@@ -215,6 +216,7 @@ def YOLO():
            cv2.imshow('Demo', image)
            cv2.moveWindow("Demo", 1025,490);
 
+        sys.stdout.write( frame.tostring() )
         cv2.waitKey(3)
     cap.release()
     out.release()
