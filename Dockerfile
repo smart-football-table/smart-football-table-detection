@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y build-essential cmake git libgtk2.0-dev
 WORKDIR /
 RUN wget -O/tmp/opencv-4.1.0.zip https://github.com/opencv/opencv/archive/4.1.0.zip && unzip /tmp/opencv-4.1.0.zip && rm /tmp/opencv-4.1.0.zip
 WORKDIR opencv-4.1.0/build
-RUN cmake -D CMAKE_BUILD_TYPE=Release -D OPENCV_GENERATE_PKGCONFIG=YES -D CMAKE_INSTALL_PREFIX=/usr/local .. && make && mkdir installdir && make install && make install DESTDIR=installdir && ln -sf /usr/local/lib/pkgconfig/opencv4.pc /usr/local/lib/pkgconfig/opencv.pc
+RUN cmake -D CMAKE_BUILD_TYPE=Release -D OPENCV_GENERATE_PKGCONFIG=YES -D CMAKE_INSTALL_PREFIX=/usr/local .. && make && make install && ln -sf /usr/local/lib/pkgconfig/opencv4.pc /usr/local/lib/pkgconfig/opencv.pc
 ################
 # yolo darknet #
 ################
