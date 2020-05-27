@@ -26,6 +26,8 @@ pathToFile = 0
 bufferSize = 200
 mqttport = 1883
 
+xrange = range #to run xrange in python 3
+
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video", default='empty', help="path to the (optional) video file")
@@ -33,7 +35,7 @@ ap.add_argument("-b", "--buffer", type=int, default=200, help="max buffer size f
 ap.add_argument("-i", "--camindex", default=0, type=int, help="index of camera")
 ap.add_argument("-c", "--color", default='0,0,0,0,0,0', help="color values comma seperated")
 ap.add_argument("-r", "--record", default='empty', help="switch on recording with following file name")
-ap.add_argument("-m", "--mqttport", default='1883', help="sets the mqtt broker port")
+ap.add_argument("-m", "--mqttport", default=1883, help="sets the mqtt broker port")
 args = vars(ap.parse_args())
 
 x = args["color"].split(",")
@@ -128,7 +130,7 @@ while(True):
         
     if args["record"] is not 'empty':
         out.write(frame)
-    # uncomment to see vid through test
+        
     cv.imshow('frame', frame)
 
     if cv.waitKey(20) & 0xFF == ord('q'):

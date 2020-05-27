@@ -11,7 +11,6 @@ WORKDIR /opencv-4.1.0/build/installdir/
 WORKDIR /opencv-4.1.0/build
 RUN cmake -D CMAKE_BUILD_TYPE=Release -D OPENCV_GENERATE_PKGCONFIG=YES -D BUILD_EXAMPLES=OFF -D INSTALL_PYTHON_EXAMPLES=OFF -D INSTALL_C_EXAMPLES=OFF -D CMAKE_INSTALL_PREFIX=/opencv-4.1.0/build/installdir/usr/local .. && make && make install
 ENV PKG_CONFIG_PATH=/opencv-4.1.0/build/installdir/usr/local/lib/pkgconfig/
-
 ################
 # yolo darknet #
 ################
