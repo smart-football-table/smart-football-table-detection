@@ -190,7 +190,7 @@ def YOLO():
             thickness = int(np.sqrt(200 / float(i + 1)) * 2)
             cv2.line(frame_resized, pts[i - 1], pts[i], (0, 255, 0), thickness)
 
-        client.publish("ball/position/abs", str(position[0]) + "," + str(position[1]) + "," + str(timepoint))
+        client.publish("ball/position/abs", str(timepoint) + "," + str(position[0]) + "," + str(position[1]))
 
         if(position[0]==-1):
             relPointX = position[0]
@@ -199,7 +199,7 @@ def YOLO():
             relPointX = float(position[0])/frame_resized.shape[1]
             relPointY = float(position[1])/frame_resized.shape[0]
 
-        client.publish("ball/position/rel", str(relPointX) + "," + str(relPointY) + "," + str(timepoint))
+        client.publish("ball/position/rel", str(timepoint) + "," + str(relPointX) + "," + str(relPointY))
 
         image = frame_resized
         if not (len(detections) is 0):

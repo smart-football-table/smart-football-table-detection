@@ -117,7 +117,7 @@ while(True):
         thickness = int(np.sqrt(200 / float(i + 1)) * 2)
         cv.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
         
-    client.publish("ball/position/abs", str(position[0]) + "," + str(position[1]) + "," + str(timepoint))
+    client.publish("ball/position/abs", str(timepoint) + "," + str(position[0]) + "," + str(position[1]))
 
     if(position[0]==-1):
         relPointX = position[0]
@@ -126,7 +126,7 @@ while(True):
         relPointX = float(position[0])/frame.shape[1]
         relPointY = float(position[1])/frame.shape[0] #0=rows
 
-    client.publish("ball/position/rel", str(relPointX) + "," + str(relPointY) + "," + str(timepoint))
+    client.publish("ball/position/rel", str(timepoint) + "," + str(relPointX) + "," + str(relPointY))
  
         
     if args["record"] is not 'empty':
