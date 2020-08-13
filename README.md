@@ -25,3 +25,15 @@ Visit the documentation at the [Smart Football Table](https://smart-football-tab
 
 env var = MODEL_PATH
 -e MODEL_PATH=...
+
+###### Videostream-Commands
+
+To start videostream
+* python <your-script> -i 0 | ffmpeg -f rawvideo -pixel_format bgr24 -video_size 800x600 -framerate 25 -i - -f avi - | nc -l -k -p 8080
+
+To recieve videostream (with mplayer or vlc)
+* nc localhost 8080 | mplayer -
+
+
+
+
