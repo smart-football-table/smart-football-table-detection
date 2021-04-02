@@ -1,0 +1,54 @@
+{
+  "consumer": {
+    "name": "cognition"
+  },
+  "provider": {
+    "name": "detection"
+  },
+  "messages": [
+    {
+      "description": "the relative position gets published",
+      "metaData": {
+        "contentType": "application/json; charset\u003dUTF-8"
+      },
+      "contents": {
+        "payload": "0.123,0.456",
+        "topic": "ball/position/rel"
+      },
+      "providerStates": [
+        {
+          "name": "the ball moved on the table"
+        }
+      ],
+      "matchingRules": {
+        "body": {
+          "$.topic": {
+            "matchers": [
+              {
+                "match": "type"
+              }
+            ],
+            "combine": "AND"
+          },
+          "$.payload": {
+            "matchers": [
+              {
+                "match": "regex",
+                "regex": "\\d*\\.?\\d+,\\d*\\.?\\d+"
+              }
+            ],
+            "combine": "AND"
+          }
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "pactSpecification": {
+      "version": "3.0.0"
+    },
+    "pact-jvm": {
+      "version": "4.0.0"
+    }
+  }
+}
