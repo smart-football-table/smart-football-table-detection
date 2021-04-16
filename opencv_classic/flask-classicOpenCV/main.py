@@ -94,8 +94,6 @@ def gen(camera):
             thickness = int(np.sqrt(200 / float(i + 1)) * 2)
             cv.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
         
-        client.publish("ball/position/abs", str(position[0]) + "," + str(position[1]))
-
         if(position[0]==-1):
             relPointX = position[0]
             relPointY = position[1]
