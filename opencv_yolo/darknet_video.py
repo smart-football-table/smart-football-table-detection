@@ -165,6 +165,7 @@ def YOLO():
         darknet.copy_image_from_bytes(darknet_image,frame_resized.tobytes())
 
         detections = darknet.detect_image(netMain, metaMain, darknet_image, thresh=0.05)
+        timepoint = int(time.time()*1000)
 
         position = (-1,-1)
 
@@ -189,8 +190,6 @@ def YOLO():
             thickness = int(np.sqrt(200 / float(i + 1)) * 2)
             cv2.line(frame_resized, pts[i - 1], pts[i], (0, 255, 0), thickness)
 
-        client.publish("ball/position/abs", str(position[0]) + "," + str(position[1]))
-
         if(position[0]==-1):
             relPointX = position[0]
             relPointY = position[1]
@@ -198,7 +197,7 @@ def YOLO():
             relPointX = float(position[0])/frame_resized.shape[1]
             relPointY = float(position[1])/frame_resized.shape[0]
 
-        client.publish("ball/position/rel", str(relPointX) + "," + str(relPointY))
+        client.publish("ball/position/rel", str(timepoint) + "," + str(relPointX) + "," + str(relPointY))
 
         image = frame_resized
         if not (len(detections) is 0):
