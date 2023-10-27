@@ -3,9 +3,9 @@ import paho.mqtt.client as mqtt
 client = mqtt.Client()
 
 
-def start_mqttclient(mqttport):
+def start_mqttclient(mqtthost, mqttport):
     client.on_connect = on_connect
-    client.connect("localhost", mqttport, 60)
+    client.connect(mqtthost, mqttport, 60)
     client.loop_start()
     return client
 

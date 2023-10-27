@@ -1,31 +1,17 @@
 from collections import deque
 import cv2 as cv
 import imutils
-import time
 
-from utils import arguments_parser, arguments_handler, config, draw_handler
+from utils import arguments_parser, arguments_handler, config, draw_handler, detection_position_handler
 
 
-def preprocess_image_with_color_treshold(colorLower, colorUpper, cv, frame):
+def preprocess_frame_with_color_treshold(colorLower, colorUpper, cv, frame):
     frame = imutils.resize(frame, width=config.FRAMESIZE_IN_PIXEL)
     hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
     mask = cv.inRange(hsv, colorLower, colorUpper)
     mask = cv.erode(mask, None, iterations=2)
     mask = cv.dilate(mask, None, iterations=2)
     return mask, frame
-
-
-def define_and_publish_detection_position(position):
-    if position[0] == -1:
-        relPointX = position[0]
-        relPointY = position[1]
-    else:
-        relPointX = float(position[0]) / frame.shape[1]
-        relPointY = float(position[1]) / frame.shape[0]  # 0=rows
-
-    timepoint = int(time.time() * 1000)
-
-    client.publish("ball/position/rel", str(timepoint) + "," + str(relPointX) + "," + str(relPointY))
 
 
 def detect_ball_draw_circle_and_return_position():
@@ -66,7 +52,7 @@ cap.set(28, 0)
 while (True):
     ret, frame = cap.read()
 
-    mask, frame = preprocess_image_with_color_treshold(color_lower_treshold, color_upper_treshold, cv, frame)
+    mask, frame = preprocess_frame_with_color_treshold(color_lower_treshold, color_upper_treshold, cv, frame)
 
     position = detect_ball_draw_circle_and_return_position()
 
@@ -76,12 +62,13 @@ while (True):
     draw_handler.draw_trace(frame, points_to_draw_trace_with)
     draw_handler.draw_detection_center(frame, position)
 
-    define_and_publish_detection_position(position)
+    detection_position_handler.define_and_publish_detection_position(frame.shape, position, client)
 
     if args.recordmode and args.recordpath != 'empty':
         out.write(frame)
 
-    cv.imshow('frame', frame)
+    if args.showvideo:
+        cv.imshow('Demo', frame)
 
     if cv.waitKey(20) & 0xFF == ord('q'):
         break

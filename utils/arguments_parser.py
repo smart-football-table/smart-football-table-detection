@@ -9,5 +9,7 @@ def parse_arguments():
     parser.add_argument("-c", "--color", default=config.COLOR, help="color values comma seperated in hsv color model")
     parser.add_argument("-r", "--recordmode", default=config.RECORD_MODE, help="switch on recoding into file")
     parser.add_argument("-p", "--recordpath", default=config.RECORD_FILE_NAME, help="recording with following file name, recordmode must be true")
+    parser.add_argument("-s", "--mqtthost", default=config.MQTTHOST, help="hostname of the mqtt broker")
     parser.add_argument("-m", "--mqttport", default=config.MQTTPORT, help="sets the mqtt broker port")
+    parser.add_argument("--showvideo", default=config.VIDEO_MODE, help="if true the video window is shown)")
     return parser.parse_args()

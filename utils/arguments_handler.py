@@ -36,5 +36,5 @@ def get_trace_length(args):
 
 def get_mqttclient(args):
     if args.mqttport != 'empty':
-        client = mqtt_handler.start_mqttclient(args.mqttport)
+        client = mqtt_handler.start_mqttclient(args.mqtthost, args.mqttport)
         return client

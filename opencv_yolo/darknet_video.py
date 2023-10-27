@@ -1,37 +1,46 @@
-from ctypes import *
-import math
-import random
 import os
-import cv2
-import numpy as np
-import time
-import customDarknet as darknet
 from collections import deque
-import imutils
-import argparse
-import paho.mqtt.client as mqtt
 
-def convertBack(x, y, w, h):
-    xmin = int(round(x - (w / 2)))
-    xmax = int(round(x + (w / 2)))
-    ymin = int(round(y - (h / 2)))
-    ymax = int(round(y + (h / 2)))
-    return xmin, ymin, xmax, ymax
+import cv2 as cv
+
+import customDarknet as darknet
+from utils import arguments_handler, arguments_parser, detection_position_handler, config, draw_handler
 
 
-def cvDrawBall(detection, img):
-    x, y, w, h = detection[2][0],\
-        detection[2][1],\
-        detection[2][2],\
-        detection[2][3]
-    xmin, ymin, xmax, ymax = convertBack(float(x), float(y), float(w), float(h))
-    pt1 = (xmin, ymin)
-    pt2 = (xmax, ymax)
+def preprocess_frame(frame, width, height):
+    frame_rgb = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
 
-    cv2.rectangle(img, pt1, pt2, (0, 255, 0), 1)
+    # cut out values for the fisheye lense, dirty hack during COM
+    x_start = 9
+    x_end = 440
+    y_start = 0
+    y_end = width
 
-    cv2.putText(img,detection[0].decode() +" [" + str(round(detection[1] * 100, 2)) + "]",(pt1[0], pt1[1] - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5,[0, 255, 0], 2)
-    return img
+    frame_rgb = frame_rgb[x_start:x_end, y_start:y_end]
+
+    frame_rgb = cv.resize(frame_rgb, (width, height))
+
+    return cv.resize(frame_rgb,
+                     (darknet.network_width(netMain),
+                      darknet.network_height(netMain)),
+                     interpolation=cv.INTER_LINEAR)
+
+
+def detect_ball_with_darknet_yolo_and_draw_labeling(frame, darknet_image):
+    darknet.copy_image_from_bytes(darknet_image, frame.tobytes())
+
+    detections = darknet.detect_image(netMain, metaMain, darknet_image, thresh=0.05)
+
+    if not (len(detections) is 0):
+        idOfDetection = getIDHighestDetection(detections)
+        position = (int(detections[idOfDetection][2][0]), int(detections[idOfDetection][2][1]))
+        draw_handler.draw_labeling_for_yolo_detection(detections[idOfDetection], frame)
+        points_to_draw_trace_with.appendleft(position)
+    else:
+        position = config.DEFAULT_POSITION
+
+    return position
+
 
 def getIDHighestDetection(detections):
     idOfMaxProbability = 0
@@ -40,73 +49,44 @@ def getIDHighestDetection(detections):
     for index, detection in enumerate(detections):
 
         probability = detection[1]
-        if(probability>maxProbability):
+        if (probability > maxProbability):
             maxProbability = probability
             idOfMaxProbability = index
 
     return idOfMaxProbability
 
-def on_connect(client, userdata, flags, rc):
-    print("Connected with result code " + str(rc))
 
 netMain = None
 metaMain = None
 altNames = None
 
-bufferSize = 200
-pathToFile = 0
+args = arguments_parser.parse_arguments()
+color_lower_treshold, color_upper_treshold, path_to_file, trace_length, client = arguments_handler.define_values_from_arguments(
+    args)
 
-# construct the argument parse and parse the arguments
-ap = argparse.ArgumentParser()
-ap.add_argument("-s", "--mqtthost", default='localhost', help="hostname of the mqtt broker")
-ap.add_argument("-p", "--mqttport", type=int, default=1883, help="port of the mqtt broker")
-ap.add_argument("-v", "--video", default='empty', help="path to the (optional) video file")
-ap.add_argument("-b", "--buffer", type=int, default=200, help="max buffer size for lightning track")
-ap.add_argument("-i", "--camindex", default=0, type=int, help="index of camera")
-ap.add_argument("-c", "--color", default='0,0,0,0,0,0', help="not neccessary here, but important for java processbuilder")
-ap.add_argument("-r", "--record", default='empty', help="switch on recording with following file name")
-ap.add_argument("--showvideo", help="if true the video window is shown)")
-args = vars(ap.parse_args())
+if args.recordmode:
+    if args.recordpath != 'empty':
+        fileName = args.record
+        fourcc = cv.cv.FOURCC(*'XVID')
+        out = cv.VideoWriter((str(fileName) + '.avi'), fourcc, 20.0, (800, 525))
 
-
-if args["video"] is not 'empty':
-    pathToFile = args["video"]
-else:
-    pathToFile = args["camindex"]
-
-if args["buffer"] is not 'empty':
-    bufferSize = args["buffer"]
-
-if args["record"] is not 'empty':
-    fileName = args["record"]
-    fourcc = cv2.cv.FOURCC(*'XVID')
-    out = cv2.VideoWriter((str(fileName)+'.avi'),fourcc, 20.0, (800,525))
-
-pts = deque(maxlen=bufferSize)
+points_to_draw_trace_with = deque(maxlen=trace_length)
 
 
 def YOLO():
-
-    #start mqttclient
-    client = mqtt.Client()
-    client.on_connect = on_connect
-    client.connect(args["mqtthost"], args["mqttport"], 60)
-
-    client.loop_start()
-
     global metaMain, netMain, altNames
     configPath = 'obj.cfg'
     weightPath = 'obj.weights'
     metaPath = 'obj.data'
     if not os.path.exists(configPath):
         raise ValueError("Invalid config path `" +
-                         os.path.abspath(configPath)+"`")
+                         os.path.abspath(configPath) + "`")
     if not os.path.exists(weightPath):
         raise ValueError("Invalid weight path `" +
-                         os.path.abspath(weightPath)+"`")
+                         os.path.abspath(weightPath) + "`")
     if not os.path.exists(metaPath):
         raise ValueError("Invalid data file path `" +
-                         os.path.abspath(metaPath)+"`")
+                         os.path.abspath(metaPath) + "`")
     if netMain is None:
         netMain = darknet.load_net(configPath.encode(
             "ascii"), weightPath.encode("ascii"), 0, 1)  # batch size = 1
@@ -132,91 +112,42 @@ def YOLO():
                     pass
         except Exception:
             pass
-    cap = cv2.VideoCapture(pathToFile)
+    cap = cv.VideoCapture(path_to_file)
 
     width = int(cap.get(3))  # float
-    height = int(cap.get(4)) # float
+    height = int(cap.get(4))  # float
 
     # Create an image we reuse for each detect
     darknet_image = darknet.make_image(darknet.network_width(netMain),
-                                    darknet.network_height(netMain),3)
+                                       darknet.network_height(netMain), 3)
 
     while True:
-        prev_time = time.time()
-        ret, frame_read = cap.read()
-        frame_rgb = cv2.cvtColor(frame_read, cv2.COLOR_BGR2RGB)
+        ret, frame = cap.read()
 
-        # cut out values for the fisheye lense, dirty hack during COM
-        x_start = 9
-        x_end = 440
-        y_start = 0
-        y_end = width
+        frame = preprocess_frame(frame, width, height)
 
-        frame_rgb = frame_rgb[x_start:x_end, y_start:y_end]
+        position = detect_ball_with_darknet_yolo_and_draw_labeling(frame, darknet_image)
 
-        frame_rgb = cv2.resize(frame_rgb, (width, height))
+        draw_handler.draw_trace(frame, points_to_draw_trace_with)
 
+        detection_position_handler.define_and_publish_detection_position(frame.shape, position, client)
 
-        frame_resized = cv2.resize(frame_rgb,
-                                   (darknet.network_width(netMain),
-                                    darknet.network_height(netMain)),
-                                   interpolation=cv2.INTER_LINEAR)
+        # TODO evtl. ist hier was kaputt gegangen, dies noch prüfen
+        frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+        frame = cv.resize(frame, (800, 525))
 
-        darknet.copy_image_from_bytes(darknet_image,frame_resized.tobytes())
+        if args.record is not 'empty':
+            out.write(frame)
 
-        detections = darknet.detect_image(netMain, metaMain, darknet_image, thresh=0.05)
-        timepoint = int(time.time()*1000)
+        if args.showvideo:
+            cv.imshow('Demo', frame)
 
-        position = (-1,-1)
+        cv.waitKey(3)
 
-
-
-        if not (len(detections) is 0):
-            idOfDetection = getIDHighestDetection(detections)
-            position = (int(detections[idOfDetection][2][0]), int(detections[idOfDetection][2][1]))
-            pts.appendleft(position)
-        #else:
-        #    pts.append(None)
-
-        # loop over the set of tracked points
-        for i in xrange(1, len(pts)):
-            # if either of the tracked points are None, ignore
-            # them
-            if pts[i - 1] is None or pts[i] is None:
-                continue
-
-            # otherwise, compute the thickness of the line and
-            # draw the connecting lines
-            thickness = int(np.sqrt(200 / float(i + 1)) * 2)
-            cv2.line(frame_resized, pts[i - 1], pts[i], (0, 255, 0), thickness)
-
-        if(position[0]==-1):
-            relPointX = position[0]
-            relPointY = position[1]
-        else:
-            relPointX = float(position[0])/frame_resized.shape[1]
-            relPointY = float(position[1])/frame_resized.shape[0]
-
-        client.publish("ball/position/rel", str(timepoint) + "," + str(relPointX) + "," + str(relPointY))
-
-        image = frame_resized
-        if not (len(detections) is 0):
-            image = cvDrawBall(detections[idOfDetection], frame_resized)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-        #image = cv2.resize(image, (1145,680))
-        image = cv2.resize(image, (800,525))
-
-        if args["record"] is not 'empty':
-            out.write(image)
-
-        if args["showvideo"]: 
-           cv2.imshow('Demo', image)
-           cv2.moveWindow("Demo", 1025,490);
-
-        cv2.waitKey(3)
     cap.release()
-    out.release()
+    if args.record is not 'empty':
+        out.release()
+
 
 if __name__ == "__main__":
     YOLO()
