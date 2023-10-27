@@ -1,9 +1,12 @@
+from utils import mqtt_handler
+
+
 def define_values_from_arguments(args):
     color_lower_treshold, color_upper_treshold = get_color_treshold(args)
     path_to_file = get_source_of_video(args)
     trace_length = get_trace_length(args)
-    mqttport = get_mqttport(args)
-    return color_lower_treshold, color_upper_treshold, path_to_file, trace_length, mqttport
+    client = get_mqttclient(args)
+    return color_lower_treshold, color_upper_treshold, path_to_file, trace_length, client
 
 
 def get_color_treshold(args):
@@ -31,6 +34,7 @@ def get_trace_length(args):
         return args.buffer
 
 
-def get_mqttport(args):
+def get_mqttclient(args):
     if args.mqttport != 'empty':
-        return args.mqttport
+        client = mqtt_handler.start_mqttclient(args.mqttport)
+        return client
