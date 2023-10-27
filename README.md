@@ -13,13 +13,14 @@ Visit the documentation at the [Smart Football Table](https://smart-football-tab
 
 ### Arguments for the application
 
-| Argument | Description                                   | Sample Input           | default |
-| -- | --------------------------------------------------- | ---------------------- | ----- |
-| -v | path to an (optional) video file, overwrites camera | "-v path/to/video.avi" | empty |
-| -b | length of lightning trace                           | 64                     | 200 |
-| -i | index of camera                                     | 0                      | 0 |
-| -c | color values (hsvmin,hsvmax) for object you want to detect (unneccessary for yolo) | 20,100,100,30,255,255 | 0,0,0,0,0,0 |
-| -r | recording output into given file name               | "fileName"             | empty |
+| Argument | Description                                                                      | Sample Input          | default     |
+|----------|----------------------------------------------------------------------------------|-----------------------|-------------|
+| -v       | path to an (optional) video file, overwrites camera                              | path/to/video.avi     | empty       |
+| -b       | length of lightning trace                                                        | 64                    | 200         |
+| -i       | index of camera                                                                  | 0                     | 0           |
+| -c       | color values (hsvmin,hsvmax) for object you want to detect (unneccessary for yolo) | 20,100,100,30,255,255 | 0,0,0,0,0,0 |
+| -r       | recording mode                                                                   | False                 | False       |
+| -p       | recording output into given file name and path                                   | path/to/fileName      | empty       |
 
 ###### Draft: Commands
 
